@@ -12,10 +12,13 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
-# Third-party actions are pinned to full commit SHAs.
+# Third-party actions are pinned to full commit SHAs. Each check is its own job.
+# Branch protection on main requires checks by job name: renaming a required
+# job leaves pull requests waiting for a check that never reports.
 jobs:
   # The hooks enforce AGENTS.md's hard constraints. GitHub sets CI=true, so a
-  # missing jq fails the job instead of skipping cases.
+  # missing jq fails the job instead of skipping cases. No install: the tests
+  # need only bash, jq and node, which the runner has.
   hooks:
     name: Hook tests
     runs-on: ubuntu-latest
@@ -23,3 +26,39 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: bash .claude/hooks/tests/run.sh
+
+  biome:
+    name: Biome
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+      - run: pnpm exec biome ci .
+
+  knip:
+    name: knip
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+      - run: pnpm knip
+
+  typecheck:
+    name: Typecheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+      - run: pnpm exec turbo run typecheck
+
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+      - run: pnpm test
