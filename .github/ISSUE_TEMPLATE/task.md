@@ -50,8 +50,9 @@ and what it proves. "It works" is not a check.
 
 <!--
 `reviewer`: the local plan reviewer may approve the plan. `owner`: the plan
-waits for the owner. A plan that touches dependencies, login, secrets, the
-data schema, Cloudflare, CI or `.claude/` goes to the owner whatever this says.
+waits for the owner. The reviewer reads the plan either way. A plan that
+touches dependencies, login, secrets, the data schema, Cloudflare, CI or
+`.claude/` goes to the owner whatever this says.
 -->
 
 reviewer
