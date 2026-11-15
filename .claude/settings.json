@@ -73,6 +73,7 @@
       "Edit(/.plan-review/**)",
       "Bash(gh api 'repos/{owner}/{repo}/issues/*' --jq .author_association)",
       "Bash(gh api 'repos/{owner}/{repo}/pulls/*/comments' --jq *)",
+      "WebFetch(domain:registry.npmjs.org)",
       "Bash(gh issue view *)",
       "Bash(gh issue list *)",
       "Bash(gh issue comment *)",

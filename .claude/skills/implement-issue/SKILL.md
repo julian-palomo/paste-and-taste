@@ -71,8 +71,9 @@ Run the `plan-reviewer` subagent. Post its answer whole, unedited, as a
 comment whose first line is `Plan review from local Claude Code`. Then:
 
 - **`APPROVED`**: go to step 5.
-- **`CHANGES`**: fix the plan, post it again as a new comment and review it again. Two reviews at most: a second answer that isn't `APPROVED` counts as `OWNER`, and the owner reads both reviews.
-- **`OWNER`**: the plan waits for the owner. Say so in the session, with what the review lists under "For the owner", and start the wait below.
+- **`CHANGES`** on a plan the review says is not the owner's: fix the plan, post it again as a new comment and review it again. Two reviews at most: a second answer that isn't `APPROVED` counts as `OWNER`, and the owner reads both reviews.
+- **`CHANGES`** on a plan the review says is the owner's: fix the plan from the review, post it again as a new comment that says what changed, and don't review it again. It waits for the owner like an `OWNER` plan.
+- **`OWNER`**: the plan waits for the owner. Say so in the session, with what the review lists under "For the owner" and "Needs a run", and start the wait below. Before answering, the owner can have the cloud session check the plan by running what it relies on (`docs/adr/2026-11-15-owner-plans-get-a-review-that-runs.md`).
 
 Never run the reviewer twice on the same plan to get a different answer, and
 never start step 5 on anything but `APPROVED` or the owner's OK. The owner's
