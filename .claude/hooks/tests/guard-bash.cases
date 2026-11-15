@@ -30,6 +30,9 @@ pass  | git config user.name
 pass  | git config --get user.email
 pass  | git restore --staged apps/api/src/main.ts
 pass  | gh issue view 4
+pass  | gh issue comment 4 --body-file /dev/null
+pass  | gh pr comment 9 --body-file /dev/null
+pass  | bash .claude/skills/implement-issue/wait-for-reply.sh issue 4 2026-11-02T10:00:00Z
 pass  | gh pr create --title "x" --body-file /dev/null
 pass  | gh pr create --base main --head feat/x --title "x" --body-file /dev/null --assignee @me
 pass  | gh pr view 9
