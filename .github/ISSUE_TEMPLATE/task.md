@@ -46,6 +46,16 @@ and what it proves. "It works" is not a check.
 
 - [ ]
 
+## Plan review
+
+<!--
+`reviewer`: the local plan reviewer may approve the plan. `owner`: the plan
+waits for the owner. A plan that touches dependencies, login, secrets, the
+data schema, Cloudflare, CI or `.claude/` goes to the owner whatever this says.
+-->
+
+reviewer
+
 ## What this practises
 
 <!-- The concept this issue is a chance to learn, in one line. The pull request says how it was applied. -->

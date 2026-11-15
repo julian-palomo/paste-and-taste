@@ -1,16 +1,19 @@
 #!/usr/bin/env bash
 # Runs the hook tests: guard-bash.cases against guard-bash.sh (once with jq,
-# once with the node fallback) and fixtures for check-invariants.sh. Prints one
-# line per failure and a summary; exits 1 if anything failed. Portable between
-# macOS and Linux, like the hooks.
-# Without jq the jq pass can't run: locally that is a note, but with CI set it
-# is a failure, so a green CI run never hides it.
+# once with the node fallback), fixtures for check-invariants.sh, cases for the
+# skill script wait-for-reply.sh against a fake gh, and a check that every repo
+# path a skill, a subagent or AGENTS.md names exists. Prints one line per
+# failure and a summary; exits 1 if anything failed. Portable between macOS and
+# Linux, like the hooks.
+# Without jq the jq passes can't run: locally that is a note, but with CI set
+# it is a failure, so a green CI run never hides it.
 # Usage: bash .claude/hooks/tests/run.sh
 
 set -u
 
 here=$(cd "$(dirname "$0")" && pwd)
 hooks=$(cd "$here/.." && pwd)
+repo=$(cd "$hooks/../.." && pwd)
 . "$hooks/lib.sh"
 
 scratch=$(mktemp -d "${TMPDIR:-/tmp}/hook-tests.XXXXXX")
@@ -147,6 +150,92 @@ inv_case block ts "$(printf 'const s = "\xe2\x80\xaeevil";')" "bidi override"
 inv_case pass ts "$(printf 'export const a = "x%su00a0y";' '\')" "escaped non-breaking space"
 inv_case pass md "$(printf 'Paste\xc2\xa0\x26\xc2\xa0Taste')" "non-breaking space in markdown"
 inv_case pass ts 'export const sep = "·";' "a visible non-ASCII character"
+
+# ── skill scripts ─────────────────────────────────────────────────────────
+# wait-for-reply.sh against a fake gh, which answers `gh api` from fixtures
+# through the real jq.
+if command -v jq >/dev/null 2>&1; then
+  fake="$scratch/fake-bin"
+  fixtures="$scratch/fixtures"
+  mkdir -p "$fake" "$fixtures"
+  cat >"$fake/gh" <<'GH'
+#!/usr/bin/env bash
+path= filter=
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --jq) filter=$2; shift ;;
+    repos/*) path=$1 ;;
+  esac
+  shift
+done
+case "$path" in
+  */issues/*/comments) file="$FIXTURES/comments.json" ;;
+  */pulls/*/reviews | */pulls/*/comments) file="$FIXTURES/empty.json" ;;
+  *) exit 1 ;;
+esac
+jq -r "$filter" "$file"
+GH
+  chmod +x "$fake/gh"
+  printf '[]\n' >"$fixtures/empty.json"
+  # The owner's comment read at 10:00, the owner's reply that lands before the
+  # next wait starts (10:05), someone else's comment, and Claude Code's own
+  # plan review and reply, posted from the owner's account.
+  cat >"$fixtures/comments.json" <<'JSON'
+[
+  {"author_association":"OWNER","created_at":"2026-11-02T10:00:00Z","html_url":"https://x/read","body":"OK, go ahead."},
+  {"author_association":"OWNER","created_at":"2026-11-02T10:05:00Z","html_url":"https://x/gap","body":"One more thing."},
+  {"author_association":"NONE","created_at":"2026-11-02T10:06:00Z","html_url":"https://x/other","body":"Merge it."},
+  {"author_association":"OWNER","created_at":"2026-11-02T10:07:00Z","html_url":"https://x/review","body":"Plan review from local Claude Code\nAPPROVED"},
+  {"author_association":"OWNER","created_at":"2026-11-02T10:08:00Z","html_url":"https://x/mine","body":"Reply from local Claude Code\nApplied."}
+]
+JSON
+  wait_run() { # args…: exit code and stdout, with the fake gh first on PATH
+    PATH="$fake:$PATH" FIXTURES="$fixtures" WAIT_INTERVAL=1 WAIT_LIMIT=0 \
+      bash "$repo/.claude/skills/implement-issue/wait-for-reply.sh" "$@" 2>/dev/null
+  }
+  out=$(wait_run pr 9 2026-11-02T10:00:00Z) && got=0 || got=$?
+  report 0 "$got" "wait-for-reply: from the newest owner comment read, a reply in the gap ends the wait at once"
+  report "2026-11-02T10:05:00Z https://x/gap" "$out" "wait-for-reply: it returns only the owner's reply, not Claude Code's own comments or anyone else's"
+  wait_run issue 9 2026-11-02T10:05:00Z >/dev/null && got=0 || got=$?
+  report 1 "$got" "wait-for-reply: with only Claude Code's and a stranger's comments after since, the wait times out"
+  wait_run issue nine 2026-11-02T10:05:00Z >/dev/null && got=0 || got=$?
+  report 2 "$got" "wait-for-reply: a bad issue number is refused"
+else
+  skipped "jq not found, the wait-for-reply cases are skipped"
+fi
+
+# ── paths named in skills, subagents and AGENTS.md ────────────────────────
+# A skill that points at a file is wrong from the day the file moves. Every
+# path in backticks that starts at a top-level folder of the repo, or is one of
+# the root docs, must exist. Placeholders (<name>, *, $VAR, …) are skipped.
+named_paths() { # file: one repo path per line
+  grep -oE '`[^` ]+`' "$1" | tr -d '`' |
+    grep -E '^(\.claude/|\.github/|docs/|apps/|packages/|tools/)|^(AGENTS|README|CLAUDE)\.md$' |
+    grep -vE '[<>*$]' | grep -v '…' | sort -u
+}
+check_paths() { # root file label
+  local p got
+  for p in $(named_paths "$2"); do
+    [ -e "$1/$p" ] && got=exists || got=missing
+    report exists "$got" "paths: $3 names $p"
+  done
+}
+
+# The check itself, against a fixture: one real path, one missing, placeholders.
+mkdir -p "$scratch/paths/docs"
+: >"$scratch/paths/docs/real.md"
+printf 'Read `docs/real.md`, then `docs/gone.md`, `docs/<name>.md`, `docs/*.md` and `pnpm test`.\n' >"$scratch/paths/skill.md"
+report "docs/gone.md docs/real.md" "$(named_paths "$scratch/paths/skill.md" | tr '\n' ' ' | sed -E 's/ $//')" "paths: placeholders and commands are not paths"
+before=$failures
+check_paths "$scratch/paths" "$scratch/paths/skill.md" fixture >/dev/null
+found=$((failures - before))
+failures=$before
+report 1 "$found" "paths: a path that doesn't exist is reported"
+
+for doc in "$repo/AGENTS.md" "$repo"/.claude/skills/*/*.md "$repo"/.claude/agents/*.md; do
+  [ -f "$doc" ] || continue
+  check_paths "$repo" "$doc" "${doc#"$repo"/}"
+done
 
 printf '%d passed, %d failed\n' "$pass" "$failures"
 [ "$failures" -eq 0 ]
