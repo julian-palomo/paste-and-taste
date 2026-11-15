@@ -21,16 +21,18 @@ is here, written down at the time instead of remembered afterwards.
 
 ## Decisions so far
 
-| Date       | Decision                                                                                             |
-| ---------- | ---------------------------------------------------------------------------------------------------- |
-| 2026-11-14 | [A monorepo with a native app, a web app and an API](2026-11-14-monorepo-with-a-native-app.md)       |
-| 2026-11-14 | [TanStack Start for the web app](2026-11-14-tanstack-start-for-the-web.md)                           |
-| 2026-11-14 | [An import limit kept per user, and no paid plan](2026-11-14-import-limit-per-user.md)               |
-| 2026-11-15 | [NestJS for the API, on Cloudflare Workers if a real deploy holds](2026-11-15-nestjs-on-workers.md)  |
-| 2026-11-15 | [Better Auth for login](2026-11-15-better-auth.md)                                                   |
-| 2026-11-15 | [Cloudflare Workflows for background work](2026-11-15-cloudflare-workflows.md)                       |
-| 2026-11-15 | [No notes field: a note edits the recipe](2026-11-15-a-note-edits-the-recipe.md)                     |
-| 2026-11-15 | [The interface in Spanish and English from day one](2026-11-15-spanish-and-english.md)               |
+| Date       | Decision                                                                                                     |
+| ---------- | ------------------------------------------------------------------------------------------------------------ |
+| 2026-11-14 | [A monorepo with a native app, a web app and an API](2026-11-14-monorepo-with-a-native-app.md)               |
+| 2026-11-14 | [TanStack Start for the web app](2026-11-14-tanstack-start-for-the-web.md)                                   |
+| 2026-11-14 | [An import limit kept per user, and no paid plan](2026-11-14-import-limit-per-user.md)                       |
+| 2026-11-15 | [NestJS for the API, on Cloudflare Workers if a real deploy holds](2026-11-15-nestjs-on-workers.md)          |
+| 2026-11-15 | [Better Auth for login](2026-11-15-better-auth.md)                                                           |
+| 2026-11-15 | [Cloudflare Workflows for background work](2026-11-15-cloudflare-workflows.md)                               |
+| 2026-11-15 | [No notes field: a note edits the recipe](2026-11-15-a-note-edits-the-recipe.md)                             |
+| 2026-11-15 | [The interface in Spanish and English from day one](2026-11-15-spanish-and-english.md)                       |
+| 2026-11-15 | [The issue carries the spec, and a local reviewer approves the plan](2026-11-15-the-issue-carries-the-spec.md) |
+| 2026-11-15 | [A model per agent](2026-11-15-a-model-per-agent.md)                                                         |
 
 ## Not decided yet
 
@@ -42,6 +44,6 @@ Each of these gets its ADR when it is decided, not before.
 - The AI provider and the SDK that calls it.
 - Reading YouTube videos with a model.
 - The package manager and the build tool, recorded with the monorepo skeleton.
-- The model each coding agent runs on.
+- Who applies the small fixes a pull request review asks for.
 - The licence, the final name, what a rating means, and whether the app ever
   charges.
