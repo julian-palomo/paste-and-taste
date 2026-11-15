@@ -5,8 +5,8 @@
 
 ## Context
 
-The first users speak Spanish or English. Recipes arrive in whatever language
-their source uses.
+The owner wants the app usable in Spanish and in English. Recipes arrive in
+whatever language their source uses.
 
 ## Decision
 

@@ -12,8 +12,8 @@ kept, edited and cooked from. It runs as a native app and as a web app.
 
 ## Saving a recipe
 
-- Adding a recipe from the phone is as easy as possible. Instagram and YouTube
-  are two of the main sources, and web pages are the third.
+- Adding a recipe from the phone is as easy as possible, from any source.
+  Instagram and YouTube are two of the main ones.
 - From Instagram it takes one tap, and the video and the carousel images are
   read too.
 - The import runs in the background. A recipe may show as loading and be

@@ -15,9 +15,9 @@ charge for more.
 
 ## Decision
 
-Each user has an import limit, stored as data on the user. Some users are
-premium and have a higher one, and the owner has none. The app is not paid.
-Whether it ever charges is not decided.
+Each user has an import limit, stored as data on the user. There are premium
+users, and the owner has no limit. The app is not paid. Whether it ever
+charges is not decided.
 
 ## Alternatives considered
 
