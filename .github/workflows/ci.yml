@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# A new push cancels the run in progress: that run would check a stale commit.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# Third-party actions are pinned to full commit SHAs.
+jobs:
+  # The hooks enforce AGENTS.md's hard constraints. GitHub sets CI=true, so a
+  # missing jq fails the job instead of skipping cases.
+  hooks:
+    name: Hook tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: bash .claude/hooks/tests/run.sh
