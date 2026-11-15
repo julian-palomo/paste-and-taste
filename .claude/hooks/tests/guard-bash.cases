@@ -11,6 +11,7 @@ pass  | git status
 pass  | git diff --stat
 pass  | git diff origin/main...HEAD
 pass  | git log --oneline -5
+pass  | git shortlog -sne origin/main
 pass  | git add apps/api/src/main.ts
 pass  | git add apps/api/src/main.ts apps/api/test/main.test.ts
 pass  | git add ./apps/api/src/main.ts

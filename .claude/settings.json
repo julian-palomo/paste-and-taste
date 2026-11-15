@@ -43,6 +43,7 @@
       "Bash(git status *)",
       "Bash(git diff *)",
       "Bash(git log *)",
+      "Bash(git shortlog *)",
       "Bash(git show *)",
       "Bash(git ls-files *)",
       "Bash(git branch *)",
