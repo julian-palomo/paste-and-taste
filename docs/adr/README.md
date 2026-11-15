@@ -35,6 +35,7 @@ is here, written down at the time instead of remembered afterwards.
 | 2026-11-15 | [A model per agent](2026-11-15-a-model-per-agent.md)                                                         |
 | 2026-11-15 | [The reviewer applies the fixes only when they close the review](2026-11-15-fixes-after-a-review.md)         |
 | 2026-11-15 | [Every plan is reviewed, the owner's too](2026-11-15-every-plan-is-reviewed.md)                              |
+| 2026-11-15 | [pnpm workspaces and Turborepo](2026-11-15-pnpm-and-turborepo.md)                                            |
 
 ## Not decided yet
 
@@ -45,6 +46,5 @@ Each of these gets its ADR when it is decided, not before.
 - The database host and the ORM. Postgres is the preference.
 - The AI provider and the SDK that calls it.
 - Reading YouTube videos with a model.
-- The package manager and the build tool, recorded with the monorepo skeleton.
 - The licence, the final name, what a rating means, and whether the app ever
   charges.

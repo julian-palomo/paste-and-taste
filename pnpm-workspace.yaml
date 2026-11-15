@@ -1,0 +1,22 @@
+packages:
+  - apps/*
+  - packages/*
+  - tools/*
+
+# Every dependency version lives here; a package.json refers to it as "catalog:".
+catalog:
+  "@biomejs/biome": 2.6.7
+  knip: 6.45.1
+  lefthook: 2.2.2
+  turbo: 2.11.11
+
+# Reviewed build scripts. lefthook's postinstall only runs `lefthook install`,
+# which the root `prepare` script already does.
+allowBuilds:
+  lefthook: false
+
+# A script or the pre-commit hook stops when node_modules is out of date,
+# instead of installing and rewriting pnpm-lock.yaml unseen. Don't set this to
+# install (pnpm's default): the lockfile changes only through an explicit
+# `pnpm install`. Not warn either: the checks would run on stale dependencies.
+verifyDepsBeforeRun: error

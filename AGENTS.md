@@ -45,19 +45,31 @@ to run it.
 
 ## 3. Commands
 
-| Command                           | What it does                           |
-| --------------------------------- | -------------------------------------- |
-| `bash .claude/hooks/tests/run.sh` | Tests for the Claude Code hooks.       |
+| Command                           | What it does                                                              |
+| --------------------------------- | ------------------------------------------------------------------------- |
+| `pnpm verify`                     | Everything CI runs: `check`, `knip`, `test` and the hook tests.           |
+| `pnpm check`                      | Biome lint and format check of the repo (not Markdown), then `typecheck`. |
+| `pnpm test`                       | `test` in every workspace that has the script, through Turborepo.         |
+| `pnpm knip`                       | Unused files, exports and dependencies.                                   |
+| `bash .claude/hooks/tests/run.sh` | Tests for the Claude Code hooks.                                          |
 
-There is no package manager yet; its commands are added here with the monorepo
-skeleton. From then on, `pnpm add` and `pnpm install` change the lockfile: ask
-first. `wrangler` asks first too, and agents never run a wrangler command that
-changes Cloudflare.
+The package manager is pnpm, with Turborepo running `typecheck`, `test` and
+`build` in each workspace that has the script. Dependency versions live only in
+the catalog in `pnpm-workspace.yaml`. `pnpm install` also installs the
+pre-commit hook, which formats staged files with Biome. `pnpm add` and
+`pnpm install` change the lockfile: ask first. A script, and the pre-commit
+hook, stops with `ERR_PNPM_VERIFY_DEPS_BEFORE_RUN` when `node_modules` no longer
+matches the lockfile instead of installing on its own; `pnpm install` fixes it,
+and asks first too. `wrangler` asks first too, and
+agents never run a wrangler command that changes Cloudflare.
 
 ## 4. Where things live
 
 - `.claude/`: rules, hooks, skills, the plan reviewer and settings for Claude Code; `.claude/README.md` explains them.
-- `.github/workflows/ci.yml`: CI on every pull request to `main`. Today it runs the hook tests.
+- `package.json`, `pnpm-workspace.yaml`, `turbo.json`, `biome.json`, `lefthook.yml`: the root scripts, workspaces and catalog, tasks, lint and format, and the pre-commit hook.
+- `tools/tsconfig`: the strict TypeScript base config, `@paste-and-taste/tsconfig/base.json`, that every workspace extends.
+- `.github/workflows/ci.yml`: CI on every pull request to `main`, one job per check: `Hook tests`, `Biome`, `knip`, `Typecheck` and `Tests`.
+- `.github/actions/setup`: the setup the CI jobs share: pnpm, Node from `.node-version`, and an install from the lockfile.
 - `.github/ISSUE_TEMPLATE/task.md`: the sections every issue has, and who reviews its plan.
 
 A workspace gets a line here in the PR that creates it.

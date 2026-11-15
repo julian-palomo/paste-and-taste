@@ -1,0 +1,7 @@
+# Formats what is staged, and re-stages only those files. Biome skips file
+# types it doesn't know (shell) and Markdown, so a commit of only those passes.
+pre-commit:
+  jobs:
+    - name: biome format
+      run: pnpm exec biome format --write --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
+      stage_fixed: true
