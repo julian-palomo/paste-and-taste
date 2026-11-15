@@ -8,6 +8,10 @@ dist
 !.dev.vars.example
 !.env.example
 
+# wrangler's local state, and the profile `wrangler check startup` writes
+.wrangler
+*.cpuprofile
+
 # What the implement-issue skill writes for the plan reviewer
 .plan-review/
 

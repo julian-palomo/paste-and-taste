@@ -1,0 +1,37 @@
+// No account ID, token or secret here: whoever deploys supplies them.
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "paste-and-taste-api",
+  // Built by `tsc` first: wrangler's bundler doesn't emit the decorator
+  // metadata NestJS injects by.
+  "main": "dist/worker.js",
+  "compatibility_date": "2026-11-15",
+  // Gives the Node APIs NestJS and Express use, process.env with the vars
+  // below, and the cloudflare:node HTTP server bridge.
+  "compatibility_flags": ["nodejs_compat"],
+  // Packages NestJS imports only for features this API doesn't use. They
+  // aren't installed, and the bundler fails on an import it can't resolve.
+  "alias": {
+    "@nestjs/microservices": "./dist/stubs/not-bundled.js",
+    "@nestjs/microservices/microservices-module.js": "./dist/stubs/not-bundled.js",
+    "@nestjs/websockets/socket-module.js": "./dist/stubs/not-bundled.js",
+    "class-transformer": "./dist/stubs/not-bundled.js",
+    "class-validator": "./dist/stubs/not-bundled.js"
+  },
+  "vars": {
+    "APP_ENV": "development"
+  },
+  // An environment doesn't inherit vars: each one sets every variable again.
+  "env": {
+    "preview": {
+      "vars": {
+        "APP_ENV": "preview"
+      }
+    },
+    "production": {
+      "vars": {
+        "APP_ENV": "production"
+      }
+    }
+  }
+}
