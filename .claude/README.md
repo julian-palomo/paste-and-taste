@@ -36,7 +36,7 @@ here avoids macOS-only syntax.
 | `skills/implement-issue/`      | The whole loop for one issue: read it, branch, plan, plan review, implement, handoff, pull request, act on the review. `wait-for-reply.sh` is its bounded wait for the owner                                                       | `/implement-issue <N>`    |
 | `skills/handoff/`              | Closes a unit of work: the checks, each "Done when" run again, the docs, the commit and the change summary                                                                                                                         | `/handoff`                |
 | `skills/ship-pr/`              | Pushes the branch, opens the pull request assigned to the owner and reports CI. Never merges                                                                                                                                       | `/ship-pr`                |
-| `agents/plan-reviewer.md`      | Reads a plan against its issue with read-only tools and answers `APPROVED`, `CHANGES` or `OWNER`. Its model is set in its first lines                                                                                              | Step 4 of implement-issue |
+| `agents/plan-reviewer.md`      | Reads a plan against its issue and the code, and the versions and documentation it cites against the web. Changes nothing, runs nothing, and answers `APPROVED`, `CHANGES` or `OWNER`. Its model is set in its first lines          | Step 4 of implement-issue |
 
 ## How a plan gets its OK
 
@@ -45,11 +45,18 @@ fresh context: it didn't write the plan, so it reads it without the
 implementer's reasons for liking it. Every plan gets this review, also one
 that only you can approve, so what reaches you has already been checked. The
 reviewer's answer is posted on the issue too, so the trail is public.
-`APPROVED` starts the work. `CHANGES` sends the plan back, twice at most.
-`OWNER` means the review found nothing left to fix and the plan waits for you:
-you asked for that in the issue, or the plan touches something an agent never
-approves (dependencies, login, secrets, the data schema, Cloudflare, CI or
-`.claude/`).
+`APPROVED` starts the work. `CHANGES` sends the plan back: twice at most when
+the reviewer can approve it, once when the plan is yours, because you read it
+anyway. `OWNER` means the review found nothing left to fix and the plan waits
+for you: you asked for that in the issue, or the plan touches something an
+agent never approves (dependencies, login, secrets, the data schema,
+Cloudflare, CI or `.claude/`).
+
+The reviewer reads the web, so it checks the versions and the documentation a
+plan cites. It can't run anything, so it lists what only a run can show. For a
+plan that is yours, you can ask the cloud session to run those before you
+answer: it tries them in a scratch project and gives you the reply to post
+(`docs/adr/2026-11-15-owner-plans-get-a-review-that-runs.md`).
 
 ## "I keep correcting Claude about X. Where does the fix go?"
 
