@@ -33,6 +33,7 @@ is here, written down at the time instead of remembered afterwards.
 | 2026-11-15 | [The interface in Spanish and English from day one](2026-11-15-spanish-and-english.md)                       |
 | 2026-11-15 | [The issue carries the spec, and a local reviewer approves the plan](2026-11-15-the-issue-carries-the-spec.md) |
 | 2026-11-15 | [A model per agent](2026-11-15-a-model-per-agent.md)                                                         |
+| 2026-11-15 | [The reviewer applies the fixes only when they close the review](2026-11-15-fixes-after-a-review.md)         |
 
 ## Not decided yet
 
@@ -44,6 +45,5 @@ Each of these gets its ADR when it is decided, not before.
 - The AI provider and the SDK that calls it.
 - Reading YouTube videos with a model.
 - The package manager and the build tool, recorded with the monorepo skeleton.
-- Who applies the small fixes a pull request review asks for.
 - The licence, the final name, what a rating means, and whether the app ever
   charges.
