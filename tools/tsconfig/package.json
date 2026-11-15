@@ -1,0 +1,7 @@
+{
+  "name": "@paste-and-taste/tsconfig",
+  "private": true,
+  "files": [
+    "base.json"
+  ]
+}

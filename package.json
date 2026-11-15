@@ -1,0 +1,18 @@
+{
+  "name": "paste-and-taste",
+  "private": true,
+  "packageManager": "pnpm@12.21.0",
+  "scripts": {
+    "check": "biome check . && turbo run typecheck",
+    "test": "turbo run test",
+    "knip": "knip",
+    "verify": "pnpm check && pnpm knip && pnpm test && bash .claude/hooks/tests/run.sh",
+    "prepare": "lefthook install"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "catalog:",
+    "knip": "catalog:",
+    "lefthook": "catalog:",
+    "turbo": "catalog:"
+  }
+}
