@@ -10,12 +10,12 @@ description: Use after /handoff, once the checks pass, to push the current paste
 ```bash
 git config --get user.name
 git config --get user.email
-git log --no-merges --format='%an <%ae>' -5 origin/main
+git shortlog -sne origin/main
 git rev-parse --abbrev-ref HEAD
 git status --short
 ```
 
-- The identity doesn't match the authors on `main`: stop and say so. Never pass `--author` or `-c user.*`, and never change `git config`.
+- The name and email aren't among the authors `git shortlog` lists for `main`: stop and say so. A new address is the owner's to confirm. That list has more than one address for the owner: commits made through GitHub, which are the cloud session's and the merge button's, carry the account's noreply address. Never pass `--author` or `-c user.*`, and never change `git config`.
 - The branch is `main`: stop.
 - Uncommitted task files: `/handoff` first. Unrelated files stay as they are and are named in the report.
 - No issue number for `Closes #N`: ask for it.

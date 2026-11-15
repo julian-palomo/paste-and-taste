@@ -89,9 +89,10 @@ while IFS= read -r raw; do
   if printf '%s' "$g" | grep -qE '^git +commit( |$).*--author'; then
     block "git commit --author changes authorship. Commits use the repo owner's git config."
   fi
+  # A read ends at the key: only read flags come before it and no value after.
   if printf '%s' "$g" | grep -qE '^git +config( |$).*user\.' &&
-    ! printf '%s' "$g" | grep -qE '^git +config +(--get +)?user\.(name|email)$'; then
-    block "git config user.* changes authorship. Read it with \`git config user.email\`; never set it."
+    ! printf '%s' "$g" | grep -qE '^git +config +((get|--get|--get-all|--show-origin|--show-scope) +)*user\.(name|email)$'; then
+    block "git config user.* changes authorship. Read it with \`git config --get user.email\`, adding --show-origin to see which file sets it; never set it."
   fi
 
   # ── History and the working tree ──────────────────────────────────────────
