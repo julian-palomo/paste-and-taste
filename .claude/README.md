@@ -42,11 +42,14 @@ here avoids macOS-only syntax.
 
 The implementer posts its plan on the issue, then starts the plan reviewer in a
 fresh context: it didn't write the plan, so it reads it without the
-implementer's reasons for liking it. The reviewer's answer is posted on the
-issue too, so the trail is public. `APPROVED` starts the work. `CHANGES` sends
-the plan back, twice at most. `OWNER` means the plan waits for you: you asked
-for that in the issue, or the plan touches something an agent never approves
-(dependencies, login, secrets, the data schema, Cloudflare, CI or `.claude/`).
+implementer's reasons for liking it. Every plan gets this review, also one
+that only you can approve, so what reaches you has already been checked. The
+reviewer's answer is posted on the issue too, so the trail is public.
+`APPROVED` starts the work. `CHANGES` sends the plan back, twice at most.
+`OWNER` means the review found nothing left to fix and the plan waits for you:
+you asked for that in the issue, or the plan touches something an agent never
+approves (dependencies, login, secrets, the data schema, Cloudflare, CI or
+`.claude/`).
 
 ## "I keep correcting Claude about X. Where does the fix go?"
 
