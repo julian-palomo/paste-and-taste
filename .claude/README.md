@@ -13,6 +13,8 @@ its own. The docs are at code.claude.com/docs.
 | Rules                     | `.claude/rules/*.md`                                                                   | A rule with a `paths:` list loads the first time Claude reads or edits a matching file. All of ours have `paths:`. |
 | Hooks                     | `.claude/hooks/*.sh`, wired in `settings.json`                                         | Run by Claude Code itself on every matching tool call. Claude can't skip or argue with them.                       |
 | Settings                  | `.claude/settings.json` (committed), `.claude/settings.local.json` (yours, gitignored) | Read at start and reloaded when they change: permissions, hooks, attribution.                                      |
+| Skills                    | `.claude/skills/<name>/SKILL.md`                                                       | Only the description is in context. The body loads when Claude decides the task matches, or when you type `/<name>`. |
+| Subagents                 | `.claude/agents/<name>.md`                                                             | Run in their own context when a skill or Claude starts them, with only the tools and the model the file gives them.  |
 
 `CLAUDE.md` holds one line, `@AGENTS.md`. Keep it: without a `CLAUDE.md`,
 adding a `CLAUDE.local.md` would stop Claude Code from reading `AGENTS.md`.
@@ -29,10 +31,22 @@ here avoids macOS-only syntax.
 | `hooks/guard-bash.sh`          | Blocks stash, `add -A`/`--all`/`.`, amend, rebase, force-push, `reset --hard`, `clean -f`, push to `main`, merging, attribution and identity changes; asks before discarding changes, dependency changes and wrangler               | Before every Bash command |
 | `hooks/check-invariants.sh`    | Flags anything that looks like an Anthropic API key or a UK phone number, and invisible or non-breaking characters in source                                                                                                        | After every edit          |
 | `hooks/lib.sh`                 | Shared helpers: reads the hook input with jq, or node when jq is missing                                                                                                                                                           | Sourced by the hooks      |
-| `hooks/tests/`                 | The case table for `guard-bash.sh` and fixtures for `check-invariants.sh`. Run with `bash .claude/hooks/tests/run.sh`; CI runs it on every pull request                                                                           | When a hook changes       |
+| `hooks/tests/`                 | The case table for `guard-bash.sh`, fixtures for `check-invariants.sh`, cases for `wait-for-reply.sh`, and a check that every repo path a skill, a subagent or `AGENTS.md` names exists. Run with `bash .claude/hooks/tests/run.sh`; CI runs it on every pull request | When a hook or a skill changes |
 | `settings.json`                | Permissions (deny, ask, allow), the hooks, `attribution` turned off                                                                                                                                                                | Always                    |
+| `skills/implement-issue/`      | The whole loop for one issue: read it, branch, plan, plan review, implement, handoff, pull request, act on the review. `wait-for-reply.sh` is its bounded wait for the owner                                                       | `/implement-issue <N>`    |
+| `skills/handoff/`              | Closes a unit of work: the checks, each "Done when" run again, the docs, the commit and the change summary                                                                                                                         | `/handoff`                |
+| `skills/ship-pr/`              | Pushes the branch, opens the pull request assigned to the owner and reports CI. Never merges                                                                                                                                       | `/ship-pr`                |
+| `agents/plan-reviewer.md`      | Reads a plan against its issue with read-only tools and answers `APPROVED`, `CHANGES` or `OWNER`. Its model is set in its first lines                                                                                              | Step 4 of implement-issue |
 
-There are no skills or subagents yet.
+## How a plan gets its OK
+
+The implementer posts its plan on the issue, then starts the plan reviewer in a
+fresh context: it didn't write the plan, so it reads it without the
+implementer's reasons for liking it. The reviewer's answer is posted on the
+issue too, so the trail is public. `APPROVED` starts the work. `CHANGES` sends
+the plan back, twice at most. `OWNER` means the plan waits for you: you asked
+for that in the issue, or the plan touches something an agent never approves
+(dependencies, login, secrets, the data schema, Cloudflare, CI or `.claude/`).
 
 ## "I keep correcting Claude about X. Where does the fix go?"
 
@@ -57,6 +71,10 @@ covers, like `comments.md`.
 add it under `hooks` in `settings.json` (copy an existing entry), and add cases
 to `hooks/tests/`. Use only portable `sed -E` / `grep -E`. `/hooks` shows what's
 configured.
+
+**A subagent.** Create `.claude/agents/<name>.md` with `name`, `description`,
+`tools` and `model`. Give a reviewer read-only tools, and say in its prompt
+what shape its answer has.
 
 **A skill.** Create `.claude/skills/<name>/SKILL.md` with `name` and
 `description`. Claude reads only the description to decide when to use the
