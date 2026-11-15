@@ -1,6 +1,6 @@
 # Every plan is reviewed, the owner's too
 
-- **Status:** Accepted
+- **Status:** Accepted, changed in part by [2026-11-15-owner-plans-get-a-review-that-runs.md](2026-11-15-owner-plans-get-a-review-that-runs.md)
 - **Date:** 2026-11-15
 
 ## Context
