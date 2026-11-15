@@ -54,6 +54,11 @@ gh issue comment $ARGUMENTS --body-file <plan file>
 
 ## 4. Plan review
 
+Every plan is reviewed, also one that only the owner can approve: the owner
+then reads a plan that has already been checked
+(`docs/adr/2026-11-15-every-plan-is-reviewed.md`). Never skip the reviewer
+because its answer can be guessed.
+
 The plan reviewer has no Bash, so write its input:
 
 ```bash
@@ -66,8 +71,8 @@ Run the `plan-reviewer` subagent. Post its answer whole, unedited, as a
 comment whose first line is `Plan review from local Claude Code`. Then:
 
 - **`APPROVED`**: go to step 5.
-- **`CHANGES`**: fix the plan, post it again as a new comment and review it again. Two reviews at most: a second answer that isn't `APPROVED` counts as `OWNER`.
-- **`OWNER`**: the plan waits for the owner. Say so in the session and start the wait below.
+- **`CHANGES`**: fix the plan, post it again as a new comment and review it again. Two reviews at most: a second answer that isn't `APPROVED` counts as `OWNER`, and the owner reads both reviews.
+- **`OWNER`**: the plan waits for the owner. Say so in the session, with what the review lists under "For the owner", and start the wait below.
 
 Never run the reviewer twice on the same plan to get a different answer, and
 never start step 5 on anything but `APPROVED` or the owner's OK. The owner's

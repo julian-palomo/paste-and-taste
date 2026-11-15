@@ -34,6 +34,7 @@ is here, written down at the time instead of remembered afterwards.
 | 2026-11-15 | [The issue carries the spec, and a local reviewer approves the plan](2026-11-15-the-issue-carries-the-spec.md) |
 | 2026-11-15 | [A model per agent](2026-11-15-a-model-per-agent.md)                                                         |
 | 2026-11-15 | [The reviewer applies the fixes only when they close the review](2026-11-15-fixes-after-a-review.md)         |
+| 2026-11-15 | [Every plan is reviewed, the owner's too](2026-11-15-every-plan-is-reviewed.md)                              |
 
 ## Not decided yet
 
