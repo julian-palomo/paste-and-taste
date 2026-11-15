@@ -28,6 +28,12 @@ pass  | git checkout -b fix/thing
 pass  | git config user.email
 pass  | git config user.name
 pass  | git config --get user.email
+pass  | git config --get-all user.email
+pass  | git config --show-origin --get-all user.email
+pass  | git config --show-origin --get-all user.email; git config --show-origin --get-all user.name
+pass  | git config --show-scope --show-origin user.name
+pass  | git config get user.email
+pass  | git config get --show-origin user.email
 pass  | git restore --staged apps/api/src/main.ts
 pass  | gh issue view 4
 pass  | gh issue comment 4 --body-file /dev/null
@@ -65,6 +71,13 @@ block | git -c user.email=other@example.com commit -m "x"
 block | GIT_AUTHOR_EMAIL=other@example.com git commit -m "x"
 block | git config user.email other@example.com
 block | git config --global user.name "Other"
+block | git config --show-origin user.email other@example.com
+block | git config --get-all user.email; git config user.email other@example.com
+block | git config --add user.email other@example.com
+block | git config --replace-all user.name "Other"
+block | git config --unset user.email
+block | git config set user.email other@example.com
+block | git config unset user.email
 block | git push --force
 block | git push -f origin feat/x
 block | git push --force-with-lease origin feat/x
