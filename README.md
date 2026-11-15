@@ -9,7 +9,12 @@ Nothing is built yet. The repo holds the working agreement for the coding
 agents that will build it: [`AGENTS.md`](AGENTS.md) has the rules and
 [`.claude/README.md`](.claude/README.md) explains the Claude Code setup.
 
+[`docs/product.md`](docs/product.md) says what the app must do.
+
 ## Decided so far
+
+Each decision has its record, with the options that lost, in
+[`docs/adr/`](docs/adr/README.md).
 
 - A monorepo with a React Native app, a web app and an API.
 - Web: TanStack Start.
