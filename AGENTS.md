@@ -65,4 +65,5 @@ A workspace gets a line here in the PR that creates it.
 - `README.md`: what the project is, its status and what is decided. Read first by outsiders.
 - `.claude/README.md`: how the Claude Code setup works and where a new rule goes.
 - `.claude/rules/*.md`: per-area rules. Each starts with a `paths:` list; before editing a file, read every rule whose paths match it.
-- `docs/adr/`: one file per decision that shapes the project, added with the first one. Records are history; a change of mind is a new ADR.
+- `docs/product.md`: what the app must do, as the owner has stated it. A new requirement goes here and in its issue.
+- `docs/adr/README.md`: the index of decisions, one file each, and what isn't decided yet. Records are history; a change of mind is a new ADR.
