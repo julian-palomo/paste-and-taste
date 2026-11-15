@@ -15,11 +15,14 @@ reviewing, and finds Opus good for implementing.
 
 ## Decision
 
-| Agent                                  | Model      |
-| -------------------------------------- | ---------- |
-| Claude Code sessions that implement    | Opus       |
-| The plan reviewer                      | Fable 5.1  |
-| The cloud session that reviews the PRs | Fable 5.2  |
+| Agent                                  | Model |
+| -------------------------------------- | ----- |
+| Claude Code sessions that implement    | Opus  |
+| The plan reviewer                      | Fable |
+| The cloud session that reviews the PRs | Fable |
+
+The exact version of each model lives in the agents' own configuration, not
+here, so this record doesn't go out of date with every release.
 
 ## Alternatives considered
 
@@ -34,4 +37,4 @@ reviewing, and finds Opus good for implementing.
 - The choice hasn't been measured in this repo. A small test, the same plans
   with a seeded defect through two models, would say whether it holds.
 - The models for the other subagents aren't chosen yet.
-- Model names age. A change is a new ADR.
+- A change of model is a new ADR.
