@@ -44,10 +44,16 @@ get a Preview URL. Status shows on GitHub as a check run and a pull request
 comment.
 
 - **What the owner sets up:** installs Cloudflare's GitHub app on the repo;
-  in the dashboard, connects the Worker `paste-and-taste-api` (the name must
-  match `wrangler.jsonc`), sets the root directory `apps/api`, the build and
-  deploy commands, and the production branch. Cloudflare creates and holds
-  the API token it deploys with; no token lives in GitHub.
+  in the dashboard, connects the Worker (its name must match
+  `wrangler.jsonc`), sets the root directory `apps/api`, the build and deploy
+  commands, and the production branch. The deploy command needs
+  `--env production`, since the default `npx wrangler deploy` deploys the
+  top-level config, whose `APP_ENV` is `development`, and the Worker to connect
+  is the one with the environment suffix, `paste-and-taste-api-production`
+  ([environments](https://developers.cloudflare.com/workers/wrangler/environments/));
+  whether the dashboard's name check accepts that suffix is not documented.
+  Cloudflare creates and holds the API token it deploys with; no token lives
+  in GitHub.
 - **Checks before a deploy:** only what the build command runs. The docs say
   nothing about waiting for GitHub's own checks, so a push to `main` deploys
   whatever CI says about it. Gating means repeating the checks in the build
