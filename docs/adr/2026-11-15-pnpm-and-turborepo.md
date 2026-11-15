@@ -45,5 +45,9 @@ a task by having the script.
   instead, so that list stays empty.
 - `pnpm add` and `pnpm install` change the lockfile, so agents ask first
   (`AGENTS.md`, section 3).
+- pnpm 12 installs on its own before `pnpm run` and `pnpm exec` when
+  `node_modules` is out of date, which rewrites the lockfile unseen.
+  `verifyDepsBeforeRun: error` makes those commands stop instead, so the
+  lockfile changes only through `pnpm install`.
 - Turborepo's task settings in `turbo.json` are a draft until the first
   workspace with code runs them.

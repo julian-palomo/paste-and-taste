@@ -57,7 +57,10 @@ The package manager is pnpm, with Turborepo running `typecheck`, `test` and
 `build` in each workspace that has the script. Dependency versions live only in
 the catalog in `pnpm-workspace.yaml`. `pnpm install` also installs the
 pre-commit hook, which formats staged files with Biome. `pnpm add` and
-`pnpm install` change the lockfile: ask first. `wrangler` asks first too, and
+`pnpm install` change the lockfile: ask first. A script, and the pre-commit
+hook, stops with `ERR_PNPM_VERIFY_DEPS_BEFORE_RUN` when `node_modules` no longer
+matches the lockfile instead of installing on its own; `pnpm install` fixes it,
+and asks first too. `wrangler` asks first too, and
 agents never run a wrangler command that changes Cloudflare.
 
 ## 4. Where things live
