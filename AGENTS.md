@@ -59,6 +59,8 @@ to run it.
 | `pnpm -C apps/api smoke <address>`     | Calls `/health` and an unknown route of a running API; exits 1 if either is off.              |
 | `pnpm -C apps/api openapi`             | Writes `apps/api/openapi.json` from the routes' schemas. Commit it.                           |
 | `pnpm -C tools/openapi-typegen generate` | Writes the client's types, `packages/api-client/src/schema.d.ts`, from the document. Commit it. |
+| `pnpm -C prototypes/instagram measure <absolute path>` | Measures each way of reading the owner's sample of Instagram posts; never prints a link. Sends requests to Instagram. |
+| `pnpm -C prototypes/instagram worker:bundle` | Bundles the spike's scratch Worker with `wrangler deploy --dry-run`; writes nothing to Cloudflare. |
 
 The package manager is pnpm, with Turborepo running `typecheck`, `test` and
 `build` in each workspace that has the script; a workspace's `test` runs after
