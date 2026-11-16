@@ -1,0 +1,12 @@
+{
+  "name": "@paste-and-taste/openapi-typegen",
+  "private": true,
+  "scripts": {
+    "generate": "openapi-typescript ../../apps/api/openapi.json -o ../../packages/api-client/src/schema.d.ts",
+    "check": "openapi-typescript ../../apps/api/openapi.json -o ../../packages/api-client/src/schema.d.ts --check && echo 'OK packages/api-client/src/schema.d.ts is up to date' || (echo 'FAIL packages/api-client/src/schema.d.ts is out of date: run pnpm -C tools/openapi-typegen generate and commit it.' && exit 1)"
+  },
+  "devDependencies": {
+    "openapi-typescript": "catalog:",
+    "typescript": "catalog:typegen"
+  }
+}
