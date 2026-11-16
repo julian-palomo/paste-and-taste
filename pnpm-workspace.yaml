@@ -8,6 +8,7 @@ packages:
 catalog:
   "@biomejs/biome": 2.6.7
   "@cfworker/json-schema": 4.1.6
+  "@google/genai": 3.3.0
   "@hono/zod-openapi": 1.6.3
   "@types/node": 26.6.6
   hono: 4.13.18
@@ -32,10 +33,13 @@ catalogs:
 # Reviewed build scripts. lefthook's postinstall only runs `lefthook install`,
 # which the root `prepare` script already does. esbuild's and workerd's check
 # the native binary that pnpm already installs from their optional
-# dependencies, and download it when that is missing.
+# dependencies, and download it when that is missing. protobufjs's, which
+# @google/genai brings in, only warns when a dependent's version range uses
+# another prefix; it builds nothing.
 allowBuilds:
   esbuild: false
   lefthook: false
+  protobufjs: false
   workerd: false
 
 # A script or the pre-commit hook stops when node_modules is out of date,

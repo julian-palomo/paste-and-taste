@@ -3,7 +3,7 @@
 // with it ends, whether it succeeded or not: no media outlives a run.
 
 import { execFile } from "node:child_process";
-import { mkdir, mkdtemp, readdir, rm, stat, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
@@ -47,13 +47,6 @@ export async function durationSeconds(path: string): Promise<number> {
   return Number(stdout.trim());
 }
 
-/** The audio as 16 kHz mono WAV, the rate speech models expect. */
-export async function extractAudio(video: string, dir: string): Promise<string> {
-  const path = join(dir, "audio.wav");
-  await run("ffmpeg", ["-v", "error", "-i", video, "-vn", "-ac", "1", "-ar", "16000", path]);
-  return path;
-}
-
 /** Returns the frames' paths in order. */
 export async function extractFrames(video: string, dir: string): Promise<string[]> {
   const framesDir = join(dir, "frames");
@@ -71,8 +64,4 @@ export async function extractFrames(video: string, dir: string): Promise<string[
   ]);
   const names = (await readdir(framesDir)).sort();
   return names.map((name) => join(framesDir, name));
-}
-
-export async function sizeOf(path: string): Promise<number> {
-  return (await stat(path)).size;
 }

@@ -8,6 +8,10 @@
     "typecheck": "tsc --noEmit",
     "worker:bundle": "wrangler deploy --dry-run"
   },
+  "dependencies": {
+    "@google/genai": "catalog:",
+    "zod": "catalog:"
+  },
   "devDependencies": {
     "@paste-and-taste/tsconfig": "workspace:*",
     "@types/node": "catalog:",
