@@ -10,15 +10,17 @@ images are read too ([`product.md`](../product.md)). The import runs on
 Cloudflare's network ([Cloudflare Workflows](2026-11-15-cloudflare-workflows.md)),
 and nobody's Instagram login is used.
 
-A spike measured every route that reads a public post with no login, for 20
+A spike measured three routes that read a public post with no login (the embed
+view, oEmbed with no token and the post's page; a fourth, the web app's
+logged-out query, is described in the report and was not run), for 20
 posts of the owner's, from the owner's machine and from Cloudflare's network,
 on 16 Nov 2026. The figures, and what Meta's terms say, are in
 [`docs/research/instagram-reading.md`](../research/instagram-reading.md). In
 short, for the 18 public posts whose kind is known, all of them reels:
 
 - The public embed view returned the caption for 18 of 18 in both places, and
-  a video address for 10 of 10 reels with their own audio and 2 of 8 with
-  licensed music, in about half a second.
+  a video address for 10 of 10 reels with their own audio and 2 of 8 that the
+  embed view doesn't mark as original audio, in about half a second.
 - oEmbed, callable with no token since May 2026, answered every time with no
   caption and no video.
 - The post's page held no post data from either place, and from Cloudflare
@@ -68,9 +70,10 @@ connection. The owner decides it knowing the cost below, the terms first.
   is JSON inside a string inside a script, in a shape Instagram doesn't
   promise. The import needs a check that notices when the caption stops
   coming.
-- **Licensed music.** 6 of 8 reels with licensed music gave no video address,
-  so for most of them the recipe has to come from the caption. Whether the
-  caption is enough is #24's question.
+- **Reels with someone else's audio.** 6 of the 8 reels the embed view doesn't
+  mark as original audio gave no video address, so for most of them the recipe
+  has to come from the caption. Whether that audio is licensed music was not
+  checked. Whether the caption is enough is #24's question.
 - **Carousels are unknown.** The requirement to read a carousel's images has
   no measurement yet; a sample with carousels has to be measured before the
   import is built on this.

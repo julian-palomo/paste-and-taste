@@ -14,11 +14,20 @@ not legal advice.
 
 ## How it was measured
 
-- **The sample.** 20 public posts chosen by the owner, in Spanish and English,
-  sorted by the owner: 10 reels with their own audio, 8 reels with licensed
-  music, and 2 the owner couldn't sort (`unknown`). One of the two turned out
-  to be private (post 19) and is left out of the totals. **The sample has no
+- **The sample.** 20 posts chosen by the owner: 19 public and 1 private (post
+  19), which is left out of the totals. On the reviewer's first look, 15 were
+  in Spanish, 2 in English, 1 in German and 1 in French. **The sample has no
   carousel and no single image**, so nothing below says how either is read.
+- **The kinds.** Nobody sorted the posts by watching them. The reviewer
+  assigned the kinds on 16 Nov 2026, about 16:00 UTC, from the embed view's own
+  data: `reel-own-audio` where the post's `uses_original_audio` was true (10),
+  `reel-music` where it was false (8), and `unknown` where the field was
+  missing (post 13) or the post couldn't be read (post 19). So "licensed music"
+  below means "not marked as original audio": it may be another creator's
+  audio, and what the audio is was not checked. The kind comes from the route
+  R1 measures, which the plan had meant to avoid, so R1's split between the two
+  kinds repeats that first look from two more places; it is not an independent
+  check.
 - **The places and times.** The owner's machine (macOS, Node 25.9.0), on
   16 Nov 2026 from 21:31 UTC. Cloudflare's network, through a scratch Worker
   the owner deployed and deleted, on 16 Nov 2026 from 21:51 UTC; the Worker
@@ -199,3 +208,8 @@ the embed.
 - **The page's meta tags.** R3 was read for the JSON in its scripts only, not
   for the description in its `<meta>` tags.
 - **The two posts of unknown kind.** Their kind stays unknown; one is private.
+- **Why oEmbed's `html` holds no caption**, when its documentation says the
+  caption is included unless `hidecaption` is set. A call with an app's access
+  token, or with other parameters, was not tried. In the answers looked at, the
+  `blockquote` has no `data-instgrm-captioned` attribute; that this is why the
+  caption is missing is a guess, not something checked.
