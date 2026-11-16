@@ -37,7 +37,7 @@ is here, written down at the time instead of remembered afterwards.
 | 2026-11-15 | [Every plan is reviewed, the owner's too](2026-11-15-every-plan-is-reviewed.md)                              |
 | 2026-11-15 | [pnpm workspaces and Turborepo](2026-11-15-pnpm-and-turborepo.md)                                            |
 | 2026-11-15 | [The plan reviewer reads the web, and the owner's plans get a review that runs](2026-11-15-owner-plans-get-a-review-that-runs.md) |
-| 2026-11-15 | [How the API deploys](2026-11-15-how-the-api-deploys.md) (Proposed)                                           |
+| 2026-11-15 | [How the API deploys](2026-11-15-how-the-api-deploys.md)                                                      |
 | 2026-11-16 | [Hono for the API on Cloudflare Workers, with NestJS's structure by hand](2026-11-16-hono-on-workers.md) |
 | 2026-11-16 | [The API's contract: an OpenAPI document, and a client generated from it](2026-11-16-api-contract-from-openapi.md) |
 
@@ -48,8 +48,6 @@ Each of these gets its ADR when it is decided, not before.
 - How an Instagram post is read. The requirement is one tap, including the
   video and the carousel images; how it is done waits for the prototype.
 - The database host and the ORM. Postgres is the preference.
-- How the API deploys. Its record is Proposed and recommends a GitHub Actions
-  job; the owner decides, and the pipeline is its own issue.
 - The AI provider and the SDK that calls it.
 - Reading YouTube videos with a model.
 - The licence, the final name, what a rating means, and whether the app ever
