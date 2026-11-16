@@ -95,4 +95,5 @@ A workspace gets a line here in the PR that creates it.
 - `.claude/rules/*.md`: per-area rules. Each starts with a `paths:` list; before editing a file, read every rule whose paths match it.
 - `.claude/skills/*/SKILL.md`: step-by-step procedures (implementing an issue, handoff, opening a PR).
 - `docs/product.md`: what the app must do, as the owner has stated it. A new requirement goes here and in its issue.
+- `docs/roadmap.md`: the order of the work, in phases, with each phase's state and issues. A plan, not a record: edit it when the order or a phase's state changes.
 - `docs/adr/README.md`: the index of decisions, one file each, and what isn't decided yet. Records are history; a change of mind is a new ADR.

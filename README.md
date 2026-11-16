@@ -17,7 +17,8 @@ working agreement for the coding agents that build it: [`AGENTS.md`](AGENTS.md)
 has the rules and [`.claude/README.md`](.claude/README.md) explains the Claude
 Code setup.
 
-[`docs/product.md`](docs/product.md) says what the app must do.
+[`docs/product.md`](docs/product.md) says what the app must do, and
+[`docs/roadmap.md`](docs/roadmap.md) in what order it is being built.
 
 ## Decided so far
 
