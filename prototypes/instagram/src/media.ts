@@ -46,7 +46,23 @@ function* blobs(html: string): Generator<unknown> {
   }
 }
 
-/** Depth-first search for the object whose shortcode is `code`; strings holding JSON are opened. */
+/**
+ * Keys only a media object carries. The post's code also appears in stubs,
+ * such as the embed view's `context` and the page's route parameters, which
+ * come before the media object; matching on the code alone reads a stub and
+ * reports a post with no caption and no video.
+ */
+const MEDIA_KEYS = [
+  "display_url",
+  "image_versions2",
+  "video_url",
+  "video_versions",
+  "is_video",
+  "media_type",
+  "edge_media_to_caption",
+];
+
+/** Depth-first search for the media object whose code is `code`; strings holding JSON are opened. */
 function findObject(value: unknown, code: string, depth = 0): Json | null {
   if (depth > 60) return null;
   if (typeof value === "string") {
@@ -61,7 +77,9 @@ function findObject(value: unknown, code: string, depth = 0): Json | null {
     return null;
   }
   if (!isRecord(value)) return null;
-  if (value.shortcode === code || value.code === code) return value;
+  if ((value.shortcode === code || value.code === code) && MEDIA_KEYS.some((key) => key in value)) {
+    return value;
+  }
   for (const item of Object.values(value)) {
     const found = findObject(item, code, depth + 1);
     if (found) return found;
