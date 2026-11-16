@@ -11,7 +11,7 @@ needs, and a phase gets its issues when it is next.
 
 | #   | Phase                         | State       | Issues                                                                 |
 | --- | ----------------------------- | ----------- | ---------------------------------------------------------------------- |
-| 1   | The API's base                | In progress | [#9](https://github.com/julian-palomo/paste-and-taste/issues/9)        |
+| 1   | The API's base                | In progress | The deploy pipeline has no issue yet                                   |
 | 2   | The Instagram prototype       | Next        | [#22](https://github.com/julian-palomo/paste-and-taste/issues/22)      |
 | 3   | Database and login            | Not started |                                                                        |
 | 4   | The first recipe, end to end  | Not started |                                                                        |
@@ -21,10 +21,10 @@ needs, and a phase gets its issues when it is next.
 
 ## The phases
 
-1. **The API's base.** The API's skeleton is in place. What is left is the
-   contract and the typed client that the web app and the native app will
-   call, and then the deploy pipeline, whose record is Proposed and waits for
-   the owner's decision.
+1. **The API's base.** The API's skeleton is in place, with its contract and
+   the typed client that the web app and the native app will call. What is
+   left is the deploy pipeline, whose record is Proposed and waits for the
+   owner's decision.
 2. **The Instagram prototype.** Reading a post with one tap, its video and its
    carousel images included, is the requirement that matters most and the one
    least sure to be possible. The prototype is throwaway code, outside the
