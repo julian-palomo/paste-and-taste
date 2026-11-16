@@ -2,9 +2,16 @@
 // holds no text from a post, only statuses, booleans, counts and a time, so
 // nothing that prints or returns one can leak a link, a handle or a caption.
 
-export type Kind = "reel-own-audio" | "reel-music" | "carousel" | "image";
+/** `unknown` is a post the owner couldn't sort; its totals stay apart instead of being guessed. */
+export type Kind = "reel-own-audio" | "reel-music" | "carousel" | "image" | "unknown";
 
-export const KINDS: readonly Kind[] = ["reel-own-audio", "reel-music", "carousel", "image"];
+export const KINDS: readonly Kind[] = [
+  "reel-own-audio",
+  "reel-music",
+  "carousel",
+  "image",
+  "unknown",
+];
 
 /** `number` is the post's line number in the sample file. */
 export type Post = { number: number; url: string; kind: Kind; images: number | null };

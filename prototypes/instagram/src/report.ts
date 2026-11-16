@@ -48,8 +48,9 @@ function failures(measurements: Measurement[]): string {
 }
 
 function images(kind: Kind, rows: Result[]): string {
-  if (kind !== "carousel" && kind !== "image") return "-";
+  if (kind === "reel-own-audio" || kind === "reel-music") return "-";
   const got = rows.reduce((sum, { measurement }) => sum + (measurement.images ?? 0), 0);
+  if (kind === "unknown") return `${got}/?`;
   const expected = rows.reduce((sum, { post }) => sum + (post.images ?? 1), 0);
   return `${got}/${expected}`;
 }

@@ -21,9 +21,11 @@ caption. One post per line, with its kind:
 <link> reel-music
 <link> image
 <link> carousel <number of images>
+<link> unknown
 ```
 
-A post is named by its line number in the file.
+`unknown` is a post the owner couldn't sort; its totals get a row of their
+own. A post is named by its line number in the file.
 
 ## Running it
 
