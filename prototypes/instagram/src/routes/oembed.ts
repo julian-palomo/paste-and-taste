@@ -23,13 +23,16 @@ function field(value: unknown, key: string): unknown {
     : undefined;
 }
 
-/** Whether the embed HTML holds a caption: a paragraph besides the "shared by" credit line. */
+/**
+ * Whether the embed HTML holds a caption: any visible text, in whatever tag,
+ * besides the "View this post on Instagram" link and the "shared by" credit.
+ */
 function hasCaption(html: string): boolean {
-  for (const match of html.matchAll(/<p\b[^>]*>([\s\S]*?)<\/p>/g)) {
-    const text = (match[1] ?? "").replace(/<[^>]*>/g, "").trim();
-    if (text.length > 0 && !/shared by/i.test(text)) return true;
-  }
-  return false;
+  return html
+    .replace(/<script\b[\s\S]*?<\/script>/g, "")
+    .split(/<[^>]*>/)
+    .map((text) => text.trim())
+    .some((text) => text.length > 0 && !/view this post on instagram|shared by/i.test(text));
 }
 
 export function measureOembed(link: PostLink): Promise<Measurement> {
