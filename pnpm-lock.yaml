@@ -298,6 +298,9 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
+      wrangler:
+        specifier: 'catalog:'
+        version: 4.162.0(@types/node@26.6.6)
 
   tools/openapi-typegen:
     devDependencies:

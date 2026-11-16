@@ -4,11 +4,13 @@
   "type": "module",
   "scripts": {
     "measure": "node src/measure.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "worker:bundle": "wrangler deploy --dry-run"
   },
   "devDependencies": {
     "@paste-and-taste/tsconfig": "workspace:*",
     "@types/node": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "wrangler": "catalog:"
   }
 }

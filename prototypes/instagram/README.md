@@ -36,3 +36,22 @@ reads each post once per route (the embed view, oEmbed with no token and the
 post's page), one request at a time with 5 seconds between requests, and
 stops a route after 3 rate limits or login redirects in a row. Every request
 sends the same `User-Agent`, which the output prints.
+
+## Running it from Cloudflare's network
+
+The scratch Worker, `src/worker.ts`, measures one route for one post per
+request, with the same code. The script on the owner's machine stays the only
+loop and sends it one post at a time, so the sample never reaches Cloudflare.
+Until `RUN_TOKEN` is set, the Worker answers every request with 401.
+
+Only the owner runs these; an agent never deploys:
+
+```bash
+pnpm -C prototypes/instagram exec wrangler deploy                 # prints the workers.dev address
+pnpm -C prototypes/instagram exec wrangler secret put RUN_TOKEN   # asks for the value
+RUN_TOKEN=<the same value> pnpm -C prototypes/instagram measure /absolute/path/to/sample.txt --via https://<address>
+pnpm -C prototypes/instagram exec wrangler delete
+```
+
+`pnpm -C prototypes/instagram worker:bundle` bundles the Worker without
+writing anything to Cloudflare.
