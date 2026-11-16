@@ -5,8 +5,8 @@
 
 ## Context
 
-`apps/api` is a NestJS application on Cloudflare Workers
-([2026-11-15-nestjs-on-workers.md](2026-11-15-nestjs-on-workers.md)). Today
+`apps/api` is a Hono application on Cloudflare Workers
+([2026-11-16-hono-on-workers.md](2026-11-16-hono-on-workers.md)). Today
 it is deployed by hand, by the owner: `wrangler deploy --env preview` from a
 laptop, then the smoke script against the Worker's address. The owner wants a
 pipeline with sanity checks; this record compares two ways to build it.
@@ -15,9 +15,9 @@ What any pipeline has to respect:
 
 - **The checks CI runs today** (`pnpm verify`: Biome, knip, typecheck, tests,
   build, hook tests) pass before a deploy, never after.
-- **The build is two steps.** `tsc` compiles `apps/api` to `dist/` first,
-  because wrangler's bundler doesn't emit the decorator metadata NestJS
-  injects by. `wrangler deploy` then bundles `dist/worker.js`.
+- **The build is one step.** `wrangler deploy` bundles `src/worker.ts`
+  itself; `pnpm -C apps/api build` is the same bundle as a dry-run, which
+  writes nothing to Cloudflare and needs no login.
 - **`pnpm install` needs a git checkout.** The root `prepare` script runs
   `lefthook install`, which exits 128 in a copy of the repo without `.git`.
 - **The smoke script runs after the deploy**: `pnpm -C apps/api smoke
@@ -57,7 +57,8 @@ comment.
 - **Checks before a deploy:** only what the build command runs. The docs say
   nothing about waiting for GitHub's own checks, so a push to `main` deploys
   whatever CI says about it. Gating means repeating the checks in the build
-  command (`pnpm verify && pnpm -C apps/api build`), on a second machine.
+  command (`pnpm verify`, which already bundles the Worker), on a second
+  machine.
 - **Smoke after:** no post-deploy step is documented. The deploy command can
   chain it: `wrangler deploy && pnpm smoke <address>`.
 - **Git checkout:** not documented. The build image page covers the OS
@@ -72,8 +73,8 @@ comment.
 ### B. A GitHub Actions job that runs wrangler with a scoped token
 
 A workflow on push to `main` runs the same jobs as CI, and a deploy job that
-`needs:` all of them runs `pnpm -C apps/api build`, then
-`pnpm -C apps/api exec wrangler deploy --env <env>`, then the smoke script.
+`needs:` all of them runs `pnpm -C apps/api exec wrangler deploy --env <env>`,
+then the smoke script.
 
 - **What the owner sets up:** a Cloudflare API token limited to editing
   Workers on this one account (the "Edit Cloudflare Workers" template), stored

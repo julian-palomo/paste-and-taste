@@ -7,7 +7,7 @@ web page, so it can be kept, edited and cooked from.
 
 The repo is a pnpm and Turborepo monorepo with its checks wired, locally and
 in CI; each app arrives with its own issue. The first is the API's skeleton in
-[`apps/api`](apps/api): NestJS on Cloudflare Workers, with validated
+[`apps/api`](apps/api): Hono on Cloudflare Workers, with validated
 configuration, a health route and one error format, and no recipe endpoints
 yet. How it deploys is proposed in
 [`docs/adr/`](docs/adr/2026-11-15-how-the-api-deploys.md) and not decided. It also holds the
@@ -24,7 +24,7 @@ Each decision has its record, with the options that lost, in
 
 - A monorepo with a React Native app, a web app and an API.
 - Web: TanStack Start.
-- API: NestJS on Cloudflare Workers. The first step is deploying the bare skeleton to a real Worker; if that fails, the fallbacks are NestJS on a Node host, or Hono on Workers.
+- API: Hono on Cloudflare Workers, organised the way NestJS taught: one module per feature and one function that wires the dependencies. NestJS on Workers was deployed first and held, and was replaced for what it needed on Workers.
 - Login: Better Auth.
 - Background work, such as importing a recipe: Cloudflare Workflows.
 - The interface is in Spanish and English from day one.

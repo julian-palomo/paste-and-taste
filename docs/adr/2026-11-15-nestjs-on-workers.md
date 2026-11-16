@@ -1,3 +1,5 @@
+Superseded by `2026-11-16-hono-on-workers.md`
+
 # NestJS for the API, on Cloudflare Workers if a real deploy holds
 
 - **Status:** Accepted
