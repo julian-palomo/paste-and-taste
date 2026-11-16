@@ -5,8 +5,12 @@ web page, so it can be kept, edited and cooked from.
 
 ## Status
 
-No app code yet. The repo is a pnpm and Turborepo monorepo with its checks
-wired, locally and in CI; each app arrives with its own issue. It also holds the
+The repo is a pnpm and Turborepo monorepo with its checks wired, locally and
+in CI; each app arrives with its own issue. The first is the API's skeleton in
+[`apps/api`](apps/api): NestJS on Cloudflare Workers, with validated
+configuration, a health route and one error format, and no recipe endpoints
+yet. How it deploys is proposed in
+[`docs/adr/`](docs/adr/2026-11-15-how-the-api-deploys.md) and not decided. It also holds the
 working agreement for the coding agents that build it: [`AGENTS.md`](AGENTS.md)
 has the rules and [`.claude/README.md`](.claude/README.md) explains the Claude
 Code setup.
@@ -37,6 +41,8 @@ pnpm check                        # Biome, then typecheck
 pnpm test                         # tests in every workspace
 pnpm knip                         # unused files, exports and dependencies
 bash .claude/hooks/tests/run.sh   # tests for the Claude Code hooks
+pnpm -C apps/api dev              # the API on the local Workers runtime, localhost:8787
+pnpm -C apps/api smoke <address>  # checks a running API: /health and an unknown route
 ```
 
 ## Licence
