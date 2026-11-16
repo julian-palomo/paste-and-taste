@@ -2,22 +2,11 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "paste-and-taste-api",
-  // Built by `tsc` first: wrangler's bundler doesn't emit the decorator
-  // metadata NestJS injects by.
-  "main": "dist/worker.js",
+  // Wrangler bundles the TypeScript entry itself.
+  "main": "src/worker.ts",
   "compatibility_date": "2026-11-15",
-  // Gives the Node APIs NestJS and Express use, process.env with the vars
-  // below, and the cloudflare:node HTTP server bridge.
-  "compatibility_flags": ["nodejs_compat"],
-  // Packages NestJS imports only for features this API doesn't use. They
-  // aren't installed, and the bundler fails on an import it can't resolve.
-  "alias": {
-    "@nestjs/microservices": "./dist/stubs/not-bundled.js",
-    "@nestjs/microservices/microservices-module.js": "./dist/stubs/not-bundled.js",
-    "@nestjs/websockets/socket-module.js": "./dist/stubs/not-bundled.js",
-    "class-transformer": "./dist/stubs/not-bundled.js",
-    "class-validator": "./dist/stubs/not-bundled.js"
-  },
+  // Deliberately no nodejs_compat: nothing in the Worker uses a Node API.
+  // A dependency that needs one adds the flag in its own change.
   "vars": {
     "APP_ENV": "development"
   },

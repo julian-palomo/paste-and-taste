@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 // Every variable the API reads, each with its description. Code reads them
-// through AppConfig only, never from process.env.
+// through AppConfig only, never from the raw environment.
 const configSchema = z.object({
   APP_ENV: z
     .enum(["development", "preview", "production"])
@@ -14,7 +14,9 @@ class ConfigError extends Error {
   override name = "ConfigError";
 }
 
-export function parseConfig(source: Record<string, string | undefined>): AppConfig {
+// `unknown`, not a Record: the Workers env is the interface Cloudflare.Env,
+// which TypeScript won't assign to an index-signature type.
+export function parseConfig(source: unknown): AppConfig {
   const result = configSchema.safeParse(source);
   if (result.success) return result.data;
 
