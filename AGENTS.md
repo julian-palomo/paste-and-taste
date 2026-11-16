@@ -82,6 +82,7 @@ and writes nothing to Cloudflare.
 - `packages/api-client`: `@paste-and-taste/api-client`, the typed way to call the API: `createApiClient`, and `ApiError` for every failed call. `src/schema.d.ts` is generated from `apps/api/openapi.json`, never edited.
 - `tools/openapi-typegen`: runs `openapi-typescript`, with its own TypeScript 5.9.3 from the catalog `typegen`, to write the client's types. Nothing else uses that TypeScript.
 - `tools/tsconfig`: the strict TypeScript base config, `@paste-and-taste/tsconfig/base.json`, that every workspace extends.
+- `prototypes/instagram`: `@paste-and-taste/instagram-prototype`, throwaway code for the Instagram spike: a script that measures each way of reading a public post with no login, and a scratch Worker that runs it from Cloudflare's network. Nothing imports it, and it is deleted when the real import replaces it; its `README.md` says how to run it.
 - `.github/workflows/ci.yml`: CI on every pull request to `main`, one job per check: `Hook tests`, `Biome`, `knip`, `Contract`, `Typecheck` and `Tests`.
 - `.github/actions/setup`: the setup the CI jobs share: pnpm, Node from `.node-version`, and an install from the lockfile.
 - `.github/ISSUE_TEMPLATE/task.md`: the sections every issue has, and who reviews its plan.
@@ -97,3 +98,4 @@ A workspace gets a line here in the PR that creates it.
 - `docs/product.md`: what the app must do, as the owner has stated it. A new requirement goes here and in its issue.
 - `docs/roadmap.md`: the order of the work, in phases, with each phase's state and issues. A plan, not a record: edit it when the order or a phase's state changes.
 - `docs/adr/README.md`: the index of decisions, one file each, and what isn't decided yet. Records are history; a change of mind is a new ADR.
+- `docs/research/*.md`: what a spike measured, each figure with its sample size, date and place. A report stays after its throwaway code is deleted.

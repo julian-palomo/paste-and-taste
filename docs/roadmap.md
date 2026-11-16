@@ -12,7 +12,7 @@ needs, and a phase gets its issues when it is next.
 | #   | Phase                         | State       | Issues                                                                 |
 | --- | ----------------------------- | ----------- | ---------------------------------------------------------------------- |
 | 1   | The API's base                | In progress | [#9](https://github.com/julian-palomo/paste-and-taste/issues/9)        |
-| 2   | The Instagram prototype       | Next        | [#22](https://github.com/julian-palomo/paste-and-taste/issues/22)      |
+| 2   | The Instagram prototype       | In progress | [#22](https://github.com/julian-palomo/paste-and-taste/issues/22)      |
 | 3   | Database and login            | Not started |                                                                        |
 | 4   | The first recipe, end to end  | Not started |                                                                        |
 | 5   | The real import               | Not started |                                                                        |

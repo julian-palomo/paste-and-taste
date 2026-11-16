@@ -17,6 +17,14 @@ working agreement for the coding agents that build it: [`AGENTS.md`](AGENTS.md)
 has the rules and [`.claude/README.md`](.claude/README.md) explains the Claude
 Code setup.
 
+The Instagram prototype, throwaway code in
+[`prototypes/instagram`](prototypes/instagram), measured which ways of reading a
+public post work without a login; the figures are in
+[`docs/research/instagram-reading.md`](docs/research/instagram-reading.md), and
+how a post is read is proposed in
+[`docs/adr/`](docs/adr/2026-11-16-how-an-instagram-post-is-read.md) and not
+decided.
+
 [`docs/product.md`](docs/product.md) says what the app must do, and
 [`docs/roadmap.md`](docs/roadmap.md) in what order it is being built.
 
