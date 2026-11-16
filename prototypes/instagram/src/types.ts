@@ -13,8 +13,19 @@ export const KINDS: readonly Kind[] = [
   "unknown",
 ];
 
-/** `number` is the post's line number in the sample file. */
-export type Post = { number: number; url: string; kind: Kind; images: number | null };
+/** Where a post's recipe is, as the owner marked it by watching the post. */
+export type Place = "caption" | "speech" | "frames" | "carousel" | "nowhere";
+
+export const PLACES: readonly Place[] = ["caption", "speech", "frames", "carousel", "nowhere"];
+
+/** `number` is the post's line number in the sample file; `place` is null on a line without one. */
+export type Post = {
+  number: number;
+  url: string;
+  kind: Kind;
+  images: number | null;
+  place: Place | null;
+};
 
 export type RouteName = "embed" | "oembed" | "page";
 

@@ -6,13 +6,13 @@
 
 type Found = { caption: boolean; video: boolean; images: number | null };
 
-type Json = Record<string, unknown>;
+export type Json = Record<string, unknown>;
 
 function isRecord(value: unknown): value is Json {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function at(value: unknown, ...path: (string | number)[]): unknown {
+export function at(value: unknown, ...path: (string | number)[]): unknown {
   let current = value;
   for (const key of path) {
     if (typeof key === "number") current = Array.isArray(current) ? current[key] : undefined;
@@ -119,10 +119,16 @@ function read(media: Json): Found {
   return { caption, video: hasVideo(media), images };
 }
 
-export function findPost(html: string, code: string): Found | null {
+/** The post's media object, from whichever blob holds it. */
+export function findMedia(html: string, code: string): Json | null {
   for (const blob of blobs(html)) {
     const media = findObject(blob, code);
-    if (media) return read(media);
+    if (media) return media;
   }
   return null;
+}
+
+export function findPost(html: string, code: string): Found | null {
+  const media = findMedia(html, code);
+  return media ? read(media) : null;
 }

@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "measure": "node src/measure.ts",
+    "recipe": "node src/recipe.ts",
     "typecheck": "tsc --noEmit",
     "worker:bundle": "wrangler deploy --dry-run"
   },
