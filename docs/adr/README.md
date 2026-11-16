@@ -40,13 +40,16 @@ is here, written down at the time instead of remembered afterwards.
 | 2026-11-15 | [How the API deploys](2026-11-15-how-the-api-deploys.md)                                                      |
 | 2026-11-16 | [Hono for the API on Cloudflare Workers, with NestJS's structure by hand](2026-11-16-hono-on-workers.md) |
 | 2026-11-16 | [The API's contract: an OpenAPI document, and a client generated from it](2026-11-16-api-contract-from-openapi.md) |
+| 2026-11-16 | [How an Instagram post is read](2026-11-16-how-an-instagram-post-is-read.md) (Proposed)                     |
 
 ## Not decided yet
 
 Each of these gets its ADR when it is decided, not before.
 
 - How an Instagram post is read. The requirement is one tap, including the
-  video and the carousel images; how it is done waits for the prototype.
+  video and the carousel images. The prototype measured the routes; its
+  [record](2026-11-16-how-an-instagram-post-is-read.md) is Proposed and
+  recommends the public embed view, and the owner decides.
 - The database host and the ORM. Postgres is the preference.
 - The AI provider and the SDK that calls it.
 - Reading YouTube videos with a model.
