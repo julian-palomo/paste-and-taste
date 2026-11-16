@@ -1,7 +1,7 @@
 # How the API deploys
 
-- **Status:** Proposed
-- **Date:** 2026-11-15
+- **Status:** Accepted
+- **Date:** 2026-11-15, accepted 2026-11-16
 
 ## Context
 
@@ -92,7 +92,7 @@ then the smoke script.
 - **Versions:** the shared setup action reads `.node-version` and
   `packageManager`, the same as every CI job.
 
-## Recommendation
+## Decision
 
 **B, GitHub Actions.** It reuses what CI already proves (the setup action,
 Node 26, the checks) and gates the deploy on them with `needs:`, where A would
@@ -111,6 +111,6 @@ What choosing B costs, beyond the token:
 - Either way, a deploy that the smoke script fails stays live until it is
   rolled back or fixed.
 
-The owner decides; the pipeline itself is a later issue. This record has no
-"Decision" section because nothing is decided yet: when the owner accepts
-it, its status changes and this recommendation becomes the decision.
+The owner accepted B on 16 November 2026. Option A is the alternative that
+lost, for the open points above. The pipeline is built in
+[#35](https://github.com/julian-palomo/paste-and-taste/issues/35).
