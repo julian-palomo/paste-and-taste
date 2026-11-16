@@ -1,0 +1,93 @@
+import type { Context } from "hono";
+import { HTTPException } from "hono/http-exception";
+import { AppError } from "./app-error";
+
+// The one place an error becomes a response: Problem Details, RFC 9457.
+// createApp installs these on the root app; a module never sets its own
+// onError or notFound, since Hono calls notFound only on the root app.
+
+type Problem = { type: string; title: string; status: number; detail: string };
+
+// The 4xx and 5xx reason phrases of RFC 9110, section 15, plus 429 from
+// RFC 6585. Kept here, not taken from node:http: the Worker runs without
+// nodejs_compat, so a node:* import passes the tests on Node and breaks the
+// bundle.
+const REASON_PHRASES: Record<number, string> = {
+  400: "Bad Request",
+  401: "Unauthorized",
+  402: "Payment Required",
+  403: "Forbidden",
+  404: "Not Found",
+  405: "Method Not Allowed",
+  406: "Not Acceptable",
+  407: "Proxy Authentication Required",
+  408: "Request Timeout",
+  409: "Conflict",
+  410: "Gone",
+  411: "Length Required",
+  412: "Precondition Failed",
+  413: "Content Too Large",
+  414: "URI Too Long",
+  415: "Unsupported Media Type",
+  416: "Range Not Satisfiable",
+  417: "Expectation Failed",
+  421: "Misdirected Request",
+  422: "Unprocessable Content",
+  426: "Upgrade Required",
+  429: "Too Many Requests",
+  500: "Internal Server Error",
+  501: "Not Implemented",
+  502: "Bad Gateway",
+  503: "Service Unavailable",
+  504: "Gateway Timeout",
+  505: "HTTP Version Not Supported",
+};
+
+export function notFound(c: Context): Response {
+  return problemResponse({
+    type: "about:blank",
+    title: title(404),
+    status: 404,
+    detail: `No route for ${c.req.method} ${c.req.path}.`,
+  });
+}
+
+export function onError(error: Error): Response {
+  if (error instanceof AppError) {
+    const { type, title, status, message } = error;
+    return problemResponse({ type, title, status, detail: message });
+  }
+
+  // Hono's own errors. Its message is an empty string unless one was given,
+  // and `detail` must be a string a client can show.
+  if (error instanceof HTTPException) {
+    const { status, message } = error;
+    return problemResponse({
+      type: "about:blank",
+      title: title(status),
+      status,
+      detail: message || title(status),
+    });
+  }
+
+  // Unexpected: its message and stack go to the log only. Never put them in
+  // the body, they can name hosts, queries or values.
+  console.error(error);
+  return problemResponse({
+    type: "about:blank",
+    title: title(500),
+    status: 500,
+    detail: "The server could not complete the request.",
+  });
+}
+
+function title(status: number): string {
+  return REASON_PHRASES[status] ?? "Error";
+}
+
+function problemResponse(problem: Problem): Response {
+  return new Response(JSON.stringify(problem), {
+    status: problem.status,
+    headers: { "Content-Type": "application/problem+json" },
+  });
+}

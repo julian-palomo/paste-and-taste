@@ -1,13 +1,6 @@
-import { Test } from "@nestjs/testing";
 import { expect, it } from "vitest";
-import { AppModule } from "../src/app.module";
-import { ENV_SOURCE } from "../src/config/config.module";
+import { createApp } from "../src/app";
 
-it("refuses to start without APP_ENV, and names it", async () => {
-  const compiling = Test.createTestingModule({ imports: [AppModule] })
-    .overrideProvider(ENV_SOURCE)
-    .useValue({})
-    .compile();
-
-  await expect(compiling).rejects.toThrow(/APP_ENV/);
+it("refuses to build without APP_ENV, and names it", () => {
+  expect(() => createApp({})).toThrow(/APP_ENV/);
 });

@@ -3,26 +3,19 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build": "wrangler deploy --dry-run --outdir dist --env=\"\"",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "dev": "pnpm build && wrangler dev",
+    "dev": "wrangler dev",
     "smoke": "node scripts/smoke.ts"
   },
   "dependencies": {
-    "@nestjs/common": "catalog:",
-    "@nestjs/core": "catalog:",
-    "@nestjs/platform-express": "catalog:",
-    "reflect-metadata": "catalog:",
-    "rxjs": "catalog:",
+    "hono": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@nestjs/testing": "catalog:",
     "@paste-and-taste/tsconfig": "workspace:*",
     "@types/node": "catalog:",
-    "@types/supertest": "catalog:",
-    "supertest": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:",
     "wrangler": "catalog:"

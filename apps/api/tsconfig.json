@@ -1,8 +1,6 @@
 {
   "extends": "@paste-and-taste/tsconfig/base.json",
   "compilerOptions": {
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
     "noEmit": true,
     "allowImportingTsExtensions": true,
     "types": ["node"]

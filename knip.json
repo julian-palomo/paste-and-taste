@@ -1,9 +1,0 @@
-{
-  "$schema": "./node_modules/knip/schema.json",
-  "workspaces": {
-    ".": {},
-    "apps/api": {
-      "entry": ["src/worker.ts", "src/stubs/not-bundled.ts"]
-    }
-  }
-}

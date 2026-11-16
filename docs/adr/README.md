@@ -38,6 +38,7 @@ is here, written down at the time instead of remembered afterwards.
 | 2026-11-15 | [pnpm workspaces and Turborepo](2026-11-15-pnpm-and-turborepo.md)                                            |
 | 2026-11-15 | [The plan reviewer reads the web, and the owner's plans get a review that runs](2026-11-15-owner-plans-get-a-review-that-runs.md) |
 | 2026-11-15 | [How the API deploys](2026-11-15-how-the-api-deploys.md) (Proposed)                                           |
+| 2026-11-16 | [Hono for the API on Cloudflare Workers, with NestJS's structure by hand](2026-11-16-hono-on-workers.md) |
 
 ## Not decided yet
 
