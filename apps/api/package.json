@@ -2,18 +2,25 @@
   "name": "@paste-and-taste/api",
   "private": true,
   "type": "module",
+  "exports": {
+    "./app": "./src/app.ts"
+  },
   "scripts": {
     "build": "wrangler deploy --dry-run --outdir dist --env=\"\"",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "dev": "wrangler dev",
-    "smoke": "node scripts/smoke.ts"
+    "smoke": "node scripts/smoke.ts",
+    "openapi": "node scripts/openapi.ts",
+    "openapi:check": "node scripts/openapi.ts --check"
   },
   "dependencies": {
+    "@hono/zod-openapi": "catalog:",
     "hono": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@cfworker/json-schema": "catalog:",
     "@paste-and-taste/tsconfig": "workspace:*",
     "@types/node": "catalog:",
     "typescript": "catalog:",

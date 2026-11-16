@@ -4,6 +4,6 @@
 // variable. Don't move it into a request handler, where the same error would
 // become a 500 on every request.
 import { env } from "cloudflare:workers";
-import { createApp } from "./app";
+import { createApp } from "./app.ts";
 
 export default createApp(env);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checkApi } from "../src/smoke/check-api";
+import { checkApi } from "../src/smoke/check-api.ts";
 
 const BASE = "https://api.example.test";
 

@@ -1,0 +1,8 @@
+{
+  "extends": "@paste-and-taste/tsconfig/base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowImportingTsExtensions": true
+  },
+  "include": ["src", "test"]
+}

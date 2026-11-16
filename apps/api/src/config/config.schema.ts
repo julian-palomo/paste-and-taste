@@ -1,11 +1,14 @@
 import { z } from "zod";
 
+// Where the API runs. The health response reports it with this same schema.
+export const AppEnvironment = z.enum(["development", "preview", "production"]);
+
 // Every variable the API reads, each with its description. Code reads them
 // through AppConfig only, never from the raw environment.
 const configSchema = z.object({
-  APP_ENV: z
-    .enum(["development", "preview", "production"])
-    .describe("Where this API runs: development (local), preview or production."),
+  APP_ENV: AppEnvironment.describe(
+    "Where this API runs: development (local), preview or production.",
+  ),
 });
 
 export type AppConfig = z.infer<typeof configSchema>;

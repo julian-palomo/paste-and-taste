@@ -1,7 +1,7 @@
 import { HTTPException } from "hono/http-exception";
 import { afterEach, expect, it, vi } from "vitest";
-import { createApp } from "../src/app";
-import { AppError } from "../src/errors/app-error";
+import { createApp } from "../src/app.ts";
+import { AppError } from "../src/errors/app-error.ts";
 
 const INTERNAL_MESSAGE = "internal detail: db-node-7 refused the query";
 

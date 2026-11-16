@@ -9,7 +9,9 @@ The repo is a pnpm and Turborepo monorepo with its checks wired, locally and
 in CI; each app arrives with its own issue. The first is the API's skeleton in
 [`apps/api`](apps/api): Hono on Cloudflare Workers, with validated
 configuration, a health route and one error format, and no recipe endpoints
-yet. How it deploys is proposed in
+yet. It describes itself in an OpenAPI document, `apps/api/openapi.json`,
+from which [`packages/api-client`](packages/api-client) gets the typed client
+the web and mobile apps will use. How it deploys is proposed in
 [`docs/adr/`](docs/adr/2026-11-15-how-the-api-deploys.md) and not decided. It also holds the
 working agreement for the coding agents that build it: [`AGENTS.md`](AGENTS.md)
 has the rules and [`.claude/README.md`](.claude/README.md) explains the Claude
@@ -25,6 +27,7 @@ Each decision has its record, with the options that lost, in
 - A monorepo with a React Native app, a web app and an API.
 - Web: TanStack Start.
 - API: Hono on Cloudflare Workers, organised the way NestJS taught: one module per feature and one function that wires the dependencies. NestJS on Workers was deployed first and held, and was replaced for what it needed on Workers.
+- The API's contract: an OpenAPI document generated from the routes' zod schemas, and a typed client generated from that document.
 - Login: Better Auth.
 - Background work, such as importing a recipe: Cloudflare Workflows.
 - The interface is in Spanish and English from day one.
@@ -40,6 +43,7 @@ pnpm verify                       # everything CI runs
 pnpm check                        # Biome, then typecheck
 pnpm test                         # tests in every workspace
 pnpm knip                         # unused files, exports and dependencies
+pnpm contract:check               # the OpenAPI document and the client's types are up to date
 bash .claude/hooks/tests/run.sh   # tests for the Claude Code hooks
 pnpm -C apps/api dev              # the API on the local Workers runtime, localhost:8787
 pnpm -C apps/api smoke <address>  # checks a running API: /health and an unknown route

@@ -6,7 +6,8 @@
     "check": "biome check . && turbo run typecheck",
     "test": "turbo run test",
     "knip": "knip",
-    "verify": "pnpm check && pnpm knip && pnpm test && bash .claude/hooks/tests/run.sh",
+    "contract:check": "pnpm -C apps/api openapi:check && pnpm -C tools/openapi-typegen check",
+    "verify": "pnpm check && pnpm knip && pnpm contract:check && pnpm test && bash .claude/hooks/tests/run.sh",
     "prepare": "lefthook install"
   },
   "devDependencies": {

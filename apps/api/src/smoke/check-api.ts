@@ -1,7 +1,7 @@
 // Checks a running API from outside: /health and one unknown route must answer
 // as specified. scripts/smoke.ts runs this file with Node directly, which
-// strips the types: keep it free of relative imports and of TypeScript-only
-// syntax such as enums.
+// strips the types: like every file in apps/api, its relative imports carry
+// `.ts` and it uses only erasable syntax (erasableSyntaxOnly checks that).
 
 type Fetch = (url: string) => Promise<Response>;
 
