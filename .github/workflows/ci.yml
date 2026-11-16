@@ -45,6 +45,17 @@ jobs:
       - uses: ./.github/actions/setup
       - run: pnpm knip
 
+  # The committed OpenAPI document and the client's types generated from it
+  # match the code: a change to the API that the client can't follow fails here.
+  contract:
+    name: Contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+      - run: pnpm contract:check
+
   typecheck:
     name: Typecheck
     runs-on: ubuntu-latest
