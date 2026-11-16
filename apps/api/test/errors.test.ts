@@ -1,5 +1,5 @@
 import { HTTPException } from "hono/http-exception";
-import { expect, it } from "vitest";
+import { afterEach, expect, it, vi } from "vitest";
 import { createApp } from "../src/app";
 import { AppError } from "../src/errors/app-error";
 
@@ -37,7 +37,13 @@ it("answers an unknown route with a 404 problem", async () => {
   });
 });
 
-it("answers an unexpected error with a 500 problem that hides it", async () => {
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
+it("answers an unexpected error with a 500 problem that hides it, and logs it", async () => {
+  const log = vi.spyOn(console, "error").mockImplementation(() => {});
+
   const response = await app.request("/broken");
   const text = await response.text();
 
@@ -51,6 +57,7 @@ it("answers an unexpected error with a 500 problem that hides it", async () => {
   });
   expect(text).not.toContain(INTERNAL_MESSAGE);
   expect(text).not.toMatch(/\bat \S+:\d+/);
+  expect(log).toHaveBeenCalledWith(expect.objectContaining({ message: INTERNAL_MESSAGE }));
 });
 
 it("answers a named error with its own problem", async () => {
