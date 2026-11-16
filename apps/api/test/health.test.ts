@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { createApp } from "../src/app";
+import { createApp } from "../src/app.ts";
 
 it("answers /health with ok and the environment", async () => {
   const app = createApp({ APP_ENV: "development" });

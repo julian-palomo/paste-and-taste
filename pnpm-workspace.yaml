@@ -6,6 +6,8 @@ packages:
 # Every dependency version lives here; a package.json refers to it as "catalog:".
 catalog:
   "@biomejs/biome": 2.6.7
+  "@cfworker/json-schema": 4.1.6
+  "@hono/zod-openapi": 1.6.3
   "@types/node": 26.6.6
   hono: 4.13.18
   knip: 6.45.1

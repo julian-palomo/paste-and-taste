@@ -1,12 +1,31 @@
+import { z } from "@hono/zod-openapi";
 import type { Context } from "hono";
 import { HTTPException } from "hono/http-exception";
-import { AppError } from "./app-error";
+import { AppError } from "./app-error.ts";
 
 // The one place an error becomes a response: Problem Details, RFC 9457.
 // createApp installs these on the root app; a module never sets its own
 // onError or notFound, since Hono calls notFound only on the root app.
 
-type Problem = { type: string; title: string; status: number; detail: string };
+// Every error body, as the document describes it and clients read it.
+const ProblemDetails = z
+  .object({
+    type: z.string(),
+    title: z.string(),
+    status: z.number().int(),
+    detail: z.string(),
+  })
+  .openapi("ProblemDetails");
+
+type Problem = z.infer<typeof ProblemDetails>;
+
+// The `default` response every route declares beside its success responses.
+export const problemResponses = {
+  default: {
+    description: "An error, as Problem Details (RFC 9457).",
+    content: { "application/problem+json": { schema: ProblemDetails } },
+  },
+};
 
 // The 4xx and 5xx reason phrases of RFC 9110, section 15, plus 429 from
 // RFC 6585. Kept here, not taken from node:http: the Worker runs without
