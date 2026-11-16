@@ -19,6 +19,8 @@ kept, edited and cooked from. It runs as a native app and as a web app.
 - The import runs in the background. A recipe may show as loading and be
   ready later.
 - Each user has an import limit.
+- When a link can't be imported, the user can tell us, and we look at it.
+  The app also has a way to send feedback.
 
 ## Keeping and using recipes
 
@@ -42,6 +44,8 @@ kept, edited and cooked from. It runs as a native app and as a web app.
 
 ## Not decided
 
+- Whether a link that fails is sent to us on its own or only when the user
+  reports it.
 - Whether users share their tags with each other.
 - Whether "made" is only a tag or also keeps a dated log of each time.
 - What a rating means: a user's own recipes only, or other people's too.
