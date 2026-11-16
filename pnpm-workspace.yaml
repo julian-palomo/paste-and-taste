@@ -2,6 +2,7 @@ packages:
   - apps/*
   - packages/*
   - tools/*
+  - prototypes/*
 
 # Every dependency version lives here; a package.json refers to it as "catalog:".
 catalog:
