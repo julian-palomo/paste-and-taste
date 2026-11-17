@@ -40,9 +40,10 @@ export const SCOUT: Price = {
 
 /**
  * Tokens a frame is assumed to cost Llama 4 Scout, for the worst-case estimate
- * only: its documentation gives no rate, and the run counts the real figure.
+ * only. Its documentation gives no rate; a 768-pixel frame counts about 2,300,
+ * so this stays above that. The run counts the real figure.
  */
-export const SCOUT_FRAME_TOKENS_ASSUMED = 1600;
+export const SCOUT_FRAME_TOKENS_ASSUMED = 2600;
 
 export const WHISPER = {
   model: "@cf/openai/whisper-large-v3-turbo",
