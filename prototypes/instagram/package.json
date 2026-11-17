@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "combine": "node src/combine.ts",
     "marks": "node src/marks.ts",
     "measure": "node src/measure.ts",
     "recipe": "node src/recipe.ts",

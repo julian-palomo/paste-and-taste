@@ -3,8 +3,8 @@
 // the counts of good, fixable and wrong per candidate and per place. The owner
 // marks blind; only this command joins the letters to the candidates.
 
-import { readFile } from "node:fs/promises";
 import { isAbsolute, join } from "node:path";
+import { readCsv } from "./csv.ts";
 
 const MARKS = ["good", "fixable", "wrong"] as const;
 type Mark = (typeof MARKS)[number];
@@ -14,29 +14,19 @@ function fail(message: string): never {
   process.exit(1);
 }
 
-function rows(text: string): string[][] {
-  return text
-    .split("\n")
-    .slice(1)
-    .filter((line) => line.trim() !== "")
-    .map((line) => line.split(",").map((cell) => cell.trim()));
-}
-
 const [runDir, ...extra] = process.argv.slice(2);
 if (!runDir || !isAbsolute(runDir) || extra.length > 0) {
   fail("Usage: pnpm -C prototypes/instagram marks <absolute path to a run folder>");
 }
 
 const key = new Map<string, string>();
-for (const [post, letter, candidate] of rows(
-  await readFile(join(runDir, "marks-key.csv"), "utf8"),
-)) {
+for (const [post, letter, candidate] of await readCsv(join(runDir, "marks-key.csv"))) {
   key.set(`${post}.${letter}`, candidate ?? "?");
 }
 
 type Counted = { candidate: string; place: string; mark: Mark };
 const counted: Counted[] = [];
-for (const [index, row] of rows(await readFile(join(runDir, "marks.csv"), "utf8")).entries()) {
+for (const [index, row] of (await readCsv(join(runDir, "marks.csv"))).entries()) {
   const [post, place, letter, , , mark] = row;
   const sheetRow = index + 2;
   if (!MARKS.some((allowed) => allowed === mark)) {
