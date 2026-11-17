@@ -47,6 +47,13 @@ export async function durationSeconds(path: string): Promise<number> {
   return Number(stdout.trim());
 }
 
+/** The audio as 16 kHz mono WAV, the rate speech models expect. */
+export async function extractAudio(video: string, dir: string): Promise<string> {
+  const path = join(dir, "audio.wav");
+  await run("ffmpeg", ["-v", "error", "-i", video, "-vn", "-ac", "1", "-ar", "16000", path]);
+  return path;
+}
+
 /** Returns the frames' paths in order. */
 export async function extractFrames(video: string, dir: string): Promise<string[]> {
   const framesDir = join(dir, "frames");

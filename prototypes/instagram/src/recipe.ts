@@ -11,10 +11,19 @@ import { isAbsolute, join, relative, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import type { Candidate, CandidateId, PostInput } from "./candidates/candidate.ts";
 import { geminiCandidate } from "./candidates/gemini.ts";
+import { type Transcript, transcribe, transcribeEstimateUsd } from "./candidates/speech.ts";
+import { workersAiCandidate } from "./candidates/workers-ai.ts";
 import { Ledger } from "./ledger.ts";
 import { parsePostLink } from "./links.ts";
-import { download, durationSeconds, extractFrames, withTempDir } from "./media-files.ts";
+import {
+  download,
+  durationSeconds,
+  extractAudio,
+  extractFrames,
+  withTempDir,
+} from "./media-files.ts";
 import { readPost } from "./post.ts";
+import { WHISPER } from "./prices.ts";
 import {
   formatLine,
   formatTables,
@@ -32,7 +41,7 @@ const PAUSE_MS = 5000;
 
 const CANDIDATES: Record<CandidateId, Candidate | undefined> = {
   A: geminiCandidate,
-  B: undefined,
+  B: workersAiCandidate,
   C: undefined,
 };
 
@@ -78,6 +87,7 @@ try {
 }
 
 const ledger = await Ledger.open(join(values.out, "ledger.json"), budget);
+const spentBefore = ledger.totalUsd;
 const runDir = join(values.out, `run-${new Date().toISOString().replace(/[:.]/g, "-")}`);
 await mkdir(join(runDir, "recipes"), { recursive: true });
 
@@ -145,9 +155,33 @@ for (const post of posts) {
     }
 
     let extractMs = 0;
-    if (input.video && chosen.some((candidate) => candidate.needsExtract)) {
+    let transcript: Transcript | null = null;
+    if (input.video && input.videoSeconds !== null && chosen.some((c) => c.needsExtract)) {
       const videoPath = input.video;
-      [input.frames, extractMs] = await timed(() => extractFrames(videoPath, dir));
+      const [[frames, audio], ms] = await timed(() =>
+        Promise.all([extractFrames(videoPath, dir), extractAudio(videoPath, dir)]),
+      );
+      input.frames = frames;
+      extractMs = ms;
+
+      const estimate = transcribeEstimateUsd(input.videoSeconds);
+      if (!ledger.allows(estimate)) {
+        console.log(
+          `Budget: stopping before ${label}'s transcript, whose worst case is ${estimate.toFixed(4)} USD`,
+        );
+        stopped = true;
+        return;
+      }
+      transcript = await transcribe(audio);
+      if (transcript.costUsd > 0) {
+        await ledger.add({
+          post: post.number,
+          step: "transcribe",
+          model: WHISPER.model,
+          costUsd: transcript.costUsd,
+        });
+      }
+      input.transcript = transcript.error ? null : transcript.text;
     }
 
     const letters = shuffledLetters(chosen.length);
@@ -177,7 +211,9 @@ for (const post of posts) {
 
       const steps: Row["steps"] = [{ step: "read" as Step, ms: readMs }];
       if (input.video || input.images.length > 0) steps.push({ step: "download", ms: downloadMs });
+      const speech = candidate.needsExtract ? transcript : null;
       if (candidate.needsExtract && input.video) steps.push({ step: "extract", ms: extractMs });
+      if (speech) steps.push({ step: "transcribe", ms: speech.ms });
       steps.push({ step: "write", ms: written.ms });
 
       const row: Row = {
@@ -189,9 +225,10 @@ for (const post of posts) {
         steps,
         inputTokens: written.inputTokens,
         outputTokens: written.outputTokens,
-        audioSeconds: null,
-        costUsd: written.costUsd,
-        error: written.error,
+        audioSeconds: speech?.seconds ?? null,
+        // A candidate's cost is its whole chain: the shared transcript counts for each one.
+        costUsd: written.costUsd + (speech?.costUsd ?? 0),
+        error: written.error ?? (speech?.error ? `transcribe ${speech.error}` : null),
         recipeFile,
       };
       rows.push(row);
@@ -204,9 +241,7 @@ await writeFile(join(runDir, "marks.csv"), marksCsv(rows));
 await writeFile(join(runDir, "marks-key.csv"), keyCsv(rows));
 
 if (rows.length > 0) console.log(`\n${formatTables(rows)}`);
-console.log(
-  `\nSpent in this run: ${rows.reduce((sum, row) => sum + row.costUsd, 0).toFixed(4)} USD`,
-);
+console.log(`\nSpent in this run (ledger): ${(ledger.totalUsd - spentBefore).toFixed(4)} USD`);
 console.log(
   `Spent in the whole issue (ledger): ${ledger.totalUsd.toFixed(4)} USD of ${budget} USD`,
 );

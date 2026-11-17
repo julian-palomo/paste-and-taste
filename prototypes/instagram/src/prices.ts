@@ -30,6 +30,27 @@ export const GEMINI_VIDEO_TOKENS_PER_S = 100;
 /** Tokens an image costs Gemini at standard resolution. */
 export const GEMINI_IMAGE_TOKENS = 258;
 
+export const SCOUT: Price = {
+  model: "@cf/meta/llama-4-scout-17b-16e-instruct",
+  inputPerM: 0.27,
+  outputPerM: 0.85,
+  source: "https://developers.cloudflare.com/workers-ai/models/llama-4-scout-17b-16e-instruct/",
+  read: "2026-11-17",
+};
+
+/**
+ * Tokens a frame is assumed to cost Llama 4 Scout, for the worst-case estimate
+ * only: its documentation gives no rate, and the run counts the real figure.
+ */
+export const SCOUT_FRAME_TOKENS_ASSUMED = 1600;
+
+export const WHISPER = {
+  model: "@cf/openai/whisper-large-v3-turbo",
+  perAudioMinute: 0.000513,
+  source: "https://developers.cloudflare.com/workers-ai/models/whisper-large-v3-turbo/",
+  read: "2026-11-17",
+};
+
 export function costUsd(price: Price, inputTokens: number, outputTokens: number): number {
   return (inputTokens * price.inputPerM + outputTokens * price.outputPerM) / 1e6;
 }
