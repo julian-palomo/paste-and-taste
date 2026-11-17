@@ -9,6 +9,7 @@
     "worker:bundle": "wrangler deploy --dry-run"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "catalog:",
     "@google/genai": "catalog:",
     "zod": "catalog:"
   },

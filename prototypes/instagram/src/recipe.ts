@@ -10,6 +10,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { isAbsolute, join, relative, resolve } from "node:path";
 import { parseArgs } from "node:util";
 import type { Candidate, CandidateId, PostInput } from "./candidates/candidate.ts";
+import { claudeCandidate } from "./candidates/claude.ts";
 import { geminiCandidate } from "./candidates/gemini.ts";
 import { type Transcript, transcribe, transcribeEstimateUsd } from "./candidates/speech.ts";
 import { workersAiCandidate } from "./candidates/workers-ai.ts";
@@ -39,10 +40,10 @@ import type { Post } from "./types.ts";
 /** Between any two requests to Instagram, the page and the media alike. */
 const PAUSE_MS = 5000;
 
-const CANDIDATES: Record<CandidateId, Candidate | undefined> = {
+const CANDIDATES: Record<CandidateId, Candidate> = {
   A: geminiCandidate,
   B: workersAiCandidate,
-  C: undefined,
+  C: claudeCandidate,
 };
 
 const USAGE =

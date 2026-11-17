@@ -51,6 +51,24 @@ export const WHISPER = {
   read: "2026-11-17",
 };
 
+export const CLAUDE: Price = {
+  model: "claude-haiku-5-5",
+  // For prompts up to 100,000 input tokens, which every post here stays under.
+  inputPerM: 0.1,
+  outputPerM: 0.5,
+  source: "https://platform.claude.com/docs/en/about-claude/pricing",
+  read: "2026-11-16",
+};
+
+/**
+ * Tokens Claude counts for an image, ceil(width / 28) * ceil(height / 28), from
+ * https://platform.claude.com/docs/en/build-with-claude/vision; a vertical frame
+ * 768 pixels wide is about 768 x 1365, so 28 * 49 = 1,372 tokens.
+ */
+export function claudeImageTokens(width: number, height: number): number {
+  return Math.ceil(width / 28) * Math.ceil(height / 28);
+}
+
 export function costUsd(price: Price, inputTokens: number, outputTokens: number): number {
   return (inputTokens * price.inputPerM + outputTokens * price.outputPerM) / 1e6;
 }
