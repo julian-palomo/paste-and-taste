@@ -41,15 +41,17 @@ from the **Edit Cloudflare Workers** template. Its permissions are listed in
 [Cloudflare's templates page](https://developers.cloudflare.com/fundamentals/api/reference/template/).
 Then trim it to what this deploy uses:
 
-- **Remove** Workers Routes (zone), Workers KV Storage and Workers R2
-  Storage. `apps/api/wrangler.jsonc` has no route, no KV namespace and no R2
-  bucket. Left in, they would let the token write the storage of everything
-  in the account and the routes of every domain in it. A row comes back in the
-  pull request that gives the Worker that binding or a custom domain.
+- **Remove** Workers Routes (zone), Workers KV Storage, Workers R2 Storage
+  and Workers Tail Read. `apps/api/wrangler.jsonc` has no route, no KV
+  namespace and no R2 bucket, and the pipeline never reads a Worker's live
+  logs. Left in, they would let the token write the storage of everything in
+  the account, the routes of every domain in it, and read every Worker's
+  logs. A row comes back in the pull request that needs it, such as a binding
+  or a custom domain.
 - **Keep** the rest: Workers Scripts Write, which is what deploys, and the
-  read rows wrangler uses to find the account. Workers Scripts Write can't
-  be narrowed to one Worker, so the token can still change every Worker in
-  the account.
+  account and user read rows wrangler uses to find the account. Workers
+  Scripts Write can't be narrowed to one Worker, so the token can still
+  change every Worker in the account.
 - Under account resources, include only this account.
 
 If `wrangler deploy` then fails on a permission, its error names the one it
