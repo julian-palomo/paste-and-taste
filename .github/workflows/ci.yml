@@ -3,14 +3,18 @@ name: CI
 on:
   pull_request:
     branches: [main]
+  # deploy.yml runs these same jobs before it deploys.
+  workflow_call:
 
 permissions:
   contents: read
 
-# A new push cancels the run in progress: that run would check a stale commit.
+# On a pull request, a new push cancels the run in progress: that run would
+# check a stale commit. Called from deploy.yml, event_name is the caller's
+# `push`, so nothing is cancelled: deploy.yml's own concurrency orders its runs.
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 # Third-party actions are pinned to full commit SHAs. Each check is its own job.
 # Branch protection on main requires checks by job name: renaming a required

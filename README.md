@@ -11,9 +11,10 @@ in CI; each app arrives with its own issue. The first is the API's skeleton in
 configuration, a health route and one error format, and no recipe endpoints
 yet. It describes itself in an OpenAPI document, `apps/api/openapi.json`,
 from which [`packages/api-client`](packages/api-client) gets the typed client
-the web and mobile apps will use. It will deploy from GitHub Actions
-([the record](docs/adr/2026-11-15-how-the-api-deploys.md)); that pipeline is
-not built yet, so for now the owner deploys it by hand. It also holds the
+the web and mobile apps will use. A merge to `main` deploys it from GitHub
+Actions, to preview and then production, each with a smoke test, once every
+check has passed ([the record](docs/adr/2026-11-15-how-the-api-deploys.md),
+[the owner's page](docs/deploying-the-api.md)). It also holds the
 working agreement for the coding agents that build it: [`AGENTS.md`](AGENTS.md)
 has the rules and [`.claude/README.md`](.claude/README.md) explains the Claude
 Code setup.
