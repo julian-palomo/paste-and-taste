@@ -6,6 +6,7 @@
 // ledger, --out/ledger.json, counts every paid call of every run. The media
 // live in a temporary folder that is removed after each post.
 
+import { appendFileSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { isAbsolute, join, relative, resolve } from "node:path";
 import { parseArgs } from "node:util";
@@ -92,6 +93,12 @@ const spentBefore = ledger.totalUsd;
 const runDir = join(values.out, `run-${new Date().toISOString().replace(/[:.]/g, "-")}`);
 await mkdir(join(runDir, "recipes"), { recursive: true });
 
+/** Prints a line and appends it to the run's output.txt, which holds no content from a post. */
+function print(line: string): void {
+  console.log(line);
+  appendFileSync(join(runDir, "output.txt"), `${line}\n`);
+}
+
 let first = true;
 async function pause(): Promise<void> {
   if (!first) await new Promise((resolve) => setTimeout(resolve, PAUSE_MS));
@@ -104,13 +111,13 @@ async function timed<T>(work: () => Promise<T>): Promise<[T, number]> {
   return [result, Date.now() - started];
 }
 
-console.log(`Date: ${new Date().toISOString()}`);
-console.log("Place: this machine");
-console.log(`Sample: ${posts.length} posts`);
+print(`Date: ${new Date().toISOString()}`);
+print("Place: this machine");
+print(`Sample: ${posts.length} posts`);
 for (const candidate of chosen) {
-  console.log(`Candidate ${candidate.id}: ${candidate.label} (${candidate.model})`);
+  print(`Candidate ${candidate.id}: ${candidate.label} (${candidate.model})`);
 }
-console.log(`Budget: ${budget} USD, ${ledger.totalUsd.toFixed(4)} USD already spent\n`);
+print(`Budget: ${budget} USD, ${ledger.totalUsd.toFixed(4)} USD already spent\n`);
 
 const rows: Row[] = [];
 let stopped = false;
@@ -124,7 +131,7 @@ for (const post of posts) {
   await pause();
   const [read, readMs] = await timed(() => readPost(link));
   if (!read.ok) {
-    console.log(`${label}  not read: ${read.outcome}`);
+    print(`${label}  not read: ${read.outcome}`);
     continue;
   }
   const { content } = read;
@@ -167,7 +174,7 @@ for (const post of posts) {
 
       const estimate = transcribeEstimateUsd(input.videoSeconds);
       if (!ledger.allows(estimate)) {
-        console.log(
+        print(
           `Budget: stopping before ${label}'s transcript, whose worst case is ${estimate.toFixed(4)} USD`,
         );
         stopped = true;
@@ -189,7 +196,7 @@ for (const post of posts) {
     for (const [index, candidate] of chosen.entries()) {
       const estimate = candidate.estimateUsd(input);
       if (!ledger.allows(estimate)) {
-        console.log(
+        print(
           `Budget: stopping before ${label} ${candidate.id}, whose worst case is ${estimate.toFixed(4)} USD`,
         );
         stopped = true;
@@ -233,7 +240,7 @@ for (const post of posts) {
         recipeFile,
       };
       rows.push(row);
-      console.log(formatLine(row));
+      print(formatLine(row));
     }
   });
 }
@@ -241,9 +248,7 @@ for (const post of posts) {
 await writeFile(join(runDir, "marks.csv"), marksCsv(rows));
 await writeFile(join(runDir, "marks-key.csv"), keyCsv(rows));
 
-if (rows.length > 0) console.log(`\n${formatTables(rows)}`);
-console.log(`\nSpent in this run (ledger): ${(ledger.totalUsd - spentBefore).toFixed(4)} USD`);
-console.log(
-  `Spent in the whole issue (ledger): ${ledger.totalUsd.toFixed(4)} USD of ${budget} USD`,
-);
-console.log(`Answers and the marks sheet: ${runDir}`);
+if (rows.length > 0) print(`\n${formatTables(rows)}`);
+print(`\nSpent in this run (ledger): ${(ledger.totalUsd - spentBefore).toFixed(4)} USD`);
+print(`Spent in the whole issue (ledger): ${ledger.totalUsd.toFixed(4)} USD of ${budget} USD`);
+print(`Answers and the marks sheet: ${runDir}`);
