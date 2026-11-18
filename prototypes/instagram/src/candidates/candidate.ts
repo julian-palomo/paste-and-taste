@@ -37,8 +37,16 @@ export type Candidate = {
   write(input: PostInput): Promise<Written>;
 };
 
+/** The error's name, its status, and the code of its cause, such as a socket error under fetch's TypeError. */
 export function errorLabel(error: unknown): string {
   if (!(error instanceof Error)) return "error";
   const status = (error as { status?: unknown }).status;
-  return typeof status === "number" ? `${error.name} ${status}` : error.name;
+  const cause = (error as { cause?: { code?: unknown } }).cause;
+  return [
+    error.name,
+    typeof status === "number" ? String(status) : "",
+    typeof cause?.code === "string" ? `(${cause.code})` : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 }
