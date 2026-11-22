@@ -11,7 +11,7 @@ needs, and a phase gets its issues when it is next.
 
 | #   | Phase                         | State       | Issues                                                                 |
 | --- | ----------------------------- | ----------- | ---------------------------------------------------------------------- |
-| 1   | The API's base                | In progress | [#35](https://github.com/julian-palomo/paste-and-taste/issues/35)      |
+| 1   | The API's base                | Done        | [#35](https://github.com/julian-palomo/paste-and-taste/issues/35)      |
 | 2   | The Instagram prototype       | In progress | [#22](https://github.com/julian-palomo/paste-and-taste/issues/22)      |
 | 3   | Database and login            | Not started |                                                                        |
 | 4   | The first recipe, end to end  | Not started |                                                                        |
@@ -25,7 +25,7 @@ needs, and a phase gets its issues when it is next.
    the typed client that the web app and the native app will call. The
    deploy pipeline, #35, deploys a merge to `main` from GitHub Actions: the
    checks, then preview, then production, each deploy smoke-tested. The phase
-   is done when its first run on `main` is green.
+   is done: the pipeline's first deploy went green on 22 November 2026.
 2. **The Instagram prototype.** Reading a post with one tap, its video and its
    carousel images included, is the requirement that matters most and the one
    least sure to be possible. The prototype is throwaway code, outside the
