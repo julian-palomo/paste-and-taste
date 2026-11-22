@@ -23,6 +23,8 @@ kept, edited and cooked from. It runs as a native app and as a web app.
   The app also has a way to send feedback.
 - A video downloaded to read a post is deleted once the recipe has been made
   from it. The app keeps the recipe, not the video.
+- A post can be a cooking tip instead of a recipe. The app saves it too, and
+  a tag marks it as a tip.
 
 ## Keeping and using recipes
 
@@ -32,7 +34,9 @@ kept, edited and cooked from. It runs as a native app and as a web app.
 - A user can always edit a recipe.
 - A note edits the recipe: the change is shown first and the previous version
   is kept.
-- A user can add their own photos of the cooked dish to any saved recipe.
+- A recipe has pictures: the ones that come with the post or the page it was
+  imported from, and the photos a user adds, such as their own of the cooked
+  dish.
 - The app reads a recipe aloud, to cook by listening: step by step, with large
   type and the screen kept on. Voice control comes later.
 - Users, comments and sending recipes between users are part of the minimum,
@@ -48,7 +52,9 @@ kept, edited and cooked from. It runs as a native app and as a web app.
 
 - Whether a link that fails is sent to us on its own or only when the user
   reports it.
-- Whether a picture from the post is kept with the recipe.
+- How a tip is kept apart from a recipe, beyond its tag.
+- What a post that holds several recipes becomes. One of the owner's sample
+  posts has three.
 - Whether users share their tags with each other.
 - Whether "made" is only a tag or also keeps a dated log of each time.
 - What a rating means: a user's own recipes only, or other people's too.
