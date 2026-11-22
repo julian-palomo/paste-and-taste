@@ -22,9 +22,10 @@ needs, and a phase gets its issues when it is next.
 ## The phases
 
 1. **The API's base.** The API's skeleton is in place, with its contract and
-   the typed client that the web app and the native app will call. What is
-   left is the deploy pipeline: the owner chose a GitHub Actions job, and
-   #35 builds it.
+   the typed client that the web app and the native app will call. The
+   deploy pipeline, #35, deploys a merge to `main` from GitHub Actions: the
+   checks, then preview, then production, each deploy smoke-tested. The phase
+   is done when its first run on `main` is green.
 2. **The Instagram prototype.** Reading a post with one tap, its video and its
    carousel images included, is the requirement that matters most and the one
    least sure to be possible. The prototype is throwaway code, outside the

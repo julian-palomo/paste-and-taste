@@ -114,3 +114,13 @@ What choosing B costs, beyond the token:
 The owner accepted B on 16 November 2026. Option A is the alternative that
 lost, for the open points above. The pipeline is built in
 [#35](https://github.com/julian-palomo/paste-and-taste/issues/35).
+
+## Consequences seen while building it
+
+Added by [#35](https://github.com/julian-palomo/paste-and-taste/issues/35), which asked for them:
+
+- The workflow's trigger doesn't keep the token from a pull request, since a
+  branch can edit a workflow to name an environment. Each GitHub
+  environment's branch rule, `main` only, does.
+- A workflow that names an environment GitHub doesn't have creates it without
+  that rule, so the environments are created before the workflow first runs.

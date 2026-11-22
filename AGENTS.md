@@ -20,7 +20,7 @@ into `CLAUDE.md`.
 - Never push to `main`. Branches are `feat/…`, `fix/…`, `chore/…` or `docs/…`.
 - Commits use the repo owner's git identity. No `Co-Authored-By`, no "Generated with", no Claude or AI attribution in commits or PR bodies.
 - Stage files by name. No `git add -A`, no stash, no amend, no rebase, no force-push, no `reset --hard`.
-- Nothing changes Cloudflare or any other account without the repo owner: agents never deploy, provision or set a secret.
+- Nothing changes Cloudflare or any other account without the repo owner: agents never deploy, provision or set a secret. What the owner merges to `main` is deployed by `.github/workflows/deploy.yml`, with secrets only the owner sets (`docs/deploying-the-api.md`); that pipeline is the only way the API reaches Cloudflare.
 - Everything in the repo is in English.
 
 `.claude/hooks/guard-bash.sh` enforces the git lines and
@@ -74,7 +74,8 @@ and asks first too. `wrangler` asks first too, and
 agents never run a wrangler command that changes Cloudflare. One exception
 runs without asking: `build` in `apps/api` is `wrangler deploy --dry-run`, so
 `pnpm test` and `pnpm verify` run wrangler's dry-run, which bundles the Worker
-and writes nothing to Cloudflare.
+and writes nothing to Cloudflare. The real deploy runs only in
+`.github/workflows/deploy.yml`, after a merge to `main`.
 
 ## 4. Where things live
 
@@ -85,7 +86,8 @@ and writes nothing to Cloudflare.
 - `tools/openapi-typegen`: runs `openapi-typescript`, with its own TypeScript 5.9.3 from the catalog `typegen`, to write the client's types. Nothing else uses that TypeScript.
 - `tools/tsconfig`: the strict TypeScript base config, `@paste-and-taste/tsconfig/base.json`, that every workspace extends.
 - `prototypes/instagram`: `@paste-and-taste/instagram-prototype`, throwaway code for the Instagram spike: a script that measures each way of reading a public post with no login, and a scratch Worker that runs it from Cloudflare's network. Nothing imports it, and it is deleted when the real import replaces it; its `README.md` says how to run it.
-- `.github/workflows/ci.yml`: CI on every pull request to `main`, one job per check: `Hook tests`, `Biome`, `knip`, `Contract`, `Typecheck` and `Tests`.
+- `.github/workflows/ci.yml`: CI on every pull request to `main`, one job per check: `Hook tests`, `Biome`, `knip`, `Contract`, `Typecheck` and `Tests`. `deploy.yml` calls it as a reusable workflow.
+- `.github/workflows/deploy.yml`: on a push to `main`, the same checks, then the API deployed to `preview` and smoke-tested, then to `production` and smoke-tested. One run at a time; the token comes from the GitHub environments `preview` and `production`, which only `main` may use.
 - `.github/actions/setup`: the setup the CI jobs share: pnpm, Node from `.node-version`, and an install from the lockfile.
 - `.github/ISSUE_TEMPLATE/task.md`: the sections every issue has, and who reviews its plan.
 
@@ -98,6 +100,7 @@ A workspace gets a line here in the PR that creates it.
 - `.claude/rules/*.md`: per-area rules. Each starts with a `paths:` list; before editing a file, read every rule whose paths match it.
 - `.claude/skills/*/SKILL.md`: step-by-step procedures (implementing an issue, handoff, opening a PR).
 - `docs/product.md`: what the app must do, as the owner has stated it. A new requirement goes here and in its issue.
+- `docs/deploying-the-api.md`: the owner's page for the deploy pipeline: setting up the token and the GitHub environments, reading a run, and what to do when the smoke fails.
 - `docs/roadmap.md`: the order of the work, in phases, with each phase's state and issues. A plan, not a record: edit it when the order or a phase's state changes.
 - `docs/adr/README.md`: the index of decisions, one file each, and what isn't decided yet. Records are history; a change of mind is a new ADR.
 - `docs/research/*.md`: what a spike measured, each figure with its sample size, date and place. A report stays after its throwaway code is deleted.
