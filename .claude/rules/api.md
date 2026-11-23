@@ -29,6 +29,14 @@ document (`openapi.json`) and the client's types: after changing a route, run
 `pnpm -C apps/api openapi` and `pnpm -C tools/openapi-typegen generate`, and
 commit both outputs. `pnpm contract:check` fails until you do.
 
+**The contract test owes each route a request.** `test/contract.test.ts` calls
+every operation in `openapi.json` and accepts only a 2xx that the operation
+documents by its number: `default` never stands in for the success response.
+A new route adds an entry to `successfulRequests` there, keyed
+`"<method> <path>"` as the document writes them, with a request that makes it
+succeed: the path with its parameters filled in, and the body and headers it
+needs. Until it does, the contract test fails and names the route.
+
 **A handler only translates HTTP.** It reads the request, calls the module's
 code and shapes the response. Rules about the domain don't live in a handler.
 
