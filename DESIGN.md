@@ -114,8 +114,8 @@ darker tone on one side and one small highlight. The reference drawings are in
 [`docs/design/`](docs/design):
 
 - `food/`: tomato, pea pod, carrot, red onion, lemon, aubergine, bean, garlic,
-  mushroom, avocado, strawberry, broccoli, bread, cheese, pitted olives, and
-  an olive sprig drawn twice, with black olives and with green ones.
+  mushroom, avocado, strawberry, broccoli, bread, cheese, pitted olives and a
+  sprig of green olives.
 - `utensils/`: wooden spoon, pot, apron, salt shaker, oil cruet, mortar, pan
   with an egg, oven mitt.
 - `states/`: the rating in spoons and the broken egg.
@@ -124,10 +124,9 @@ darker tone on one side and one small highlight. The reference drawings are in
 The owner judged most of them one by one. Liked: the mortar, the pan, the oven
 mitt and the apron. Accepted after a redraw: the cheese and the broken egg.
 The red onion has no leaf, at his word.
-Asked for by him: bread, olives, cheese. He wants a couple of olive drawings,
-redrawn from reference images he sent: the pitted olives and the sprig are
-fine by him. **Open:** whether the sprig carries black olives or green ones.
-The black ones nearly vanish on the dark page.
+Asked for by him: bread, olives, cheese. The two olive drawings were redrawn
+from reference images he sent, and he chose them: pitted green olives, and a
+sprig of green olives with leaves and olives on both sides of the branch.
 
 **Decided, about where they go:**
 
@@ -237,6 +236,7 @@ They live on the owner's private design canvas, not in this repo.
 - For a failure: a salt shaker and burnt toast.
 - An artichoke, a brown onion, chickpeas beside the bean, and a spoon among
   the landing page's vegetables.
-- Olives in a bowl, a pair of green olives on a twig, and a sprig with
-  stuffed olives or with green and black ones together.
+- Olives in a bowl, a pair of green olives on a twig, a sprig of black olives
+  (they nearly vanish on the dark page), and a sprig with stuffed olives or
+  with green and black ones together.
 - A rating in spoons with red sauce.
