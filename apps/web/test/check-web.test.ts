@@ -81,6 +81,17 @@ describe("checkWeb", () => {
     expect(failures).toEqual([expect.stringMatching(/^\/ answered 200/)]);
   });
 
+  // A permanent redirect would be cached by browsers, so a visitor who
+  // changes their language would keep landing on the old one.
+  it("reports / redirecting with another status than 302", async () => {
+    const pages = {
+      ...rightPages("preview"),
+      root: () => new Response(null, { status: 301, headers: { Location: "/en", ...noindex } }),
+    };
+    const failures = await checkWeb(BASE, fakeFetch(pages), "preview");
+    expect(failures).toEqual([expect.stringMatching(/^\/ answered 301 to \/en; expected 302/)]);
+  });
+
   it("reports a page that search engines may index on preview", async () => {
     const failures = await checkWeb(BASE, fakeFetch(rightPages("preview", {})), "preview");
     expect(failures).toEqual([
