@@ -42,6 +42,7 @@ describe("the colour tokens", () => {
     ["text", "surface-raised"],
     ["text-muted", "surface-raised"],
     ["on-accent", "accent"],
+    ["on-accent", "text"],
   ])("%s on %s reaches 4.5:1", (foreground, background) => {
     expect(contrast(foreground, background)).toBeGreaterThanOrEqual(4.5);
   });

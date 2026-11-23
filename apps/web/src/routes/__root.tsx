@@ -1,6 +1,7 @@
 import { createRootRoute, HeadContent, Outlet, Scripts, useLocation } from "@tanstack/react-router";
 import { languageOfPath } from "../layout/language-path.ts";
 import { Layout } from "../layout/layout.tsx";
+import { NotFoundPage } from "../layout/not-found-page.tsx";
 import appCss from "../styles/app.css?url";
 
 export const Route = createRootRoute({
@@ -12,6 +13,9 @@ export const Route = createRootRoute({
     links: [{ rel: "stylesheet", href: appCss }],
   }),
   component: RootDocument,
+  // Any address no route matches, and any notFound() a route throws, lands
+  // here: the root still renders the layout and its <Outlet> shows this, 404.
+  notFoundComponent: NotFoundPage,
 });
 
 // The language comes from the address, not the matched route's params, so a
