@@ -109,8 +109,9 @@ surfaces.
 and **no faces**. Food is vegetables, fruit, legumes, bread, olives and
 cheese; the utensils were the owner's idea for the friendly element.
 
-Each drawing is one SVG on a 120 by 120 box, built from a base colour, one
-darker tone on one side and one small highlight. The reference drawings are in
+Each drawing is one SVG with a `<title>` that names it, on a 120 by 120 box
+(the rating is wider), built from a base colour, one darker tone on one side
+and one small highlight. The reference drawings are in
 [`docs/design/`](docs/design):
 
 - `food/`: tomato, pea pod, carrot, red onion, lemon, aubergine, bean, garlic,
