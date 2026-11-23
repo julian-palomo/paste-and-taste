@@ -1,7 +1,7 @@
 /*
  * The one file that holds every colour, font, radius, duration and easing the
  * web app uses, each named by its role. Components write Tailwind utilities
- * from these names (bg-surface, text-muted, duration-quick), never a raw
+ * from these names (bg-surface, text-text-muted, duration-quick), never a raw
  * value, so the look changes here without touching a component. The values
  * are neutral placeholders until the owner picks the app's look.
  *
