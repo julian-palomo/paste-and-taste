@@ -49,4 +49,24 @@ describe("checkApi", () => {
     const failures = await checkApi(BASE, fakeFetch(healthy, healthy));
     expect(failures).toEqual([expect.stringContaining("unknown route")]);
   });
+
+  it.each(["development", "preview", "production"])(
+    "accepts /health answering %s when no environment is expected",
+    async (environment) => {
+      const health = () => json(200, { status: "ok", environment });
+      expect(await checkApi(BASE, fakeFetch(health, notFoundProblem))).toEqual([]);
+    },
+  );
+
+  it("finds nothing wrong when /health answers the expected environment", async () => {
+    expect(await checkApi(BASE, fakeFetch(healthy, notFoundProblem), "preview")).toEqual([]);
+  });
+
+  it("reports /health answering another environment than the expected one", async () => {
+    const production = () => json(200, { status: "ok", environment: "production" });
+    const failures = await checkApi(BASE, fakeFetch(production, notFoundProblem), "preview");
+    expect(failures).toHaveLength(1);
+    expect(failures[0]).toContain('"production"');
+    expect(failures[0]).toContain('"preview"');
+  });
 });
