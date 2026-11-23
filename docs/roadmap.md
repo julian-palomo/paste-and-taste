@@ -39,7 +39,8 @@ needs, and a phase gets its issues when it is next.
    here for the first time. The web app's skeleton came first, #46, while
    phase 3 is in progress, because it needs neither the database nor login:
    one page rendered on the server, in both languages, that shows the API's
-   health through the typed client.
+   health through the typed client. Since #48 the pipeline deploys it after
+   the API, to preview and production.
 5. **The real import.** Workflows in the background and the limit per user.
    Web pages first, the cheapest source to read, then Instagram, then YouTube.
 6. **The native app.** Android first, with sharing a post to the app. iPhone

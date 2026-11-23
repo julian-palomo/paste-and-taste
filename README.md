@@ -17,7 +17,11 @@ check has passed ([the record](docs/adr/2026-11-15-how-the-api-deploys.md),
 [the owner's page](docs/deploying-the-api.md)). The web app's skeleton is in
 [`apps/web`](apps/web): TanStack Start on Cloudflare Workers, with one page
 rendered on the server, at `/en` and `/es`, that shows the API's health
-through that client; it isn't deployed yet. The repo also holds the
+through that client. The same pipeline deploys it after the API, to a
+preview and a production Worker, each checked after its deploy; its server
+reaches that environment's API through a Service binding
+([the record](docs/adr/2026-11-23-how-the-web-app-deploys.md)). Neither is
+indexed by search engines while the app is on `workers.dev`. The repo also holds the
 working agreement for the coding agents that build it: [`AGENTS.md`](AGENTS.md)
 has the rules and [`.claude/README.md`](.claude/README.md) explains the Claude
 Code setup.
@@ -61,6 +65,7 @@ pnpm contract:check               # the OpenAPI document and the client's types 
 bash .claude/hooks/tests/run.sh   # tests for the Claude Code hooks
 pnpm -C apps/api dev              # the API on the local Workers runtime, localhost:8787
 pnpm -C apps/web dev              # the web app, localhost:5173, calling the API above
+pnpm -C apps/web smoke <address> <environment>  # checks a running web app: /en, /es and the redirect of /
 pnpm -C apps/api smoke <address> [environment]  # checks a running API: /health, with the environment it names, and an unknown route
 ```
 

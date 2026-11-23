@@ -43,6 +43,7 @@ is here, written down at the time instead of remembered afterwards.
 | 2026-11-16 | [How an Instagram post is read](2026-11-16-how-an-instagram-post-is-read.md) (Proposed)                     |
 | 2026-11-23 | [ApiUnreachableError when no usable answer comes back from the API](2026-11-23-api-unreachable-error.md) |
 | 2026-11-23 | [The web app's addresses per language, and no i18n library yet](2026-11-23-web-addresses-per-language.md) |
+| 2026-11-23 | [How the web app deploys, and how its server reaches the API](2026-11-23-how-the-web-app-deploys.md) |
 
 ## Not decided yet
 

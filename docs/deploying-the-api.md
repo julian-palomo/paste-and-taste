@@ -1,21 +1,30 @@
-# Deploying the API
+# Deploying the API and the web app
 
-A merge to `main` deploys `apps/api` from GitHub Actions
+A merge to `main` deploys `apps/api` and `apps/web` from GitHub Actions
 ([`.github/workflows/deploy.yml`](../.github/workflows/deploy.yml)). This page
 is the owner's: how to set it up, how to read a run, and what to do when it
-goes red. Why it works this way is in
-[the record](adr/2026-11-15-how-the-api-deploys.md).
+goes red. Why it works this way is in the records for
+[the API](adr/2026-11-15-how-the-api-deploys.md) and
+[the web app](adr/2026-11-23-how-the-web-app-deploys.md).
 
 Each run is a chain of gates. Each job starts only when the one before it is
 green:
 
 1. **Checks**: the six jobs CI runs on a pull request (`ci.yml`, called as a
    reusable workflow).
-2. **Deploy to preview**: `wrangler deploy --env preview`, then the smoke
-   script against the preview Worker, which must also answer that it is
+2. **Deploy to preview**: the API. `wrangler deploy --env preview`, then the
+   smoke script against the preview Worker, which must also answer that it is
    `preview`.
-3. **Deploy to production**: the same, with `--env production`, and the
-   Worker must answer that it is `production`.
+3. **Deploy web to preview**: the web app built for preview
+   (`CLOUDFLARE_ENV=preview pnpm build`), `wrangler deploy --env preview`, then
+   its check against the preview web Worker: `/en` and `/es` must show the
+   status `ok` and `preview`, with `X-Robots-Tag: noindex`, and `/` must
+   answer 302. Its server reaches the preview API through a Service binding.
+4. **Deploy to production**: the API, the same as step 2, with `--env
+   production`, and the Worker must answer that it is `production`.
+5. **Deploy web to production**: the same as step 3, for production.
+
+Nothing reaches production until both services passed on preview.
 
 Agents never deploy, provision or set a secret. Everything below is done by
 the owner.
@@ -76,6 +85,18 @@ says Write.
 If `wrangler deploy` fails on a permission, its error names the one it
 lacks: add that row to the token and re-run the job.
 
+The web app's Workers use the same token. A Service binding needs no
+permission of its own:
+[Cloudflare's roles page](https://developers.cloudflare.com/workers/authorization/workers/)
+says "You do not need separate permissions on the bound resources to deploy
+the Worker". The same page says "Creating a new Worker requires Workers Admin
+because per-Worker permissions can only apply to Workers that already exist",
+yet this token created both API Workers on their first runs. The web's Workers
+also upload static assets, whose upload
+[accepts](https://developers.cloudflare.com/api/resources/workers/subresources/scripts/subresources/assets/subresources/upload/methods/create/)
+"Workers Admin" or "Workers Scripts Write". The token is expected to be
+enough, which only the web's first deploy shows.
+
 Give the token an expiry date, and note that date: when the token expires,
 deploys fail at the `wrangler deploy` step until it is replaced. Before
 creating it, check the summary's start date: it should be today or earlier.
@@ -93,26 +114,33 @@ Before the merge, in each of `preview` and `production`:
 | Secret   | `CLOUDFLARE_API_TOKEN`  | The token from step 2 (the same one in both).             |
 | Secret   | `CLOUDFLARE_ACCOUNT_ID` | The account ID.                                           |
 | Variable | `API_URL`               | `https://paste-and-taste-api-<env>.<subdomain>.workers.dev` |
+| Variable | `WEB_URL`               | `https://paste-and-taste-web-<env>.<subdomain>.workers.dev` |
 
-`API_URL` is a variable, not a secret: the workflow reads `vars.API_URL`, and
-a secret with that name is never read. `<env>` is `preview` or `production`,
-and `<subdomain>` is the account's workers.dev subdomain.
+`API_URL` and `WEB_URL` are variables, not secrets: the workflow reads
+`vars.API_URL` and `vars.WEB_URL`, and a secret with either name is never
+read. `<env>` is `preview` or `production`, and `<subdomain>` is the account's
+workers.dev subdomain. The web's server doesn't use `WEB_URL` or `API_URL`:
+it reaches the API through its binding. `WEB_URL` is only where the check
+looks.
 
-`API_URL` keeps the address out of the repo, **not out of view**: the smoke
-script prints it, so it shows in every run's log, which anyone can read on a
-public repo. The secrets never do: GitHub masks them, and only the
+The variables keep the addresses out of the repo, **not out of view**: the
+smoke script and the web's check print them, so they show in every run's log,
+which anyone can read on a public repo. The secrets never do: GitHub masks them, and only the
 `wrangler deploy` step receives them.
 
 ## Reading a run
 
-The **Actions** tab, workflow **Deploy**. A run's graph has three boxes:
-`Checks` (open it to see the six jobs), `Deploy to preview` and
-`Deploy to production`.
+The **Actions** tab, workflow **Deploy**. A run's graph has five boxes:
+`Checks` (open it to see the six jobs), `Deploy to preview`,
+`Deploy web to preview`, `Deploy to production` and
+`Deploy web to production`.
 
-- **Green through the end:** both Workers are deployed, and both answered the
-  smoke. The last line of each deploy job is
-  `OK <address> (<environment>): ...`.
-- **Red in `Checks`:** nothing was deployed. Both deploy jobs show as
+- **Green through the end:** all four Workers are deployed, and each answered
+  its check. The last line of each API job is
+  `OK <address> (<environment>): /health and an unknown route answer as specified`,
+  and of each web job
+  `OK <address> (<environment>): /en, /es and / answer as specified`.
+- **Red in `Checks`:** nothing was deployed. Every deploy job shows as
   skipped. Fix it with a pull request, like any red CI.
 - **Red at `wrangler deploy`:** that environment wasn't changed. Usually the
   token: expired, revoked, or missing from that environment.
@@ -145,6 +173,54 @@ If the smoke can't reach the address at all, check `API_URL` in that
 environment first. The very first production deploy creates the Worker, and a
 new workers.dev address can take a moment to answer: re-run that job before
 concluding anything.
+
+## When a web check fails
+
+Its `FAIL` lines say which address answered what.
+
+- **`/en doesn't show the status ok; it says "…"`** quotes the page's own
+  message. "The API cannot be reached" or "answered with an error" means the
+  web Worker is up but its binding to the API isn't answering as it should:
+  check that the API's job for that environment is green, and the `services`
+  entry for that environment in `apps/web/wrangler.jsonc`.
+- **`shows the environment "production"; expected "preview"`**: the binding
+  points to the other environment's API. Fix `apps/web/wrangler.jsonc` with a
+  pull request.
+- **`could not reach`**, or a 404 on every address: check `WEB_URL` in that
+  GitHub environment first. The first web deploy creates its Worker, and a new
+  workers.dev address can take a moment to answer: re-run the job before
+  concluding anything.
+- **`has no X-Robots-Tag: noindex`**: `INDEXING` in that environment's block of
+  `apps/web/wrangler.jsonc` doesn't match the check's list.
+
+What a red web job stops:
+
+- **On preview:** both production jobs are skipped, the API's included.
+  Preview's web runs the failing build until the next deploy.
+- **On production:** the build is live and failing. Roll back the Worker
+  `paste-and-taste-web-production` in the dashboard, as for the API above, or
+  merge a revert.
+
+## Trying the deployed path locally
+
+`pnpm -C apps/web dev` calls the API over HTTP at `API_URL`. To run the
+binding path, as deployed, on your machine (nothing is sent to Cloudflare):
+
+```bash
+CLOUDFLARE_ENV=preview pnpm -C apps/web build
+# terminal 1
+CLOUDFLARE_DEV_REGISTRY_PATH=/tmp/pt-registry pnpm -C apps/api exec wrangler dev --env preview
+# terminal 2
+CLOUDFLARE_DEV_REGISTRY_PATH=/tmp/pt-registry pnpm -C apps/web exec vite preview
+# terminal 3
+pnpm -C apps/web smoke http://localhost:4173 preview
+```
+
+The shared `CLOUDFLARE_DEV_REGISTRY_PATH` is what lets the two find each
+other: wrangler and the Vite plugin otherwise keep their local registries in
+different folders. It was observed, not documented. Stopping the API means
+ending the whole `wrangler dev` (Ctrl+C in its terminal): its Worker keeps
+answering the binding while any of its processes runs.
 
 ## Deploying again without a new commit
 
