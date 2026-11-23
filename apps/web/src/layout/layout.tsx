@@ -24,7 +24,7 @@ export function Layout({
       <div className="flex min-h-dvh flex-col">
         <header className="border-b border-border">
           <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3">
-            <a href={`/${lang}`} className="font-semibold text-text">
+            <a href={`/${lang}`} className="font-display font-extrabold text-text">
               {messages.appName}
             </a>
             <a

@@ -182,6 +182,12 @@ catalogs:
     '@cloudflare/vite-plugin':
       specifier: 1.69.1
       version: 1.69.1
+    '@fontsource-variable/nunito-sans':
+      specifier: 5.3.0
+      version: 5.3.0
+    '@fontsource-variable/outfit':
+      specifier: 5.3.0
+      version: 5.3.0
     '@hono/zod-openapi':
       specifier: 1.6.3
       version: 1.6.3
@@ -303,6 +309,12 @@ importers:
 
   apps/web:
     dependencies:
+      '@fontsource-variable/nunito-sans':
+        specifier: 'catalog:'
+        version: 5.3.0
+      '@fontsource-variable/outfit':
+        specifier: 'catalog:'
+        version: 5.3.0
       '@paste-and-taste/api-client':
         specifier: workspace:*
         version: link:../../packages/api-client
@@ -809,6 +821,12 @@ packages:
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
+
+  '@fontsource-variable/nunito-sans@5.3.0':
+    resolution: {integrity: sha512-Vk1PSfckNDwgw2yGcsvJP3o/0zEW8Rp6KzbD8Ql/6iRHQshnhhAjt+cSIfAUyp5vQuSlleGHFW2LfYaaex0diw==}
+
+  '@fontsource-variable/outfit@5.3.0':
+    resolution: {integrity: sha512-fPb5XnYK0k7SbR++HEmm4+ZqDszmLKQ+sPRUr8oQ/KNC0vy6r6hazJFe8iYozv4cqlHbvJ/JECkJWrfDodUMVQ==}
 
   '@hono/zod-openapi@1.6.3':
     resolution: {integrity: sha512-VYR82Y60plu8g3pN60OUXMVKpmxh3R04Qs++3DY9vtwZ9/sA/BRY0PcRIR+Z37/3itWtM7pYwT9bKiH9JhqV6Q==}
@@ -2957,6 +2975,10 @@ snapshots:
 
   '@esbuild/win32-x64@0.28.2':
     optional: true
+
+  '@fontsource-variable/nunito-sans@5.3.0': {}
+
+  '@fontsource-variable/outfit@5.3.0': {}
 
   '@hono/zod-openapi@1.6.3(hono@4.13.18)(zod@4.6.7)':
     dependencies:

@@ -91,3 +91,11 @@ describe.each(["light", "dark"] as const)("the %s colour tokens", (mode) => {
 it("the dark set declares exactly the colours the light set does", () => {
   expect([...modes.dark.keys()].sort()).toEqual([...modes.light.keys()].sort());
 });
+
+// A misspelt family silently falls back to the system's typeface.
+it.each(["sans", "display"])("--font-%s names first a family fonts.css declares", (role) => {
+  const fonts = readFileSync(new URL("../src/styles/fonts.css", import.meta.url), "utf8");
+  const declared = [...fonts.matchAll(/font-family:\s*"([^"]+)"/g)].map(([, family]) => family);
+  const first = css.match(new RegExp(`--font-${role}:\\s*"([^"]+)"`))?.[1];
+  expect(declared).toContain(first);
+});
