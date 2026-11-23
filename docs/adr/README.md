@@ -41,6 +41,7 @@ is here, written down at the time instead of remembered afterwards.
 | 2026-11-16 | [Hono for the API on Cloudflare Workers, with NestJS's structure by hand](2026-11-16-hono-on-workers.md) |
 | 2026-11-16 | [The API's contract: an OpenAPI document, and a client generated from it](2026-11-16-api-contract-from-openapi.md) |
 | 2026-11-16 | [How an Instagram post is read](2026-11-16-how-an-instagram-post-is-read.md) (Proposed)                     |
+| 2026-11-23 | [ApiUnreachableError when no usable answer comes back from the API](2026-11-23-api-unreachable-error.md) |
 
 ## Not decided yet
 
