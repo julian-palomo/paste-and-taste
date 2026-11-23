@@ -5,5 +5,5 @@
   "status": "Status",
   "environment": "Environment",
   "apiError": "The API answered with an error. Try again in a few minutes.",
-  "unreachable": "The API can't be reached right now. Try again in a few minutes."
+  "unreachable": "The API cannot be reached right now. Try again in a few minutes."
 }

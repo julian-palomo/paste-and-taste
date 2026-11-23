@@ -9,6 +9,7 @@
     "dev": "vite dev"
   },
   "dependencies": {
+    "@paste-and-taste/api-client": "workspace:*",
     "@tanstack/react-router": "catalog:",
     "@tanstack/react-start": "catalog:",
     "react": "catalog:",
@@ -16,6 +17,7 @@
   },
   "devDependencies": {
     "@cloudflare/vite-plugin": "catalog:",
+    "@paste-and-taste/api": "workspace:*",
     "@paste-and-taste/tsconfig": "workspace:*",
     "@types/node": "catalog:",
     "@types/react": "catalog:",

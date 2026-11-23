@@ -1,7 +1,7 @@
 import en from "./en.json";
 import es from "./es.json";
 
-const languages = ["en", "es"] as const;
+export const languages = ["en", "es"] as const;
 export type Language = (typeof languages)[number];
 
 // English is the shape: a key missing from es.json fails typecheck here.
