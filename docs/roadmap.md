@@ -40,7 +40,9 @@ needs, and a phase gets its issues when it is next.
    phase 3 is in progress, because it needs neither the database nor login:
    one page rendered on the server, in both languages, that shows the API's
    health through the typed client. Since #48 the pipeline deploys it after
-   the API, to preview and production.
+   the API, to preview and production. Since #50 it has the base the first
+   screen is built on: Tailwind CSS from one tokens file, a layout every page
+   shares, and its own error and not-found pages.
 5. **The real import.** Workflows in the background and the limit per user.
    Web pages first, the cheapest source to read, then Instagram, then YouTube.
 6. **The native app.** Android first, with sharing a post to the app. iPhone
