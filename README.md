@@ -27,6 +27,11 @@ how a post is read is proposed in
 [`docs/adr/`](docs/adr/2026-11-16-how-an-instagram-post-is-read.md) and not
 decided.
 
+The login prototype, throwaway code in
+[`prototypes/login`](prototypes/login), measures login with Better Auth on a
+Worker on the free plan, with its users in Postgres reached through
+Hyperdrive, on Neon and on PlanetScale; the database host is not decided.
+
 [`docs/product.md`](docs/product.md) says what the app must do, and
 [`docs/roadmap.md`](docs/roadmap.md) in what order it is being built.
 

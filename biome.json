@@ -11,7 +11,8 @@
       "!pnpm-lock.yaml",
       "!apps/api/worker-configuration.d.ts",
       "!apps/api/openapi.json",
-      "!packages/api-client/src/schema.d.ts"
+      "!packages/api-client/src/schema.d.ts",
+      "!prototypes/login/drizzle/**"
     ]
   },
   "formatter": {
