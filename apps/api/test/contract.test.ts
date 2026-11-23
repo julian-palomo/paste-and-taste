@@ -11,10 +11,24 @@ const app = createApp({ APP_ENV: "development" });
 type Operation = { responses: Record<string, DocumentedResponse> };
 type DocumentedResponse = { content?: Record<string, { schema: object }> };
 
+// A request meant to succeed for each operation, keyed "<method> <path>" as
+// the document writes them. Every operation needs one: its path requested as
+// written (a `{id}` left in, no body, no login) would get an error, which the
+// `default` response accepts, and the success schema would go unchecked. When
+// `init` has no method, the operation's is used.
+const successfulRequests: Record<string, { path: string; init?: RequestInit }> = {
+  "get /health": { path: "/health" },
+};
+
 const operations = Object.entries(
   document.paths as Record<string, Record<string, Operation>>,
 ).flatMap(([path, item]) =>
-  Object.entries(item).map(([method, operation]) => ({ path, method, operation })),
+  Object.entries(item).map(([method, operation]) => ({
+    key: `${method} ${path}`,
+    path,
+    method,
+    operation,
+  })),
 );
 
 // A schema from the document, with the document's components beside it so
@@ -33,19 +47,36 @@ describe("the real application against the committed document", () => {
     expect(operations.length).toBeGreaterThan(0);
   });
 
-  it.each(operations)(
-    "$method $path answers as documented",
-    async ({ path, method, operation }) => {
-      const response = await app.request(path, { method: method.toUpperCase() });
-      const documented =
-        operation.responses[String(response.status)] ?? operation.responses.default;
-      const { contentType, body } = await bodyAndType(response);
-      const schema = documented?.content?.[contentType]?.schema;
+  it.each(operations)("$method $path answers as documented", async ({ key, method, operation }) => {
+    const request = successfulRequests[key];
+    if (!request) {
+      throw new Error(`no successful request for ${key}: add one to successfulRequests`);
+    }
 
-      expect(schema, `no schema for ${response.status} ${contentType}`).toBeDefined();
-      expect(validate(schema as object, body).errors).toEqual([]);
-    },
-  );
+    const response = await app.request(request.path, {
+      method: method.toUpperCase(),
+      ...request.init,
+    });
+    const { contentType, body } = await bodyAndType(response);
+    // Only a 2xx the operation documents by its number. Never fall back to
+    // `default`: it is Problem Details, so any error would pass.
+    const documented = response.ok ? operation.responses[String(response.status)] : undefined;
+    if (!documented) {
+      throw new Error(
+        `${key} answered ${response.status}, not a documented success: ${JSON.stringify(body)}`,
+      );
+    }
+    const schema = documented.content?.[contentType]?.schema;
+
+    expect(schema, `no schema for ${response.status} ${contentType}`).toBeDefined();
+    expect(validate(schema as object, body).errors).toEqual([]);
+  });
+
+  it("names only operations the document has", () => {
+    const documented = operations.map(({ key }) => key);
+
+    expect(Object.keys(successfulRequests).filter((key) => !documented.includes(key))).toEqual([]);
+  });
 
   it("answers an unknown route with the documented Problem Details", async () => {
     const response = await app.request("/no-such-route");

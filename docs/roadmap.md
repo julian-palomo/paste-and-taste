@@ -14,7 +14,7 @@ needs, and a phase gets its issues when it is next.
 | 1   | The API's base                | Done        | [#35](https://github.com/julian-palomo/paste-and-taste/issues/35)      |
 | 2   | The Instagram prototype       | In progress | [#22](https://github.com/julian-palomo/paste-and-taste/issues/22)      |
 | 3   | Database and login            | In progress | [#42](https://github.com/julian-palomo/paste-and-taste/issues/42)      |
-| 4   | The first recipe, end to end  | Not started |                                                                        |
+| 4   | The first recipe, end to end  | In progress | [#46](https://github.com/julian-palomo/paste-and-taste/issues/46)      |
 | 5   | The real import               | Not started |                                                                        |
 | 6   | The native app                | Not started |                                                                        |
 | 7   | What makes the product        | Not started |                                                                        |
@@ -39,7 +39,10 @@ needs, and a phase gets its issues when it is next.
 4. **The first recipe, end to end.** A table, its endpoints, and the web app
    in TanStack Start with one screen that lists a recipe, opens it and edits
    it, in Spanish and English. A service and a repository appear in the API
-   here for the first time.
+   here for the first time. The web app's skeleton came first, #46, while
+   phase 3 is in progress, because it needs neither the database nor login:
+   one page rendered on the server, in both languages, that shows the API's
+   health through the typed client.
 5. **The real import.** Workflows in the background and the limit per user.
    Web pages first, the cheapest source to read, then Instagram, then YouTube.
 6. **The native app.** Android first, with sharing a post to the app. iPhone

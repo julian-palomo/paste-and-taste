@@ -1,0 +1,9 @@
+{
+  "title": "Paste & Taste: estado de la API",
+  "description": "Si la API de Paste & Taste responde, y en qué entorno.",
+  "heading": "Estado de la API",
+  "status": "Estado",
+  "environment": "Entorno",
+  "apiError": "La API ha respondido con un error. Vuelve a intentarlo en unos minutos.",
+  "unreachable": "No se puede contactar con la API ahora mismo. Vuelve a intentarlo en unos minutos."
+}
