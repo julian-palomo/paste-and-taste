@@ -20,7 +20,9 @@ rendered on the server, at `/en` and `/es`, that shows the API's health
 through that client. It is styled with Tailwind CSS from one file of
 placeholder tokens, every page shares a layout with a link to the other
 language, and unknown addresses and errors get their own pages in both
-languages ([the record](docs/adr/2026-11-23-tailwind-and-css-motion.md)). The same pipeline deploys it after the API, to a
+languages ([the record](docs/adr/2026-11-23-tailwind-and-css-motion.md)). The app's look is chosen and
+written down in [`DESIGN.md`](DESIGN.md), with its reference drawings in
+[`docs/design/`](docs/design); no screen has it yet. The same pipeline deploys it after the API, to a
 preview and a production Worker, each checked after its deploy; its server
 reaches that environment's API through a Service binding
 ([the record](docs/adr/2026-11-23-how-the-web-app-deploys.md)). Neither is
@@ -51,6 +53,7 @@ Each decision has its record, with the options that lost, in
 - The API's contract: an OpenAPI document generated from the routes' zod schemas, and a typed client generated from that document.
 - Login: Better Auth.
 - Background work, such as importing a recipe: Cloudflare Workflows.
+- The look: a basil green on a warm off-white with a dark mode, Outfit and Nunito Sans, pills, and flat drawings of food and kitchen utensils. The mark is not decided.
 - The interface is in Spanish and English from day one. On the web each language has its own address, `/en` and `/es`, and `/` sends a visitor to theirs.
 - Tooling: pnpm workspaces with a version catalog, and Turborepo.
 

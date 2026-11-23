@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+<title>A pot seen from above, stirred</title>
+<g><animateTransform attributeName="transform" type="translate" values="0 4;0 -6" dur="1.6s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.2;1;0.2" dur="1.6s" repeatCount="indefinite"/><path d="M40 28q-6-7 0-14M56 26q-6-7 0-14" fill="none" stroke="#B9C7B6" stroke-width="4" stroke-linecap="round"/></g><rect x="2" y="57" width="18" height="11" rx="5.500" fill="#226239"/><rect x="100" y="57" width="18" height="11" rx="5.500" fill="#226239"/>
+<path d="M14 52v32c0 13 20 22 46 22s46-9 46-22V52z" fill="#2A7548"/><path d="M60 52h46v32c0 13-20 22-46 22z" fill="#226239"/>
+<ellipse cx="60" cy="52" rx="48" ry="17" fill="#3E9A62"/><ellipse cx="60" cy="52" rx="40" ry="12.500" fill="#1F5A37"/><ellipse cx="60" cy="54.500" rx="36" ry="10" fill="#F08A2B"/>
+<path d="M36 55q7-4 14 0" fill="none" stroke="#F7A85B" stroke-width="3" stroke-linecap="round"/><circle cx="76" cy="59" r="2.500" fill="#3E9A62"/><circle cx="48" cy="61" r="2.500" fill="#3E9A62"/><circle cx="68" cy="49" r="2.500" fill="#3E9A62"/>
+<g><animateTransform attributeName="transform" type="translate" values="-16 0;-11 -3;0 -4.500;11 -3;16 0;11 3;0 4.500;-11 3;-16 0" dur="1.6s" repeatCount="indefinite"/><path d="M60 55L74 12" stroke="#D9A066" stroke-width="10" stroke-linecap="round"/><path d="M63 55L77 13" stroke="#C58A50" stroke-width="4" stroke-linecap="round"/><ellipse cx="60" cy="57" rx="8.500" ry="3.200" fill="#F7A85B"/></g>
+</svg>
