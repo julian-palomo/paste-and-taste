@@ -6,8 +6,9 @@ paths:
 # How the web app is put together
 
 TanStack Start checks none of this; this rule and the reviews do. The records
-are `docs/adr/2026-11-14-tanstack-start-for-the-web.md` and
-`docs/adr/2026-11-23-web-addresses-per-language.md`.
+are `docs/adr/2026-11-14-tanstack-start-for-the-web.md`,
+`docs/adr/2026-11-23-web-addresses-per-language.md` and
+`docs/adr/2026-11-23-how-the-web-app-deploys.md`.
 
 **Every page is rendered on the server.** The HTML the server sends already
 holds the content, its `<title>` and its meta description, so search engines
@@ -26,9 +27,11 @@ a view that is plain React with no router, so tests render it with
 `renderToString`. `src/health/` is the model.
 
 **The API is called only inside a server function**, through
-`createApiClient` from `@paste-and-taste/api-client`: never a hand-written
-`fetch`, never a copied type, and never from the browser (the API sends no
-CORS headers). A call catches `ApiError` and `ApiUnreachableError` and turns
+`createApiClient` from `@paste-and-taste/api-client` with `WebConfig.api`:
+never a hand-written `fetch`, never a copied type, and never from the browser
+(the API sends no CORS headers). `WebConfig.api` is the Service binding `API`
+when deployed and `API_URL` over HTTP under `vite dev`; never call the
+binding's `fetch` detached from it. A call catches `ApiError` and `ApiUnreachableError` and turns
 them into states the view shows, with text from the translation files. Never
 an error's own message, and never a stack trace.
 
@@ -41,8 +44,17 @@ reads. `src/server.ts` is the only file that imports from `cloudflare:*`: it
 parses the config at module scope, so an invalid value stops the Worker from
 starting, and passes it to every request as Start's request context. A server
 function gets it, and the request's origin, through the `withConfig`
-middleware. A new variable goes into `wrangler.jsonc`, `WebConfig` and its
-test, then `pnpm -C apps/web exec wrangler types`.
+middleware. A new variable goes into `wrangler.jsonc`'s top level and into
+every `env` block (an environment inherits neither `vars` nor `services`),
+into `WebConfig` and its test, then `pnpm -C apps/web exec wrangler types`.
+`INDEXING` (`src/indexing.ts`) sets `X-Robots-Tag: noindex` on every response;
+keep it in step with `NOINDEX_ENVIRONMENTS` in `scripts/check-web.ts`.
+
+**Environments are chosen at build time**, with `CLOUDFLARE_ENV`; `wrangler
+deploy` deploys what the build wrote. `scripts/check-web.ts`, run by
+`pnpm -C apps/web smoke`, is the check after each deploy: it reads rendered
+markup only. Node runs the scripts directly, so `scripts/` uses `.ts`
+imports and erasable syntax only.
 
 **Generated files are never edited:** `src/routeTree.gen.ts` (the router
 plugin rewrites it on `dev` and `build`) and `worker-configuration.d.ts`

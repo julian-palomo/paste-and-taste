@@ -9,6 +9,7 @@ import { readHealth } from "./read-health.ts";
 export const getHealthPage = createServerFn({ method: "GET" })
   .middleware([withConfig])
   .handler(async ({ context }) => {
-    const client = createApiClient({ baseUrl: context.config.apiUrl });
+    const { baseUrl, fetch } = context.config.api;
+    const client = createApiClient(fetch ? { baseUrl, fetch } : { baseUrl });
     return { health: await readHealth(client), origin: context.origin };
   });
