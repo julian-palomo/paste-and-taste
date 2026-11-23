@@ -11,6 +11,8 @@
       "!pnpm-lock.yaml",
       "!apps/api/worker-configuration.d.ts",
       "!apps/api/openapi.json",
+      "!apps/web/worker-configuration.d.ts",
+      "!apps/web/src/routeTree.gen.ts",
       "!packages/api-client/src/schema.d.ts"
     ]
   },

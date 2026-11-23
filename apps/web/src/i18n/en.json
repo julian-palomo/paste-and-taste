@@ -1,0 +1,9 @@
+{
+  "title": "Paste & Taste: API status",
+  "description": "Whether the Paste & Taste API is answering, and in which environment.",
+  "heading": "API status",
+  "status": "Status",
+  "environment": "Environment",
+  "apiError": "The API answered with an error. Try again in a few minutes.",
+  "unreachable": "The API can't be reached right now. Try again in a few minutes."
+}
