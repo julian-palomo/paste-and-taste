@@ -9,7 +9,13 @@ const UNKNOWN_ROUTE = "/smoke-check/no-such-route";
 const ENVIRONMENTS = ["development", "preview", "production"];
 
 // Returns what is wrong, one line per route; an empty list means both passed.
-export async function checkApi(baseUrl: string, fetchFn: Fetch): Promise<string[]> {
+// With an expected environment, /health must also name that one; without, any
+// of the three passes.
+export async function checkApi(
+  baseUrl: string,
+  fetchFn: Fetch,
+  expectedEnvironment?: string,
+): Promise<string[]> {
   const base = baseUrl.replace(/\/+$/, "");
   const failures: string[] = [];
 
@@ -20,6 +26,14 @@ export async function checkApi(baseUrl: string, fetchFn: Fetch): Promise<string[
       `/health answered ${health.status} ${JSON.stringify(healthBody)}; ` +
         `expected 200 {"status":"ok","environment":"<APP_ENV>"}`,
     );
+  } else if (expectedEnvironment !== undefined) {
+    const { environment } = healthBody as { environment: string };
+    if (environment !== expectedEnvironment) {
+      failures.push(
+        `/health answered environment ${JSON.stringify(environment)}; ` +
+          `expected ${JSON.stringify(expectedEnvironment)}`,
+      );
+    }
   }
 
   const unknown = await fetchFn(`${base}${UNKNOWN_ROUTE}`);

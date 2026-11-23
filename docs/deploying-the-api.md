@@ -12,8 +12,10 @@ green:
 1. **Checks**: the six jobs CI runs on a pull request (`ci.yml`, called as a
    reusable workflow).
 2. **Deploy to preview**: `wrangler deploy --env preview`, then the smoke
-   script against the preview Worker.
-3. **Deploy to production**: the same, with `--env production`.
+   script against the preview Worker, which must also answer that it is
+   `preview`.
+3. **Deploy to production**: the same, with `--env production`, and the
+   Worker must answer that it is `production`.
 
 Agents never deploy, provision or set a secret. Everything below is done by
 the owner.
@@ -108,7 +110,8 @@ The **Actions** tab, workflow **Deploy**. A run's graph has three boxes:
 `Deploy to production`.
 
 - **Green through the end:** both Workers are deployed, and both answered the
-  smoke. The last line of each deploy job is `OK <address>: ...`.
+  smoke. The last line of each deploy job is
+  `OK <address> (<environment>): ...`.
 - **Red in `Checks`:** nothing was deployed. Both deploy jobs show as
   skipped. Fix it with a pull request, like any red CI.
 - **Red at `wrangler deploy`:** that environment wasn't changed. Usually the
@@ -132,6 +135,11 @@ The smoke's `FAIL` lines say which route answered what.
   **Rollback**
   ([Cloudflare's page](https://developers.cloudflare.com/workers/configuration/versions-and-deployments/rollbacks/)),
   or merge a revert, which deploys through the same chain.
+
+If `/health` names the wrong environment, as in
+`/health answered environment "production"; expected "preview"`, the Worker at
+`API_URL` is up but belongs to the other environment, so this job's Worker
+wasn't checked. Fix `API_URL` in that GitHub environment and re-run the job.
 
 If the smoke can't reach the address at all, check `API_URL` in that
 environment first. The very first production deploy creates the Worker, and a

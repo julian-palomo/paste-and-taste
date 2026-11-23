@@ -57,7 +57,7 @@ pnpm knip                         # unused files, exports and dependencies
 pnpm contract:check               # the OpenAPI document and the client's types are up to date
 bash .claude/hooks/tests/run.sh   # tests for the Claude Code hooks
 pnpm -C apps/api dev              # the API on the local Workers runtime, localhost:8787
-pnpm -C apps/api smoke <address>  # checks a running API: /health and an unknown route
+pnpm -C apps/api smoke <address> [environment]  # checks a running API: /health, with the environment it names, and an unknown route
 ```
 
 ## Licence

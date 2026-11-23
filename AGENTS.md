@@ -56,7 +56,7 @@ to run it.
 | `pnpm contract:check`                  | Fails, naming the file, if the OpenAPI document or the client's types are stale.              |
 | `bash .claude/hooks/tests/run.sh`      | Tests for the Claude Code hooks.                                                              |
 | `pnpm -C apps/api dev`                 | Serves the API on the local Workers runtime, `localhost:8787`.                                |
-| `pnpm -C apps/api smoke <address>`     | Calls `/health` and an unknown route of a running API; exits 1 if either is off.              |
+| `pnpm -C apps/api smoke <address> [environment]` | Calls `/health` and an unknown route of a running API; exits 1 if either is off, or if `/health` names another environment than the one given. |
 | `pnpm -C apps/api openapi`             | Writes `apps/api/openapi.json` from the routes' schemas. Commit it.                           |
 | `pnpm -C tools/openapi-typegen generate` | Writes the client's types, `packages/api-client/src/schema.d.ts`, from the document. Commit it. |
 | `pnpm -C prototypes/instagram measure <absolute path>` | Measures each way of reading the owner's sample of Instagram posts; never prints a link. Sends requests to Instagram. |
