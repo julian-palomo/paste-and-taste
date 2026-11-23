@@ -1,5 +1,6 @@
-import { createRootRoute, HeadContent, Outlet, Scripts, useParams } from "@tanstack/react-router";
-import { parseLanguage } from "../i18n/i18n.ts";
+import { createRootRoute, HeadContent, Outlet, Scripts, useLocation } from "@tanstack/react-router";
+import { languageOfPath } from "../layout/language-path.ts";
+import { Layout } from "../layout/layout.tsx";
 import appCss from "../styles/app.css?url";
 
 export const Route = createRootRoute({
@@ -13,16 +14,20 @@ export const Route = createRootRoute({
   component: RootDocument,
 });
 
+// The language comes from the address, not the matched route's params, so a
+// not-found page under /es is in Spanish too: it has no params of its own.
 function RootDocument() {
-  // The language of the matched page; "en" where there is none, as on a 404.
-  const { lang } = useParams({ strict: false });
+  const { pathname } = useLocation();
+  const lang = languageOfPath(pathname);
   return (
-    <html lang={parseLanguage(lang ?? "") ?? "en"}>
+    <html lang={lang}>
       <head>
         <HeadContent />
       </head>
       <body>
-        <Outlet />
+        <Layout lang={lang} path={pathname}>
+          <Outlet />
+        </Layout>
         <Scripts />
       </body>
     </html>

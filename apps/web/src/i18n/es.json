@@ -5,5 +5,8 @@
   "status": "Estado",
   "environment": "Entorno",
   "apiError": "La API ha respondido con un error. Vuelve a intentarlo en unos minutos.",
-  "unreachable": "No se puede contactar con la API ahora mismo. Vuelve a intentarlo en unos minutos."
+  "unreachable": "No se puede contactar con la API ahora mismo. Vuelve a intentarlo en unos minutos.",
+  "appName": "Paste & Taste",
+  "otherLanguage": "English",
+  "footer": "Paste & Taste es un nombre provisional."
 }
