@@ -28,6 +28,11 @@
       "trailingCommas": "all"
     }
   },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  },
   "markdown": {
     "formatter": {
       "enabled": false
