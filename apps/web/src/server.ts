@@ -2,11 +2,13 @@
 // from cloudflare:*. parseConfig runs at module top level, when the Worker
 // starts: an invalid API_URL throws there, so the Worker fails to start and
 // the error names the variable. Don't move it into fetch, where the same
-// error would become a broken page on every request.
+// error would become a broken page on every request. It reads the API binding
+// when deployed and API_URL locally: wrangler.jsonc says which.
 
 import { env } from "cloudflare:workers";
 import handler, { createServerEntry } from "@tanstack/react-start/server-entry";
 import { parseConfig, type WebConfig } from "./config/config.ts";
+import { applyIndexing } from "./indexing.ts";
 
 const config = parseConfig(env);
 
@@ -21,5 +23,6 @@ declare module "@tanstack/react-router" {
 export default createServerEntry({
   // Only the request is passed on: on Workers the second argument of fetch is
   // the env, not Start's request options.
-  fetch: (request) => handler.fetch(request, { context: { config } }),
+  fetch: async (request) =>
+    applyIndexing(await handler.fetch(request, { context: { config } }), config.indexing),
 });
