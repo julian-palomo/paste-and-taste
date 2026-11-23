@@ -5,7 +5,15 @@
     "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
     "resolveJsonModule": true,
-    "types": ["node", "vite/client"]
+    "types": ["node", "vite/client"],
+    "erasableSyntaxOnly": true
   },
-  "include": ["src", "test", "vite.config.ts", "vitest.config.ts", "worker-configuration.d.ts"]
+  "include": [
+    "src",
+    "test",
+    "scripts",
+    "vite.config.ts",
+    "vitest.config.ts",
+    "worker-configuration.d.ts"
+  ]
 }

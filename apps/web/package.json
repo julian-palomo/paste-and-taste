@@ -6,7 +6,8 @@
     "build": "vite build",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "dev": "vite dev"
+    "dev": "vite dev",
+    "smoke": "node scripts/smoke.ts"
   },
   "dependencies": {
     "@paste-and-taste/api-client": "workspace:*",
