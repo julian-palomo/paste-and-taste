@@ -1,0 +1,29 @@
+/*
+ * The web app's one stylesheet. The root route links it from the server's
+ * <head>, so a page is styled before any JavaScript runs.
+ */
+@import "tailwindcss";
+@import "./tokens.css";
+
+/* What no component puts a class on. Values come from the tokens only. */
+@layer base {
+  body {
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+  }
+
+  /* Each page's one heading. It carries no class: the deploy check and the
+     tests read it as bare markup. */
+  h1 {
+    font-size: var(--text-2xl);
+    line-height: var(--text-2xl--line-height);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  :where(a, button):focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+    border-radius: var(--radius-control);
+  }
+}

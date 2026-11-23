@@ -58,7 +58,7 @@ describe.each(["en", "es"] as const)("in %s", (lang) => {
     const html = await renderPage(lang, failingApi);
 
     expect(html).toContain(`<p role="alert">${messages.apiError}</p>`);
-    expect(html).not.toContain("<dl>");
+    expect(html).not.toContain("<dl");
     expect(html).not.toMatch(/Service Unavailable|database is down|503/);
   });
 
@@ -66,7 +66,7 @@ describe.each(["en", "es"] as const)("in %s", (lang) => {
     const html = await renderPage(lang, stoppedApi);
 
     expect(html).toContain(`<p role="alert">${messages.unreachable}</p>`);
-    expect(html).not.toContain("<dl>");
+    expect(html).not.toContain("<dl");
     expect(html).not.toMatch(/Network connection lost|could not be reached/);
   });
 });

@@ -17,7 +17,10 @@ check has passed ([the record](docs/adr/2026-11-15-how-the-api-deploys.md),
 [the owner's page](docs/deploying-the-api.md)). The web app's skeleton is in
 [`apps/web`](apps/web): TanStack Start on Cloudflare Workers, with one page
 rendered on the server, at `/en` and `/es`, that shows the API's health
-through that client. The same pipeline deploys it after the API, to a
+through that client. It is styled with Tailwind CSS from one file of
+placeholder tokens, every page shares a layout with a link to the other
+language, and unknown addresses and errors get their own pages in both
+languages ([the record](docs/adr/2026-11-23-tailwind-and-css-motion.md)). The same pipeline deploys it after the API, to a
 preview and a production Worker, each checked after its deploy; its server
 reaches that environment's API through a Service binding
 ([the record](docs/adr/2026-11-23-how-the-web-app-deploys.md)). Neither is

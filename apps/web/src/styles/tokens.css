@@ -1,0 +1,50 @@
+/*
+ * The one file that holds every colour, font, radius, duration and easing the
+ * web app uses, each named by its role. Components write Tailwind utilities
+ * from these names (bg-surface, text-text-muted, duration-quick), never a raw
+ * value, so the look changes here without touching a component. The values
+ * are neutral placeholders until the owner picks the app's look.
+ *
+ * `static` writes every variable into the CSS, used or not. The `initial`
+ * lines remove Tailwind's own palette, fonts, radii and easings, so a utility
+ * like bg-red-500 doesn't exist here.
+ */
+@theme static {
+  --color-*: initial;
+  --color-surface: #ffffff;
+  --color-surface-raised: #f4f4f5;
+  --color-text: #18181b;
+  --color-text-muted: #52525b;
+  --color-border: #d4d4d8;
+  --color-accent: #3b4f66;
+  --color-on-accent: #ffffff;
+  --color-danger: #b42318;
+  --color-focus: #2563a8;
+
+  --font-*: initial;
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --radius-*: initial;
+  --radius-control: 0.375rem;
+
+  /* Tailwind's duration-* utilities read --transition-duration-*. */
+  --transition-duration-quick: 120ms;
+  --transition-duration-base: 200ms;
+
+  --ease-*: initial;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  /* What a bare transition-colors takes when no duration-* or ease-* is given. */
+  --default-transition-duration: var(--transition-duration-quick);
+  --default-transition-timing-function: var(--ease-standard);
+}
+
+/* Everything that moves reads the durations above, so zeroing them stops it all. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --transition-duration-quick: 0s;
+    --transition-duration-base: 0s;
+    --default-transition-duration: 0s;
+  }
+}

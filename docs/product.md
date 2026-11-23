@@ -48,6 +48,10 @@ kept, edited and cooked from. It runs as a native app and as a web app.
   language they were imported in.
 - The app is not paid.
 
+## The web app
+
+- Its pages are rendered on the server, so search engines can read them.
+
 ## Not decided
 
 - Whether a link that fails is sent to us on its own or only when the user
@@ -58,4 +62,5 @@ kept, edited and cooked from. It runs as a native app and as a web app.
 - Whether users share their tags with each other.
 - Whether "made" is only a tag or also keeps a dated log of each time.
 - What a rating means: a user's own recipes only, or other people's too.
+- What a visitor who isn't logged in sees on the web.
 - The final name. Paste & Taste is the working one.
