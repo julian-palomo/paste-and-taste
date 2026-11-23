@@ -1,3 +1,4 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+<title>Red onion</title>
 <path d="M60 22c2 12 10 18 22 26 16 11 20 30 10 44-7 10-19 14-32 14s-25-4-32-14c-10-14-6-33 10-44 12-8 20-14 22-26z" fill="#9B4F96"/><path d="M60 22c2 12 10 18 22 26 16 11 20 30 10 44-7 10-19 14-32 14z" fill="#84407F"/><path d="M60 40c-2 10-16 16-20 30-3 11 2 22 10 28" fill="none" stroke="#C48BC0" stroke-width="4" stroke-linecap="round"/><path d="M62 44c6 10 16 16 16 32 0 8-3 14-8 20" fill="none" stroke="#B06FAB" stroke-width="4" stroke-linecap="round"/><path d="M52 106v6M60 106v8M68 106v6" stroke="#C9B38A" stroke-width="3" stroke-linecap="round"/>
 </svg>

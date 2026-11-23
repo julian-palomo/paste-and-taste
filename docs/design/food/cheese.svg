@@ -1,4 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+<title>Wedge of cheese</title>
 <path d="M86 28L91.6 30.1L96.3 32.6L100.2 35.3L103.3 38.2L105.5 41.5L106.9 45L107.4 48.9L107.4 49.9L107.4 79.9L107.3 81.9L106.3 86.2L104.6 90.8L104 92L104 62z" fill="#C98A2B" stroke="#C98A2B" stroke-width="3" stroke-linejoin="round"/>
 <path d="M12 64l92-2v30L12 94z" fill="#EDBE45" stroke="#EDBE45" stroke-width="4" stroke-linejoin="round"/>
 <path d="M12 64L86 28Q116 38 104 62z" fill="#F7DA78" stroke="#F7DA78" stroke-width="4" stroke-linejoin="round"/>
