@@ -62,7 +62,7 @@ to run it.
 | `pnpm -C prototypes/instagram measure <absolute path>` | Measures each way of reading the owner's sample of Instagram posts; never prints a link. Sends requests to Instagram. |
 | `pnpm -C prototypes/instagram worker:bundle` | Bundles the spike's scratch Worker with `wrangler deploy --dry-run`; writes nothing to Cloudflare. |
 | `pnpm -C prototypes/login dev`         | Serves the login spike's Worker on the local Workers runtime, against the databases its two `CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_…` variables name. |
-| `pnpm -C prototypes/login measure <address> <cpu\|warm\|hung\|cold>` | Measures login on the spike's Worker, at `localhost:8787` or deployed; never prints the token, a cookie or the address. |
+| `pnpm -C prototypes/login measure <address> <cpu\|warm\|hung\|cold>` | Measures login on the spike's Worker, at `localhost:8787` or deployed; never prints the token or a cookie, and stops when `RUN_TOKEN` is missing or refused. |
 | `pnpm -C prototypes/login worker:bundle` | Bundles the login spike's Worker with `wrangler deploy --dry-run`; writes nothing to Cloudflare. |
 | `pnpm -C prototypes/login generate`    | Writes the login spike's migration, `prototypes/login/drizzle/`, from its schema, with no database. Commit it. |
 

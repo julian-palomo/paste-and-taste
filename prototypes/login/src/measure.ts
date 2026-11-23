@@ -2,7 +2,8 @@
 // Worker (or `wrangler dev`). One request at a time, one a second, unless a
 // step says otherwise. It prints only steps, hosts, counts, statuses, error
 // bodies, UTC windows and timings: never the token, a cookie, a password or
-// the address. Test users are made up, under example.com.
+// the address (pnpm's echo of the command line, above its output, does show
+// the address). Test users are made up, under example.com.
 //
 //   pnpm -C prototypes/login measure <address> cpu [--count 20]
 //   pnpm -C prototypes/login measure <address> warm [--count 50]
@@ -189,8 +190,21 @@ if (!address || !step) {
   process.exit(2);
 }
 const token = process.env.RUN_TOKEN;
-if (!token) console.error("RUN_TOKEN is not set: every request will answer 401.");
+if (!token) {
+  console.error("RUN_TOKEN is not set: every request would answer 401.");
+  process.exit(2);
+}
 const client = new WorkerClient(address, token);
+
+// Stops before any batch or idle wait when the Worker refuses the token, so
+// an overnight run never collects nine hours of 401s. `/` passes the token
+// check and then answers 404 without touching a database.
+const check = await client.send("/");
+if (check.status !== 404) {
+  console.error(`the Worker answered ${check.status} to the token check, not 404: stopping.`);
+  if (check.error) console.error(`  ${check.error.replaceAll(/\s+/g, " ")}`);
+  process.exit(1);
+}
 const count = (fallback: number) => Number(values.count ?? fallback);
 
 console.log(`step ${step}, run ${run}, started ${now()}`);

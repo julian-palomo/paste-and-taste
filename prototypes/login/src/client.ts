@@ -9,7 +9,10 @@ export type Outcome = {
   /** 0 when no answer arrived: the network failed or the request timed out. */
   status: number;
   ms: number;
-  /** The answer's body, or the network error, cut to 200 characters, when not a 2xx. */
+  /**
+   * The answer's body, or the network error, cut to 200 characters, when not a
+   * 2xx. Never empty: the summary times every answer without an error.
+   */
   error?: string;
 };
 
@@ -54,7 +57,7 @@ export class WorkerClient {
       return {
         status: response.status,
         ms,
-        ...(ok ? {} : { error: text.slice(0, 200) }),
+        ...(ok ? {} : { error: text.slice(0, 200) || "(empty body)" }),
         ...(cookie ? { cookie } : {}),
         body: ok && text ? safeJson(text) : undefined,
       };

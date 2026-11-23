@@ -23,8 +23,10 @@ It is exempt from "test first" (`AGENTS.md`, section 2).
   generated: never edit it.
 - `src/measure.ts`: the measurements, run from the owner's machine. It prints
   only steps, hosts, counts, statuses, error bodies, UTC windows and timings,
-  never the token, a cookie, a password or the address. Test users are
-  `spike-<run>-<n>@example.com`.
+  never the token, a cookie, a password or the address; pnpm's echo of the
+  command line, the first line of the output, does show the address. Test
+  users are `spike-<run>-<n>@example.com`. It stops at once when `RUN_TOKEN`
+  is not set or the Worker refuses it.
 
 | Step   | Per host                                                                                                         |
 | ------ | ---------------------------------------------------------------------------------------------------------------- |
@@ -95,7 +97,27 @@ names. Why each choice, the costs and the sources are in the plan on issue
    ```
 
    Then the same with the PlanetScale string and the name
-   `paste-and-taste-login-spike-planetscale`. Note each printed `id`.
+   `paste-and-taste-login-spike-planetscale`, with one more line right after
+   the `read`. `pg` reads `sslrootcert` as a file name, so `sslrootcert=system`
+   fails `migrate` with ENOENT; this removes it wherever it sits in the query,
+   without showing the string:
+
+   ```bash
+   DATABASE_URL=$(node -e 'const u = new URL(process.env.DATABASE_URL); u.searchParams.delete("sslrootcert"); console.log(u.href)')
+   ```
+
+   If the dashboard gives the host, database, user and password separately
+   instead of one string, build it from four hidden prompts instead of the
+   first `read` (paste each value, then Enter; nothing shows):
+
+   ```bash
+   read -rs DB_HOST && read -rs DB_NAME && read -rs DB_USER && read -rs DB_PASSWORD
+   export DB_HOST DB_NAME DB_USER DB_PASSWORD
+   export DATABASE_URL=$(node -e 'const e = process.env; const u = new URL(`postgresql://${e.DB_HOST}:5432/${e.DB_NAME}?sslmode=verify-full`); u.username = e.DB_USER; u.password = e.DB_PASSWORD; console.log(u.href)')
+   unset DB_HOST DB_NAME DB_USER DB_PASSWORD
+   ```
+
+   Note each printed `id`.
 4. **The deploy config.**
    `cp prototypes/login/wrangler.jsonc prototypes/login/wrangler.deploy.jsonc`,
    and put the two ids in the copy. Git ignores it.
@@ -122,7 +144,9 @@ names. Why each choice, the costs and the sources are in the plan on issue
    page (Active or Idle) after at least 30 minutes with nothing calling it,
    twice; and the project's CU-hours at the start and the end of the day.
 10. **Hand back** to the session: the script's printed lines, the Query
-    Builder tables, the Neon readings and PlanetScale's shown cost.
+    Builder tables, the Neon readings and PlanetScale's shown cost. Leave out
+    the first line of each run, `$ node src/measure.ts <address> …`: pnpm
+    echoes the command line, and it holds the Worker's address.
 11. **Delete, the same day**, and say the date:
     - `pnpm -C prototypes/login exec wrangler delete --config wrangler.deploy.jsonc` (its secrets go with it);
     - `pnpm -C prototypes/login exec wrangler hyperdrive delete <id>`, for each id;
