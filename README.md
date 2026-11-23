@@ -11,10 +11,13 @@ in CI; each app arrives with its own issue. The first is the API's skeleton in
 configuration, a health route and one error format, and no recipe endpoints
 yet. It describes itself in an OpenAPI document, `apps/api/openapi.json`,
 from which [`packages/api-client`](packages/api-client) gets the typed client
-the web and mobile apps will use. A merge to `main` deploys it from GitHub
+the web app uses and the mobile app will use. A merge to `main` deploys it from GitHub
 Actions, to preview and then production, each with a smoke test, once every
 check has passed ([the record](docs/adr/2026-11-15-how-the-api-deploys.md),
-[the owner's page](docs/deploying-the-api.md)). It also holds the
+[the owner's page](docs/deploying-the-api.md)). The web app's skeleton is in
+[`apps/web`](apps/web): TanStack Start on Cloudflare Workers, with one page
+rendered on the server, at `/en` and `/es`, that shows the API's health
+through that client; it isn't deployed yet. The repo also holds the
 working agreement for the coding agents that build it: [`AGENTS.md`](AGENTS.md)
 has the rules and [`.claude/README.md`](.claude/README.md) explains the Claude
 Code setup.
@@ -41,7 +44,7 @@ Each decision has its record, with the options that lost, in
 - The API's contract: an OpenAPI document generated from the routes' zod schemas, and a typed client generated from that document.
 - Login: Better Auth.
 - Background work, such as importing a recipe: Cloudflare Workflows.
-- The interface is in Spanish and English from day one.
+- The interface is in Spanish and English from day one. On the web each language has its own address, `/en` and `/es`, and `/` sends a visitor to theirs.
 - Tooling: pnpm workspaces with a version catalog, and Turborepo.
 
 ## Commands
@@ -57,6 +60,7 @@ pnpm knip                         # unused files, exports and dependencies
 pnpm contract:check               # the OpenAPI document and the client's types are up to date
 bash .claude/hooks/tests/run.sh   # tests for the Claude Code hooks
 pnpm -C apps/api dev              # the API on the local Workers runtime, localhost:8787
+pnpm -C apps/web dev              # the web app, localhost:5173, calling the API above
 pnpm -C apps/api smoke <address> [environment]  # checks a running API: /health, with the environment it names, and an unknown route
 ```
 

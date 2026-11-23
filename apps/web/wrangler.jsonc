@@ -1,0 +1,17 @@
+// No account ID, token or secret here: whoever deploys supplies them.
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "paste-and-taste-web",
+  // Our own entry, not "@tanstack/react-start/server-entry": with the
+  // package's entry as main, src/server.ts never runs and the request context
+  // it builds is empty.
+  "main": "src/server.ts",
+  "compatibility_date": "2026-11-15",
+  // The TanStack Start and Cloudflare guides' setup has it.
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    // The local default: the address of `pnpm -C apps/api dev`. A deployed
+    // Worker needs its own value.
+    "API_URL": "http://localhost:8787"
+  }
+}

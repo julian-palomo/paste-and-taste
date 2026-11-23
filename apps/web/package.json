@@ -1,0 +1,31 @@
+{
+  "name": "@paste-and-taste/web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "dev": "vite dev"
+  },
+  "dependencies": {
+    "@paste-and-taste/api-client": "workspace:*",
+    "@tanstack/react-router": "catalog:",
+    "@tanstack/react-start": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@cloudflare/vite-plugin": "catalog:",
+    "@paste-and-taste/api": "workspace:*",
+    "@paste-and-taste/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:",
+    "wrangler": "catalog:"
+  }
+}
