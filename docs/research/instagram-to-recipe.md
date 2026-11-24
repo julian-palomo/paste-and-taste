@@ -88,10 +88,12 @@ Workers AI's error aren't in it.
 | B | 3 good, 3 fixable, 3 wrong | 3 fixable, 4 wrong | 2 good, 1 fixable, 1 wrong |
 | C | 3 good, 5 fixable, 1 wrong | 3 good, 3 fixable, 1 wrong | 1 good, 1 fixable, 2 wrong |
 
-**Reliability at the first attempt.** Of the calls that reached a model, A lost
-none of 20, C none of 23, and B 3 of 21 to a network error: post 14 in run 1
-and two posts in run 3. Calls Workers AI refused for its daily allocation are
-not counted here.
+**Reliability at the first attempt.** Of the calls that reached the model that
+writes the recipe, in run 1 and run 3, A lost none of 20, C none of 27, and B 3
+of 21 to a network error: post 14 in run 1 and two posts in run 3. C's 27
+include its 4 posts of run 1 whose transcript Workers AI refused but whose
+call to Claude went through. Calls Workers AI refused for its daily allocation
+are not counted.
 
 ### The recipe posts with a video
 
