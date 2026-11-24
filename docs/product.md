@@ -134,7 +134,8 @@ How people meet and pass recipes is recorded in
   posts has three.
 - Which fixed tags the app has. A first list the owner finds fine for now:
   favourite, made; starter, main, side, dessert, breakfast, drink, sauces and
-  basics; recipe or tip.
+  basics; recipe or tip. In that list, time, servings and the main ingredient
+  are fields of a recipe, not tags.
 - Whether users share their own tags with each other.
 - Whether "made" is only a tag or also keeps a dated log of each time.
 - What a rating means: a user's own recipes only, or other people's too.
@@ -146,6 +147,8 @@ How people meet and pass recipes is recorded in
   shared by link.
 - How the app teaches a new user. Perhaps the page before login explains it
   with screenshots and vignettes, and another way inside.
+- Whether signing in with Google and with a password on the same email
+  address opens the same account (proposed: one email, one account).
 - What the native app does that the web app doesn't. The owner sees sharing a
   post from Instagram as the main one, and perhaps Facebook or TikTok later.
 - The final name. Paste & Taste is the working one.

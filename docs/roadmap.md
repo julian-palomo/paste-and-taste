@@ -33,6 +33,8 @@ needs, and a phase gets its issues when it is next.
    it comes before anything is built on either.
 3. **Database and login.** Where Postgres lives and which ORM talks to it, the
    first table with its migrations, and Better Auth, which needs the database.
+   The first table holds an owner and who may see each recipe
+   ([the record](adr/2026-11-24-friends-groups-and-copies.md)).
 4. **The first recipe, end to end.** A table, its endpoints, and the web app
    in TanStack Start with one screen that lists a recipe, opens it and edits
    it, in Spanish and English. A service and a repository appear in the API
@@ -50,4 +52,5 @@ needs, and a phase gets its issues when it is next.
    is tested early.
 7. **What makes the product.** Tags, editing a recipe with a note, a user's
    own photos, the cooking mode that reads aloud, and the social part:
-   sharing, commenting and rating.
+   friends and groups, sending recipes as copies, the conversation on each
+   recipe, and rating.
