@@ -41,6 +41,7 @@ to run it.
 - **Root cause before a fix.** For a bug or a failing check, reproduce it and find the cause before changing code. The fix comes with a test that fails without it.
 - **Act on PR reviews.** Read the owner's review, check each point against the code before applying it, and reply on the PR with what you didn't apply and why. No agreement for show. A review from the cloud session starts with `Verdict: changes requested` or `Verdict: ready for the owner`. That session pushes to the branch only when every fix is mechanical and that closes the review; otherwise it pushes nothing (`docs/adr/2026-11-15-fixes-after-a-review.md`).
 - **Leave the docs true.** Before handing off, re-read every doc the change could have made false, and fix it. "No doc changes needed" is a fine answer when it follows from that check.
+- **One word per concept.** Issues, plans, tests, code names and docs use the terms in `GLOSSARY.md`. A new concept, or a sharper word for one, goes into `GLOSSARY.md` in the same pull request.
 - **What the PR says.** What changed and why, every check run with its result, what was not run or not verified, and `## What this practises`: the concept the issue names and one sentence on how it was applied here.
 - **The loop has skills.** `/implement-issue <N>` runs it from reading the issue to acting on the review; `/handoff` and `/ship-pr` are its last steps.
 - Each commit passes the checks on its own. Subjects are short, lowercase and imperative ("add …", "fix …").
@@ -104,6 +105,7 @@ A workspace gets a line here in the PR that creates it.
 - `.claude/rules/*.md`: per-area rules. Each starts with a `paths:` list; before editing a file, read every rule whose paths match it.
 - `.claude/skills/*/SKILL.md`: step-by-step procedures (implementing an issue, handoff, opening a PR).
 - `docs/product.md`: what the app must do, as the owner has stated it. A new requirement goes here and in its issue.
+- `GLOSSARY.md`: one word for each of the app's concepts, the Spanish word the app shows where it is decided, and the words to avoid.
 - `DESIGN.md`: how the app looks, moves and speaks: what the owner decided, what is only proposed and what is open, with the reference drawings in `docs/design/`. A visual change starts there.
 - `docs/deploying-the-api.md`: the owner's page for the deploy pipeline, the API's and the web app's: setting up the token and the GitHub environments, reading a run, what to do when a smoke or a check fails, and trying the deployed path locally.
 - `docs/roadmap.md`: the order of the work, in phases, with each phase's state and issues. A plan, not a record: edit it when the order or a phase's state changes.
