@@ -120,12 +120,12 @@ B's 4 wrong include its 2 failed calls.
   the owner marked all three wrong: the recipe is lost, through no fault of
   the candidates.
 
-### What the owner's notes say
+### What the owner's remarks say
 
 Written in the sheet with the marks, summed up here without the posts' content:
 
 - **Missing ingredients or quantities**: in 15 fixable answers: A 2, B 6, C 7.
-- **The time** of the recipe, caught or missed: noted on 5 answers.
+- **The time** of the recipe, caught or missed: remarked on 5 answers.
 - **Language**: two of B's answers (posts 16 and 17) were written partly or
   wholly in English for Spanish posts, though their `language` field was right.
 - **Terse steps that are hard to follow**: three of B's answers and one of C's.
