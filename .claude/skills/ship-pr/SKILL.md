@@ -31,9 +31,9 @@ git push -u origin <branch>
 Write the body to a file outside the repo. Its first line is `Closes #N.`,
 plus `Part of #M.` when the issue belongs to an epic. Then the handoff
 summary's sections, in this order: "What changed and why", "Done when",
-"Checks", "Not verified" and "What this practises". Leave out "Not staged" and
-"Needs from you": those are for the session. No attribution anywhere in the
-title or the body.
+"Checks", "Not verified", "Merge danger" and "What this practises". Leave out
+"Not staged" and "Needs from you": those are for the session. No attribution
+anywhere in the title or the body.
 
 ```bash
 gh pr create --base main --head <branch> --title "<lowercase imperative, like the commits>" --body-file <file> --assignee @me
