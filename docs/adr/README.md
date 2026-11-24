@@ -51,6 +51,7 @@ is here, written down at the time instead of remembered afterwards.
 | 2026-11-24 | [A recipe shared by link can be read without an account](2026-11-24-a-shared-link-is-readable-without-an-account.md) |
 | 2026-11-24 | [The conversation hangs from the recipe](2026-11-24-the-conversation-hangs-from-the-recipe.md) |
 | 2026-11-24 | [Recipes are organised with tags, not folders](2026-11-24-tags-not-folders.md) |
+| 2026-11-24 | [The AI provider and the SDK for the import](2026-11-24-the-ai-provider-and-sdk.md) (Proposed) |
 
 ## Not decided yet
 
@@ -61,7 +62,10 @@ Each of these gets its ADR when it is decided, not before.
   [record](2026-11-16-how-an-instagram-post-is-read.md) is Proposed and
   recommends the public embed view, and the owner decides.
 - The database host and the ORM. Postgres is the preference.
-- The AI provider and the SDK that calls it.
+- The AI provider and the SDK that calls it. The prototype measured three
+  candidates; its [record](2026-11-24-the-ai-provider-and-sdk.md) is Proposed
+  and recommends Gemini reading the video, with Google's SDK, and the owner
+  decides.
 - Reading YouTube videos with a model.
 - The licence, the final name, the mark, what a rating means, and whether the
   app ever charges.

@@ -6,6 +6,7 @@ packages:
 
 # Every dependency version lives here; a package.json refers to it as "catalog:".
 catalog:
+  "@anthropic-ai/sdk": 1.8.0
   "@biomejs/biome": 2.6.7
   "@cfworker/json-schema": 4.1.6
   # 1.69.1, not the latest: 1.70.x needs a newer wrangler than the one below,
@@ -13,6 +14,7 @@ catalog:
   "@cloudflare/vite-plugin": 1.69.1
   "@fontsource-variable/nunito-sans": 5.3.0
   "@fontsource-variable/outfit": 5.3.0
+  "@google/genai": 3.3.0
   "@hono/zod-openapi": 1.6.3
   "@tailwindcss/vite": 4.3.5
   "@tanstack/react-router": 1.170.46
@@ -47,10 +49,13 @@ catalogs:
 # Reviewed build scripts. lefthook's postinstall only runs `lefthook install`,
 # which the root `prepare` script already does. esbuild's and workerd's check
 # the native binary that pnpm already installs from their optional
-# dependencies, and download it when that is missing.
+# dependencies, and download it when that is missing. protobufjs's, which
+# @google/genai brings in, only warns when a dependent's version range uses
+# another prefix; it builds nothing.
 allowBuilds:
   esbuild: false
   lefthook: false
+  protobufjs: false
   workerd: false
 
 # A script or the pre-commit hook stops when node_modules is out of date,

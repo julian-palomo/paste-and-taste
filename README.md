@@ -36,11 +36,12 @@ Code setup.
 
 The Instagram prototype, throwaway code in
 [`prototypes/instagram`](prototypes/instagram), measured which ways of reading a
-public post work without a login; the figures are in
-[`docs/research/instagram-reading.md`](docs/research/instagram-reading.md), and
-how a post is read is proposed in
-[`docs/adr/`](docs/adr/2026-11-16-how-an-instagram-post-is-read.md) and not
-decided.
+public post work without a login, and which AI provider turns a post into a
+recipe; the figures are in
+[`docs/research/instagram-reading.md`](docs/research/instagram-reading.md) and
+[`docs/research/instagram-to-recipe.md`](docs/research/instagram-to-recipe.md).
+How a post is read and the AI provider are proposed in
+[`docs/adr/`](docs/adr/README.md) and not decided.
 
 [`docs/product.md`](docs/product.md) says what the app must do, and
 [`docs/roadmap.md`](docs/roadmap.md) in what order it is being built.

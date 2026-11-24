@@ -3,9 +3,17 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "combine": "node src/combine.ts",
+    "marks": "node src/marks.ts",
     "measure": "node src/measure.ts",
+    "recipe": "node src/recipe.ts",
     "typecheck": "tsc --noEmit",
     "worker:bundle": "wrangler deploy --dry-run"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "catalog:",
+    "@google/genai": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@paste-and-taste/tsconfig": "workspace:*",
