@@ -7,6 +7,7 @@ packages:
 # Every dependency version lives here; a package.json refers to it as "catalog:".
 catalog:
   "@better-auth/drizzle-adapter": 1.7.27
+  "@better-auth/passkey": 1.7.27
   "@biomejs/biome": 2.6.7
   "@cfworker/json-schema": 4.1.6
   # 1.69.1, not the latest: 1.70.x needs a newer wrangler than the one below,

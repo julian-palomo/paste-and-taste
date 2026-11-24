@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "catalog:",
+    "@better-auth/passkey": "catalog:",
     "better-auth": "catalog:",
     "drizzle-orm": "catalog:",
     "pg": "catalog:"
