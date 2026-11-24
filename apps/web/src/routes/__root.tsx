@@ -3,6 +3,7 @@ import { languageOfPath } from "../layout/language-path.ts";
 import { Layout } from "../layout/layout.tsx";
 import { NotFoundPage } from "../layout/not-found-page.tsx";
 import appCss from "../styles/app.css?url";
+import { fontPreloads } from "../styles/fonts.ts";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -10,7 +11,7 @@ export const Route = createRootRoute({
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
     ],
-    links: [{ rel: "stylesheet", href: appCss }],
+    links: [{ rel: "stylesheet", href: appCss }, ...fontPreloads],
   }),
   component: RootDocument,
   // Any address no route matches, and any notFound() a route throws, lands

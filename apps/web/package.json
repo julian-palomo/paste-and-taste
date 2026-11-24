@@ -10,6 +10,8 @@
     "smoke": "node scripts/smoke.ts"
   },
   "dependencies": {
+    "@fontsource-variable/nunito-sans": "catalog:",
+    "@fontsource-variable/outfit": "catalog:",
     "@paste-and-taste/api-client": "workspace:*",
     "@tanstack/react-router": "catalog:",
     "@tanstack/react-start": "catalog:",

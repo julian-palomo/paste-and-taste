@@ -7,9 +7,10 @@ A visual change starts here.
 
 Each part says what is **decided** (the owner chose it), what is **proposed**
 (drawn or written by the design session, shown to the owner and not objected
-to, or not yet shown) and what is **open**. Nothing here is built yet: the web
-app's tokens still hold placeholders, and the first screens come with their
-issues.
+to, or not yet shown) and what is **open**. The web app's tokens
+(`apps/web/src/styles/tokens.css`) hold the colours of section 3, light and
+dark, the two typefaces and the pill shape; the drawings, the motion and the
+screens come with their issues.
 
 ## 1. Character
 
@@ -80,8 +81,9 @@ light are the accent as text on the page (4.89:1), white on the accent
 (5.27:1) and `#2F6416` on the middle tone (5.13:1). Two pairs fall just short
 and are not used: the accent itself on the soft tint in light (4.49:1), which
 is why green text on a tint uses `#2F6416`, and muted text on the middle tone
-in dark (4.49:1). A `focus` colour is not chosen; it must reach 3:1 on both
-surfaces.
+in dark (4.49:1). The `focus` colour is the accent of each mode, `#3B7A1E` and `#8FD46A`,
+which reaches 3:1 on both surfaces. The dark column applies when the device
+asks for dark (`prefers-color-scheme`); the app has no switch of its own yet.
 
 - **Decided:** the app has a dark mode, with the dark column above.
 - Drawing colours (tomato red, wood, yolk) are not tokens. They live in the
@@ -94,8 +96,10 @@ surfaces.
   stroke ends, was the first choice for titles and read as childish.
 - As drawn on the mock-ups, at phone width: page title 34px, section title
   20px, text 17px, secondary text 15px, navigation labels 13px.
-- **Open:** how the two families are served. It is decided with the issue
-  that gives the tokens their real values.
+- **Decided:** both are served by the app itself, from the Latin files of the
+  Fontsource variable packages, and drawn only if they are ready for the
+  first paint, so the text never changes once shown
+  ([the record](docs/adr/2026-11-24-fonts-from-the-app-and-dark-mode-from-the-device.md)).
 
 ## 5. Shape
 
@@ -219,7 +223,6 @@ They live on the owner's private design canvas, not in this repo.
   initials "P&T", or the "&" as the main character. The name is itself a
   working name.
 - How users relate to each other, and so what the social screens look like.
-- The `focus` colour.
 - How the look carries over to the native app.
 
 ## 12. Rejected, so it isn't proposed again

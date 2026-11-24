@@ -4,6 +4,7 @@
  */
 @import "tailwindcss";
 @import "./tokens.css";
+@import "./fonts.css";
 
 /* What no component puts a class on. Values come from the tokens only. */
 @layer base {
@@ -18,12 +19,14 @@
   h1 {
     font-size: var(--text-2xl);
     line-height: var(--text-2xl--line-height);
-    font-weight: var(--font-weight-semibold);
+    font-family: var(--font-display);
+    font-weight: var(--font-weight-bold);
   }
 
+  /* The outline follows the element's own corners, so a pill button gets a
+     pill ring; never give the ring a radius, which would reshape the element. */
   :where(a, button):focus-visible {
     outline: 2px solid var(--color-focus);
     outline-offset: 2px;
-    border-radius: var(--radius-control);
   }
 }

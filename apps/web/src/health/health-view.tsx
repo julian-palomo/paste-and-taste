@@ -9,14 +9,14 @@ export function HealthView({ state, messages }: { state: HealthState; messages: 
     <section className="flex flex-col gap-6">
       <h1>{messages.heading}</h1>
       {state.kind === "ok" ? (
-        <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 rounded-control bg-surface-raised p-4 [&_dd]:font-mono [&_dt]:text-text-muted">
+        <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2 bg-surface-raised p-4 [&_dd]:font-mono [&_dt]:text-text-muted">
           <dt>{messages.status}</dt>
           <dd>{state.status}</dd>
           <dt>{messages.environment}</dt>
           <dd>{state.environment}</dd>
         </dl>
       ) : (
-        <div className="rounded-control border border-danger p-4 text-danger">
+        <div className="border border-danger p-4 text-danger">
           <p role="alert">
             {state.kind === "api-error" ? messages.apiError : messages.unreachable}
           </p>

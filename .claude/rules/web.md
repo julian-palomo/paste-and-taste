@@ -8,8 +8,9 @@ paths:
 TanStack Start checks none of this; this rule and the reviews do. The records
 are `docs/adr/2026-11-14-tanstack-start-for-the-web.md`,
 `docs/adr/2026-11-23-web-addresses-per-language.md`,
-`docs/adr/2026-11-23-how-the-web-app-deploys.md` and
-`docs/adr/2026-11-23-tailwind-and-css-motion.md`.
+`docs/adr/2026-11-23-how-the-web-app-deploys.md`,
+`docs/adr/2026-11-23-tailwind-and-css-motion.md` and
+`docs/adr/2026-11-24-fonts-from-the-app-and-dark-mode-from-the-device.md`.
 
 **Every page is rendered on the server.** The HTML the server sends already
 holds the content, its `<title>` and its meta description, so search engines
@@ -68,11 +69,19 @@ utilities (`bg-surface`, `text-text-muted`, `rounded-control`,
 `duration-quick`): never a raw or arbitrary one like `bg-[#fff]` or
 `duration-[300ms]`. Spacing, sizes and type sizes use Tailwind's own scale.
 Tailwind's own palette, fonts, radii and easings are removed there, so
-`bg-red-500` doesn't exist. A new role is a new token in that file,
+`bg-red-500` doesn't exist. Every colour has a light value in `@theme
+static` and a dark one in the `prefers-color-scheme: dark` block after it, so
+no component knows which mode is on; `test/tokens.test.ts` fails when the two
+sets name different tokens. A new role is a new token in that file,
 under Tailwind's namespace for it: a duration is `--transition-duration-*`,
 or `duration-*` silently produces nothing. `src/styles/app.css` imports
-Tailwind and the tokens and styles what has no class (`body`, `h1`, focus);
+Tailwind, the tokens and the fonts, and styles what has no class (`body`, `h1`, focus);
 the root links it from `<head>`, so a page is styled before JavaScript runs.
+The typefaces come only from `src/styles/fonts.css`, served by the app, never
+by another host, with `font-display: optional`; `src/styles/fonts.ts`
+preloads the same files from the root, and `test/fonts.test.ts` fails when the
+two name different files. `public/_headers` caches `/assets/*` for a year:
+never widen it to a file without a hash in its name.
 Markup the deploy check or a test matches exactly (`<h1>`, `<dt>`, `<dd>`, `<p
 role="alert">`) carries no class and is styled from its parent.
 

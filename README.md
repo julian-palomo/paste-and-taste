@@ -18,11 +18,14 @@ check has passed ([the record](docs/adr/2026-11-15-how-the-api-deploys.md),
 [`apps/web`](apps/web): TanStack Start on Cloudflare Workers, with one page
 rendered on the server, at `/en` and `/es`, that shows the API's health
 through that client. It is styled with Tailwind CSS from one file of
-placeholder tokens, every page shares a layout with a link to the other
+tokens, every page shares a layout with a link to the other
 language, and unknown addresses and errors get their own pages in both
 languages ([the record](docs/adr/2026-11-23-tailwind-and-css-motion.md)). The app's look is chosen and
 written down in [`DESIGN.md`](DESIGN.md), with its reference drawings in
-[`docs/design/`](docs/design); no screen has it yet. The same pipeline deploys it after the API, to a
+[`docs/design/`](docs/design); the tokens have its colours, light and dark,
+and its two typefaces, served by the app
+([the record](docs/adr/2026-11-24-fonts-from-the-app-and-dark-mode-from-the-device.md)), and no screen
+is built yet. The same pipeline deploys it after the API, to a
 preview and a production Worker, each checked after its deploy; its server
 reaches that environment's API through a Service binding
 ([the record](docs/adr/2026-11-23-how-the-web-app-deploys.md)). Neither is
