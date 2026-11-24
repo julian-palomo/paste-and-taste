@@ -1,7 +1,8 @@
 # How the app looks, moves and speaks
 
 The look of Paste & Taste, as the owner chose it on 23 November 2026 by
-reacting to ten rounds of mock-ups. The record of the choice, with what lost,
+reacting to ten rounds of mock-ups, and its social screens, drawn in two more
+rounds on 24 November. The record of the choice, with what lost,
 is [`docs/adr/2026-11-23-the-apps-look.md`](docs/adr/2026-11-23-the-apps-look.md).
 A visual change starts here.
 
@@ -37,6 +38,9 @@ step by step).
   the soft tint to the full accent. A colour per step was rejected. As drawn,
   they are a tag on each screen, the bottom navigation, and three numbered
   blocks on the landing page.
+- **Decided:** the bottom navigation has a fourth tab, for people, after the
+  three moments: friends, groups and what has arrived. The owner loves it as
+  the fourth tab. Its word is open; it is drawn as "Mi gente".
 - **Decided:** the cooking screen shows one step at a time, like stories. It
   is drawn dark.
 - **Liked by the owner:** after the last step, a tasting screen, "¡A probar!":
@@ -52,7 +56,8 @@ other colours, so the interface doesn't compete with them.
 The light values are the ones the owner saw on the mock-ups. The dark column
 was computed, then shown to him on three mock-ups (Añadir, Receta, Cocinar),
 and he likes it, more than the light one. In light, the middle step tone and
-`danger` were computed and have **not been seen on a screen** by anyone. The
+`danger` were computed; on 24 November the owner saw both on screenshots of
+the built page and found the samples fine. The
 names are the roles of `apps/web/src/styles/tokens.css`, plus the ones this
 look adds.
 
@@ -78,14 +83,25 @@ Contrast, computed with WCAG 2's formula, in light and in dark: `text` and
 accent text colour on the soft and middle tones, and `danger` on both
 surfaces all reach 4.5:1; the control border reaches 3:1. The tightest in
 light are the accent as text on the page (4.89:1), white on the accent
-(5.27:1) and `#2F6416` on the middle tone (5.13:1). Two pairs fall just short
+(5.27:1) and `#2F6416` on the middle tone (5.13:1). Three pairs fall just short
 and are not used: the accent itself on the soft tint in light (4.49:1), which
 is why green text on a tint uses `#2F6416`, and muted text on the middle tone
-in dark (4.49:1). The `focus` colour is the accent of each mode, `#3B7A1E` and `#8FD46A`,
+and on a chip in dark (4.49:1 each, since the two share `#35501F`). The `focus` colour is the accent of each mode, `#3B7A1E` and `#8FD46A`,
 which reaches 3:1 on both surfaces. The dark column applies when the device
-asks for dark (`prefers-color-scheme`); the app has no switch of its own yet.
+asks for dark (`prefers-color-scheme`).
 
 - **Decided:** the app has a dark mode, with the dark column above.
+- **Decided:** settings let the user choose how the app looks: "Como el
+  móvil" (the default), "Claro" or "Oscuro". It is not built yet; today the
+  device decides.
+- **Proposed:** a state is never told by colour alone. The step tones and the
+  chip are 1.1 to 2.0:1 against the page, and in a simulated deuteranopia and
+  protanopia the error red and the accent green look almost the same. So an
+  error carries text or a drawing (the broken egg), a step carries its number
+  or name, and a count carries its number. This comes from the check of 24
+  November 2026: WCAG 2's formula on the token values, and the colour
+  blindness simulated in Chromium on the production page. Not checked: APCA,
+  a real phone, Safari, or a person with colour blindness looking at it.
 - Drawing colours (tomato red, wood, yolk) are not tokens. They live in the
   drawings.
 
@@ -106,6 +122,10 @@ asks for dark (`prefers-color-scheme`); the app has no switch of its own yet.
 - **Decided:** buttons, inputs, tags and filters are pills.
 - **Proposed:** cards with a 28px radius, rows with 22px, controls 54px tall,
   and no shadows beyond a 2px line under a card.
+- **Proposed:** every touch target is at least 44px. WCAG 2.2's minimum is
+  24px; Apple's and Google's guides ask for about 44 and 48, to be checked
+  against them when the control heights are set. On the built page today the
+  pill button is 40px high.
 
 ## 6. Drawings
 
@@ -125,6 +145,8 @@ and one small highlight. The reference drawings are in
   with an egg, oven mitt.
 - `states/`: the rating in spoons and the broken egg.
 - `loaders/`: the four waits, animated as mock-ups (section 8).
+- `screens/`: the mock-ups of rounds 11 and 12 (section 10), one file per
+  screen, as the design canvas keeps them.
 
 The owner judged most of them one by one. Liked: the mortar, the pan, the oven
 mitt and the apron. Accepted after a redraw: the cheese and the broken egg.
@@ -197,6 +219,8 @@ verbs are proposed copy.
   ingredientes y sus pasos."
 - The wit is kept for the edges: the waits' verbs, the failure, the empty
   list.
+- The social screens speak the same way, and never of fame: "Te ha llegado",
+  "Guardar mi copia", "Esto lo ves solo tú", "aquí nadie tiene seguidores".
 - All copy so far is Spanish and proposed. The English copy is not written.
 
 ## 10. The screens drawn so far
@@ -214,7 +238,68 @@ not specifications of what each screen does.
 - **Portada:** the landing page, with the circle of vegetables and the three
   steps.
 
-They live on the owner's private design canvas, not in this repo.
+The screens drawn on 24 November: the social ones (round 11), and keeping
+and finding recipes (round 12).
+
+- **Mi gente:** "Te ha llegado" first, with what has arrived (a friend
+  request, a recipe from a friend, an invitation to a group), then the
+  groups, then the friends with an "Invitar" tile at the end of their row.
+- **Un grupo:** who is in it, the recipes shared there with their comments,
+  "Invitar al grupo" and "Compartir una receta mía".
+- **Un amigo:** what they have passed you and what you have passed them,
+  marked "Esto lo ves solo tú", the recipes they passed, "Enviar una receta"
+  and "Quitar de amigos o bloquear".
+- **Compartir:** send to a friend, share in a group, or create a link.
+- **Enviar con una nota:** the note is optional and opens the recipe's
+  conversation.
+- **La conversación de una receta:** the messages in full, "editado" on an
+  edited one, and holding your own message to edit or delete it.
+- **Invitar al grupo:** your friends, each with "Invitar", "Invitación
+  enviada" or "Ya está en el grupo", and a WhatsApp link for whoever has no
+  account.
+- **Invitación** and **receta por enlace**, for a visitor without an
+  account: the invitation, with "Ver una receta de ejemplo", and the whole
+  recipe with "Guardar en mi recetario".
+- **Tu cuenta y ajustes:** photo, name, language, password, how it looks,
+  signing out and deleting the account.
+- **Mis recetas:** search, one-tap filters (favourites, made, under 30
+  minutes, from a friend), the pinned tags with a cover, and the last ones
+  saved.
+- **Buscar y filtrar** and **al guardar una receta**: the results with their
+  tags, and the dish type, main ingredient, time and tags the app suggests
+  on import, for the user to correct.
+
+**Decided by the owner on these screens:**
+
+- A recipe that arrives shows "Ver" and "Guardar mi copia" together and
+  centred, since you don't keep a recipe without seeing it; once kept, "Ver"
+  and "Ya está en tu recetario". Its conversation sits apart, as a strip at
+  the foot of the card with the last message and "Responder" or "Comentar",
+  which opens it whole. A received recipe has no "Ahora no".
+- The counts of what is new disappear once seen, and there are no totals.
+- "Últimas guardadas" in Mis recetas.
+- Settings as drawn.
+
+**Proposed, with no answer yet:** your own avatar, top right of the main
+screens, opens your account and settings; an avatar without a photo is the
+initial on a soft tint; the invitation link, opened by someone who already
+has an account, becomes a friend request ("Lucía quiere ser tu amiga",
+"Coincidís en el grupo Piso"); the app suggests the fixed tags on import and
+never sets a diet label (vegetarian, gluten free) by itself, since a wrong
+one is a health risk; when a recipe is sent, its fixed tags travel with it
+and the sender's own tags don't.
+
+**Proposed for a first visit, with no answer yet beyond the sample recipe:**
+a landing page that tells the three steps with the drawings and real
+screenshots, plus the app's sample recipe, which opens and cooks without an
+account; no slide tour inside; the first screen asks for one thing, the first
+link, and the recipe book already holds the sample recipe; one-time hints only
+when needed, the main one on Android being how to share from Instagram to the
+app.
+
+All the screens live on the owner's private design canvas. A copy of the
+screens of rounds 11 and 12 is in [`docs/design/screens/`](docs/design/screens),
+as the canvas holds them; the earlier rounds are only on the canvas.
 
 ## 11. Not decided
 
@@ -222,7 +307,9 @@ They live on the owner's private design canvas, not in this repo.
   Until then the name set in Outfit 800 stands in for it. Routes noted: the
   initials "P&T", or the "&" as the main character. The name is itself a
   working name.
-- How users relate to each other, and so what the social screens look like.
+- The word for the people tab. "Mi gente" is drawn as a trial; the owner
+  also likes "Amigos" and "Comunidad".
+- How the avatar photo is drawn. The screens show initials only.
 - How the look carries over to the native app.
 
 ## 12. Rejected, so it isn't proposed again
@@ -244,3 +331,6 @@ They live on the owner's private design canvas, not in this repo.
   (they nearly vanish on the dark page), and a sprig with stuffed olives or
   with green and black ones together.
 - A rating in spoons with red sauce.
+- "Mesa" as the word for the people tab: the owner liked the idea and found it
+  hard to understand.
+- A tree of folders for recipes ([the record](docs/adr/2026-11-24-tags-not-folders.md)).

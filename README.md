@@ -56,6 +56,8 @@ Each decision has its record, with the options that lost, in
 - The API's contract: an OpenAPI document generated from the routes' zod schemas, and a typed client generated from that document.
 - Login: Better Auth.
 - Background work, such as importing a recipe: Cloudflare Workflows.
+- People: mutual friends and groups, with no followers. Whoever keeps a recipe gets their own copy, nobody signs one, and its conversation hangs from the recipe.
+- Recipes are organised with tags, fixed and the user's own, not with folders.
 - The look: a basil green on a warm off-white with a dark mode, Outfit and Nunito Sans, pills, and flat drawings of food and kitchen utensils. The mark is not decided.
 - The interface is in Spanish and English from day one. On the web each language has its own address, `/en` and `/es`, and `/` sends a visitor to theirs.
 - Tooling: pnpm workspaces with a version catalog, and Turborepo.
