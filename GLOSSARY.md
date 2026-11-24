@@ -31,7 +31,7 @@ _Avoid_: quota.
 marked with a tag. Spanish word: open.\
 _Avoid_: hack, trick.
 
-**Variant**: Another version of a recipe that lives beside it, with
+**Variant**: Another form of a recipe that lives beside it, with
 ingredients changed or added or the steps in another order.\
 _Avoid_: version (see Note).
 
