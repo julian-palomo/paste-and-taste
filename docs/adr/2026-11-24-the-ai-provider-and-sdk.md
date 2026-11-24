@@ -47,9 +47,9 @@ owner decides it.
 - **C, Claude Haiku with a Whisper transcript.** The fastest by the median, and
   the cheapest at the worst post and in total, with no answer wrong on the
   recipe posts with a video, but fewer of them good (4 of 10 against 8). By the
-  median cost per post, B was cheaper by a ten-thousandth of a dollar. It needs two providers, and its frames and audio have to
-  be extracted outside a Worker, in a Container or with Media Transformations,
-  which wasn't tried. A larger Claude model wasn't tried; the owner keeps it as
+  median cost per post, B was cheaper by a ten-thousandth of a dollar. It needs
+  two providers, and its frames and audio have to be extracted outside a
+  Worker, in a Container or with Media Transformations, which wasn't tried. A larger Claude model wasn't tried; the owner keeps it as
   a second run if Haiku falls short.
 - **B, everything on Workers AI.** One provider, already the app's, with zero
   data retention; but the lowest quality, 3 network failures in 21 calls, 2 of
