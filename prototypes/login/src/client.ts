@@ -24,6 +24,11 @@ export class WorkerClient {
   readonly #origin: string;
   readonly #token: string | undefined;
 
+  /** The Worker's origin: what a passkey's client data names. */
+  get origin(): string {
+    return this.#origin;
+  }
+
   constructor(address: string, token: string | undefined) {
     this.#origin = new URL(address).origin;
     this.#token = token;
@@ -101,4 +106,71 @@ export async function readSession(client: WorkerClient, host: Host, cookie: stri
 
 export function wake(client: WorkerClient, host: Host) {
   return client.send(`/${host}/wake`);
+}
+
+/** Joins two Cookie headers; a cookie in `next` replaces one of the same name. */
+export function mergeCookies(previous: string | undefined, next: string | undefined): string {
+  const jar = new Map<string, string>();
+  for (const header of [previous, next]) {
+    for (const pair of (header ?? "").split("; ")) {
+      const name = pair.split("=")[0];
+      if (name) jar.set(name, pair);
+    }
+  }
+  return [...jar.values()].join("; ");
+}
+
+export function askForCode(client: WorkerClient, host: Host, email: string) {
+  return client.send(`/${host}/api/auth/email-otp/send-verification-otp`, {
+    method: "POST",
+    json: { email, type: "sign-in" },
+  });
+}
+
+/** The code the last `askForCode` stored, read through the spike's own route. */
+export async function readCode(client: WorkerClient, host: Host, email: string) {
+  const sent = await client.send(`/${host}/spike/code?email=${encodeURIComponent(email)}`);
+  const otp = (sent.body as { otp?: unknown } | undefined)?.otp;
+  return { ...sent, otp: typeof otp === "string" ? otp : undefined };
+}
+
+export function signInWithCode(client: WorkerClient, host: Host, email: string, otp: string) {
+  return client.send(`/${host}/api/auth/sign-in/email-otp`, {
+    method: "POST",
+    json: { email, otp },
+  });
+}
+
+export function passkeyRegisterOptions(client: WorkerClient, host: Host, cookie: string) {
+  return client.send(`/${host}/api/auth/passkey/generate-register-options`, { cookie });
+}
+
+export function passkeyVerifyRegistration(
+  client: WorkerClient,
+  host: Host,
+  cookie: string,
+  response: unknown,
+) {
+  return client.send(`/${host}/api/auth/passkey/verify-registration`, {
+    method: "POST",
+    json: { response },
+    cookie,
+  });
+}
+
+export function passkeySignInOptions(client: WorkerClient, host: Host) {
+  return client.send(`/${host}/api/auth/passkey/generate-authenticate-options`);
+}
+
+export function passkeyVerifySignIn(
+  client: WorkerClient,
+  host: Host,
+  cookie: string,
+  response: unknown,
+) {
+  return client.send(`/${host}/api/auth/passkey/verify-authentication`, {
+    method: "POST",
+    json: { response },
+    cookie,
+  });
 }

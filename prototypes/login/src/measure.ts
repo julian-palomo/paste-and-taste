@@ -1,23 +1,33 @@
 // The spike's measurements, run from the owner's machine against the deployed
 // Worker (or `wrangler dev`). One request at a time, one a second, unless a
 // step says otherwise. It prints only steps, hosts, counts, statuses, error
-// bodies, UTC windows and timings: never the token, a cookie, a password or
-// the address (pnpm's echo of the command line, above its output, does show
+// bodies, UTC windows and timings: never the token, a cookie, a password, a
+// code or the address (pnpm's echo of the command line, above its output, does show
 // the address). Test users are made up, under example.com.
 //
 //   pnpm -C prototypes/login measure <address> cpu [--count 20]
 //   pnpm -C prototypes/login measure <address> warm [--count 50]
 //   pnpm -C prototypes/login measure <address> hung [--count 500]
 //   pnpm -C prototypes/login measure <address> cold [--rounds 15] [--idle-minutes 35]
+//   pnpm -C prototypes/login measure <address> passwordless [--count 20]
 
 import { parseArgs } from "node:util";
+import { Passkey } from "./authenticator.ts";
 import {
   type Account,
+  askForCode,
   HOSTS,
   type Host,
+  mergeCookies,
   type Outcome,
+  passkeyRegisterOptions,
+  passkeySignInOptions,
+  passkeyVerifyRegistration,
+  passkeyVerifySignIn,
+  readCode,
   readSession,
   signIn,
+  signInWithCode,
   signUp,
   WorkerClient,
   wake,
@@ -27,6 +37,8 @@ import { failures, summarize } from "./stats.ts";
 const PACE_MS = 1_000;
 const SIGN_UP_ATTEMPTS = 5;
 const GAPS_MS = [2_000, 10_000];
+/** Between the passwordless batches: their UTC windows must not overlap, and a code lives 300 s. */
+const PASSWORDLESS_GAP_MS = 20_000;
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, Math.max(0, ms)));
 const now = () => new Date().toISOString().replace(/\.\d+Z$/, "Z");
@@ -174,6 +186,137 @@ async function cold(client: WorkerClient, rounds: number, idleMinutes: number) {
   for (const [label, outcomes] of results) console.log(`  ${label}: ${summarize(outcomes)}`);
 }
 
+type Ceremony = { challenge: string; rpId: string; origin: string };
+
+/** The challenge and site id a ceremony's options carry, or undefined when the answer had none. */
+function ceremonyFrom(client: WorkerClient, body: unknown): Ceremony | undefined {
+  const options = body as
+    | { challenge?: unknown; rp?: { id?: unknown }; rpId?: unknown }
+    | undefined;
+  const rpId = options?.rp?.id ?? options?.rpId;
+  if (typeof options?.challenge !== "string" || typeof rpId !== "string") return undefined;
+  return { challenge: options.challenge, rpId, origin: client.origin };
+}
+
+const missing = (what: string): Outcome => ({ status: 0, ms: 0, error: `skipped: no ${what}` });
+
+/**
+ * Login without a password, Neon only: CPU time is the Worker's, so one host
+ * is enough. Each batch is one kind of request, so its UTC window reads one
+ * kind in the Query Builder; the code reads between them are not measured.
+ */
+async function passwordless(client: WorkerClient, count: number) {
+  const host: Host = "neon";
+  const people = Array.from({ length: count }, () => ({
+    email: newAccount().email,
+    code: undefined as string | undefined,
+    cookie: undefined as string | undefined,
+    challenge: undefined as { ceremony: Ceremony; cookie: string } | undefined,
+    passkey: new Passkey(),
+  }));
+  const pause = () => sleep(PASSWORDLESS_GAP_MS);
+
+  const readCodes = async (label: string) => {
+    const read = await batch(`${label} (not measured)`, count, async (i) => {
+      const person = people[i] as (typeof people)[number];
+      const sent = await readCode(client, host, person.email);
+      person.code = sent.otp;
+      return sent.otp ? sent : { ...sent, error: sent.error ?? "no code stored" };
+    });
+    await pause();
+    return read;
+  };
+  const signInEach = async (label: string) => {
+    await batch(label, count, async (i) => {
+      const person = people[i] as (typeof people)[number];
+      if (!person.code) return missing("code");
+      const sent = await signInWithCode(client, host, person.email, person.code);
+      if (sent.status === 200 && sent.cookie) person.cookie = sent.cookie;
+      return sent;
+    });
+    await pause();
+  };
+
+  for (const kind of ["new person", "existing person"]) {
+    await batch(`passwordless ask for a code, ${kind}`, count, (i) =>
+      askForCode(client, host, (people[i] as (typeof people)[number]).email),
+    );
+    await pause();
+    await readCodes(`passwordless read the code, ${kind}`);
+    await signInEach(`passwordless sign in with the code, ${kind}`);
+  }
+
+  // Registering needs the fresh session the code sign-in gave.
+  await batch("passwordless passkey register: options", count, async (i) => {
+    const person = people[i] as (typeof people)[number];
+    if (!person.cookie) return missing("session");
+    const sent = await passkeyRegisterOptions(client, host, person.cookie);
+    const ceremony = ceremonyFrom(client, sent.body);
+    if (sent.status === 200 && ceremony && sent.cookie)
+      person.challenge = { ceremony, cookie: mergeCookies(person.cookie, sent.cookie) };
+    return sent;
+  });
+  await pause();
+  await batch("passwordless passkey register: verify", count, async (i) => {
+    const person = people[i] as (typeof people)[number];
+    if (!person.challenge) return missing("challenge");
+    const { ceremony, cookie } = person.challenge;
+    person.challenge = undefined;
+    return passkeyVerifyRegistration(client, host, cookie, person.passkey.register(ceremony));
+  });
+  await pause();
+
+  // Signing in with a passkey starts with no session, as on a device after sign-out.
+  await batch("passwordless passkey sign-in: options", count, async (i) => {
+    const person = people[i] as (typeof people)[number];
+    const sent = await passkeySignInOptions(client, host);
+    const ceremony = ceremonyFrom(client, sent.body);
+    if (sent.status === 200 && ceremony && sent.cookie)
+      person.challenge = { ceremony, cookie: sent.cookie };
+    return sent;
+  });
+  await pause();
+  await batch("passwordless passkey sign-in: verify", count, async (i) => {
+    const person = people[i] as (typeof people)[number];
+    if (!person.challenge) return missing("challenge");
+    const { ceremony, cookie } = person.challenge;
+    person.challenge = undefined;
+    const sent = await passkeyVerifySignIn(client, host, cookie, person.passkey.signIn(ceremony));
+    if (sent.status === 200 && sent.cookie) person.cookie = mergeCookies(cookie, sent.cookie);
+    return sent;
+  });
+  await pause();
+
+  // The checks: each must be refused, and the passkey's session must read back.
+  console.log("passwordless checks:");
+  const first = people[0] as (typeof people)[number];
+  if (first.cookie) {
+    const session = await readSession(client, host, first.cookie);
+    console.log(
+      `  session after a passkey sign-in: ${session.status}${session.error ? ` (${session.error})` : ""}`,
+    );
+  }
+  const stranger = newAccount().email;
+  await askForCode(client, host, stranger);
+  const real = (await readCode(client, host, stranger)).otp ?? "000000";
+  const wrong = real.replace(/^./, (digit) => String((Number(digit) + 1) % 10));
+  const refusedCode = await signInWithCode(client, host, stranger, wrong);
+  console.log(`  wrong code: ${refusedCode.status} (must not be 200)`);
+  const options = await passkeySignInOptions(client, host);
+  const ceremony = ceremonyFrom(client, options.body);
+  if (ceremony && options.cookie) {
+    const forged = first.passkey.signIn(ceremony, { forged: true });
+    const refusedPasskey = await passkeyVerifySignIn(client, host, options.cookie, forged);
+    console.log(`  signature from another key: ${refusedPasskey.status} (must not be 200)`);
+  } else {
+    console.log(`  signature from another key: not tried, options answered ${options.status}`);
+  }
+  const notTest = await client.send(
+    `/${host}/spike/code?email=${encodeURIComponent("someone@example.org")}`,
+  );
+  console.log(`  code for an address that isn't a test one: ${notTest.status} (must be 404)`);
+}
+
 const { values, positionals } = parseArgs({
   allowPositionals: true,
   options: {
@@ -185,7 +328,7 @@ const { values, positionals } = parseArgs({
 const [address, step] = positionals;
 if (!address || !step) {
   console.error(
-    "usage: measure <address> <cpu|warm|hung|cold> [--count N] [--rounds N] [--idle-minutes N]",
+    "usage: measure <address> <cpu|warm|hung|cold|passwordless> [--count N] [--rounds N] [--idle-minutes N]",
   );
   process.exit(2);
 }
@@ -220,6 +363,9 @@ switch (step) {
     break;
   case "cold":
     await cold(client, Number(values.rounds), Number(values["idle-minutes"]));
+    break;
+  case "passwordless":
+    await passwordless(client, count(20));
     break;
   default:
     console.error(`unknown step ${step}`);
