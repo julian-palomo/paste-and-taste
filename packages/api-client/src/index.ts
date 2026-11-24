@@ -3,7 +3,7 @@ import type { components, paths } from "./schema.d.ts";
 
 export type ProblemDetails = components["schemas"]["ProblemDetails"];
 
-// Every failed call throws this: one place to read what went wrong. `status`
+// The API answered with an error: one place to read what went wrong. `status`
 // is the response's; `problem` is its body when that is Problem Details.
 export class ApiError extends Error {
   readonly status: number;
@@ -14,6 +14,16 @@ export class ApiError extends Error {
     this.name = "ApiError";
     this.status = status;
     this.problem = problem;
+  }
+}
+
+// No usable answer came back: `fetch` rejected, or a 200's body is empty or
+// isn't JSON (a captive portal, a wrong address). `cause` is the platform's
+// error when there is one.
+export class ApiUnreachableError extends Error {
+  constructor(message: string, options?: ErrorOptions) {
+    super(message, options);
+    this.name = "ApiUnreachableError";
   }
 }
 
@@ -58,20 +68,41 @@ type ApiClientOptions = {
 };
 
 export function createApiClient({ baseUrl, fetch }: ApiClientOptions) {
-  const client = createClient<paths>({ baseUrl, ...(fetch ? { fetch } : {}) });
+  const client = createClient<paths>({
+    baseUrl,
+    fetch: async (request) => {
+      try {
+        // The global is read on each call, so a fetch replaced later is used.
+        return await (fetch ?? globalThis.fetch)(request);
+      } catch (cause) {
+        throw new ApiUnreachableError("The API could not be reached.", { cause });
+      }
+    },
+  });
   // openapi-fetch types GET per literal path; a generic path needs this one
   // widening, and GetBody gives the result its type back.
   const get = client.GET as (
     path: string,
+    init: { parseAs: "text" },
   ) => Promise<{ data?: unknown; error?: unknown; response: Response }>;
 
   return {
     async get<P extends GetPath>(path: P): Promise<GetBody<P>> {
-      const { data, error, response } = await get(path);
+      // As text, so the JSON is parsed here: openapi-fetch's own parse throws
+      // a bare SyntaxError on HTML and resolves an empty body as undefined.
+      // An error body is read the same way whatever parseAs says.
+      const { data, error, response } = await get(path, { parseAs: "text" });
       if (!response.ok || error !== undefined) {
         throw new ApiError(response.status, toProblem(error, response.status));
       }
-      return data as GetBody<P>;
+      if (typeof data !== "string" || data === "") {
+        throw new ApiUnreachableError(`The ${response.status} response had no body.`);
+      }
+      try {
+        return JSON.parse(data) as GetBody<P>;
+      } catch (cause) {
+        throw new ApiUnreachableError(`The ${response.status} response was not JSON.`, { cause });
+      }
     },
   };
 }

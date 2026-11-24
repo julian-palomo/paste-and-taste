@@ -41,6 +41,16 @@ is here, written down at the time instead of remembered afterwards.
 | 2026-11-16 | [Hono for the API on Cloudflare Workers, with NestJS's structure by hand](2026-11-16-hono-on-workers.md) |
 | 2026-11-16 | [The API's contract: an OpenAPI document, and a client generated from it](2026-11-16-api-contract-from-openapi.md) |
 | 2026-11-16 | [How an Instagram post is read](2026-11-16-how-an-instagram-post-is-read.md) (Proposed)                     |
+| 2026-11-23 | [ApiUnreachableError when no usable answer comes back from the API](2026-11-23-api-unreachable-error.md) |
+| 2026-11-23 | [The web app's addresses per language, and no i18n library yet](2026-11-23-web-addresses-per-language.md) |
+| 2026-11-23 | [How the web app deploys, and how its server reaches the API](2026-11-23-how-the-web-app-deploys.md) |
+| 2026-11-23 | [Tailwind CSS 4 from one tokens file, and motion without a library](2026-11-23-tailwind-and-css-motion.md) |
+| 2026-11-23 | [The app's look: a basil green, Outfit and Nunito Sans, flat food and utensils](2026-11-23-the-apps-look.md) |
+| 2026-11-24 | [The typefaces served by the app, and dark mode from the device](2026-11-24-fonts-from-the-app-and-dark-mode-from-the-device.md) |
+| 2026-11-24 | [Friends and groups, and a copy for whoever keeps a recipe](2026-11-24-friends-groups-and-copies.md) |
+| 2026-11-24 | [A recipe shared by link can be read without an account](2026-11-24-a-shared-link-is-readable-without-an-account.md) |
+| 2026-11-24 | [The conversation hangs from the recipe](2026-11-24-the-conversation-hangs-from-the-recipe.md) |
+| 2026-11-24 | [Recipes are organised with tags, not folders](2026-11-24-tags-not-folders.md) |
 
 ## Not decided yet
 
@@ -53,5 +63,5 @@ Each of these gets its ADR when it is decided, not before.
 - The database host and the ORM. Postgres is the preference.
 - The AI provider and the SDK that calls it.
 - Reading YouTube videos with a model.
-- The licence, the final name, what a rating means, and whether the app ever
-  charges.
+- The licence, the final name, the mark, what a rating means, and whether the
+  app ever charges.

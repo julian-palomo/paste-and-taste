@@ -1,0 +1,18 @@
+{
+  "title": "Paste & Taste: estado de la API",
+  "description": "Si la API de Paste & Taste responde, y en qué entorno.",
+  "heading": "Estado de la API",
+  "status": "Estado",
+  "environment": "Entorno",
+  "apiError": "La API ha respondido con un error. Vuelve a intentarlo en unos minutos.",
+  "unreachable": "No se puede contactar con la API ahora mismo. Vuelve a intentarlo en unos minutos.",
+  "appName": "Paste & Taste",
+  "otherLanguage": "English",
+  "footer": "Paste & Taste es un nombre provisional.",
+  "notFoundHeading": "Página no encontrada",
+  "notFoundBody": "No hay ninguna página en esta dirección.",
+  "backHome": "Ir a la página de inicio",
+  "errorHeading": "Algo ha fallado",
+  "errorBody": "No se ha podido mostrar esta página. Vuelve a intentarlo en un momento.",
+  "retry": "Volver a intentarlo"
+}

@@ -1,0 +1,129 @@
+name: Deploy
+
+# A merge to main deploys the API and the web app, one environment after the
+# other: the checks, then the API to preview and its smoke, the web to preview
+# and its check, then the same two for production. Each job needs the one
+# before it, so nothing reaches production until both services passed on
+# preview. docs/deploying-the-api.md is the owner's page for it.
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# One run at a time, and a run in progress is never cancelled: a deploy cut
+# off halfway leaves a Worker nobody smoke-tested. GitHub keeps one pending
+# run in the group; a newer push replaces it before it starts.
+# The group keeps its first name although the run now deploys the web too:
+# renaming it would let a run in the old group overlap one in the new.
+concurrency:
+  group: deploy-api
+  cancel-in-progress: false
+
+# The token reaches a job only through its environment. Each environment's
+# branch rule (main only) is what keeps a branch's edited workflow from naming
+# it: never remove that rule in the repo's settings.
+jobs:
+  # The same six jobs CI runs on a pull request. No secrets are passed.
+  checks:
+    name: Checks
+    uses: ./.github/workflows/ci.yml
+
+  deploy-preview:
+    name: Deploy to preview
+    needs: checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: preview
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+      # working-directory, not `pnpm -C apps/api`: knip reads a step's
+      # working-directory but not -C, and would report wrangler as unlisted.
+      # The secrets live in this step's env only, so no other step can read them.
+      - run: pnpm exec wrangler deploy --env preview
+        working-directory: apps/api
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - run: pnpm smoke "$API_URL" preview
+        working-directory: apps/api
+        env:
+          API_URL: ${{ vars.API_URL }}
+
+  # The web app is built for its environment here, not in Checks: the
+  # Cloudflare Vite plugin applies CLOUDFLARE_ENV at build time, and
+  # `wrangler deploy` deploys what that build wrote
+  # (docs/adr/2026-11-23-how-the-web-app-deploys.md). Its server reaches this
+  # environment's API through a Service binding, so it runs after that API's
+  # smoke.
+  deploy-web-preview:
+    name: Deploy web to preview
+    needs: deploy-preview
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: preview
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+      - run: pnpm build
+        working-directory: apps/web
+        env:
+          CLOUDFLARE_ENV: preview
+      # --env is a guard, not the switch: wrangler refuses to deploy a build
+      # made for another environment ("This does not match the target
+      # environment"). Observed with wrangler 4.162.0, not documented.
+      - run: pnpm exec wrangler deploy --env preview
+        working-directory: apps/web
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - run: pnpm smoke "$WEB_URL" preview
+        working-directory: apps/web
+        env:
+          WEB_URL: ${{ vars.WEB_URL }}
+
+  # Needs the web's preview job, and through it the API's: a commit that failed
+  # on preview, in either service, never reaches production.
+  deploy-production:
+    name: Deploy to production
+    needs: deploy-web-preview
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+      - run: pnpm exec wrangler deploy --env production
+        working-directory: apps/api
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - run: pnpm smoke "$API_URL" production
+        working-directory: apps/api
+        env:
+          API_URL: ${{ vars.API_URL }}
+
+  deploy-web-production:
+    name: Deploy web to production
+    needs: deploy-production
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: production
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+      - run: pnpm build
+        working-directory: apps/web
+        env:
+          CLOUDFLARE_ENV: production
+      - run: pnpm exec wrangler deploy --env production
+        working-directory: apps/web
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - run: pnpm smoke "$WEB_URL" production
+        working-directory: apps/web
+        env:
+          WEB_URL: ${{ vars.WEB_URL }}
