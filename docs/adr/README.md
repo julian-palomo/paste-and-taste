@@ -46,6 +46,7 @@ is here, written down at the time instead of remembered afterwards.
 | 2026-11-23 | [How the web app deploys, and how its server reaches the API](2026-11-23-how-the-web-app-deploys.md) |
 | 2026-11-23 | [Tailwind CSS 4 from one tokens file, and motion without a library](2026-11-23-tailwind-and-css-motion.md) |
 | 2026-11-23 | [The app's look: a basil green, Outfit and Nunito Sans, flat food and utensils](2026-11-23-the-apps-look.md) |
+| 2026-11-24 | [The typefaces served by the app, and dark mode from the device](2026-11-24-fonts-from-the-app-and-dark-mode-from-the-device.md) |
 
 ## Not decided yet
 
