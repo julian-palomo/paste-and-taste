@@ -63,6 +63,8 @@ to run it.
 | `pnpm -C tools/openapi-typegen generate` | Writes the client's types, `packages/api-client/src/schema.d.ts`, from the document. Commit it. |
 | `pnpm -C prototypes/instagram measure <absolute path>` | Measures each way of reading the owner's sample of Instagram posts; never prints a link. Sends requests to Instagram. |
 | `pnpm -C prototypes/instagram worker:bundle` | Bundles the spike's scratch Worker with `wrangler deploy --dry-run`; writes nothing to Cloudflare. |
+| `pnpm -C prototypes/instagram recipe <absolute path> --candidates A,B,C --out <folder>` | Has each AI candidate turn the owner's sample into recipes, with time and cost; answers go to `--out`, outside the repo. Sends requests to Instagram and paid calls to the providers, within `--budget`. |
+| `pnpm -C prototypes/instagram marks <run folder>` | Counts the owner's blind marks of a run's answers per candidate and per place. |
 
 The package manager is pnpm, with Turborepo running `typecheck`, `test` and
 `build` in each workspace that has the script; a workspace's `test` runs after
@@ -88,7 +90,7 @@ and writes nothing to Cloudflare. The real deploy runs only in
 - `packages/api-client`: `@paste-and-taste/api-client`, the typed way to call the API: `createApiClient`; `ApiError` when the API answers with an error, and `ApiUnreachableError` when no usable answer comes back (`fetch` rejects, or a 200's body is empty or isn't JSON). `src/schema.d.ts` is generated from `apps/api/openapi.json`, never edited.
 - `tools/openapi-typegen`: runs `openapi-typescript`, with its own TypeScript 5.9.3 from the catalog `typegen`, to write the client's types. Nothing else uses that TypeScript.
 - `tools/tsconfig`: the strict TypeScript base config, `@paste-and-taste/tsconfig/base.json`, that every workspace extends.
-- `prototypes/instagram`: `@paste-and-taste/instagram-prototype`, throwaway code for the Instagram spike: a script that measures each way of reading a public post with no login, and a scratch Worker that runs it from Cloudflare's network. Nothing imports it, and it is deleted when the real import replaces it; its `README.md` says how to run it.
+- `prototypes/instagram`: `@paste-and-taste/instagram-prototype`, throwaway code for the Instagram spikes: a script that measures each way of reading a public post with no login, a scratch Worker that runs it from Cloudflare's network, and a script that has AI candidates turn a post into a recipe, with the owner's blind marks counted. Nothing imports it, and it is deleted when the real import replaces it; its `README.md` says how to run it.
 - `docs/design/`: the reference drawings of `DESIGN.md`, one SVG each on a 120 by 120 box: `food/`, `utensils/`, `states/` and `loaders/`; and `screens/`, the design canvas's mock-ups of rounds 11 and 12, one HTML file per screen. Nothing imports them; a screen that shows a drawing brings it into its app.
 - `.github/workflows/ci.yml`: CI on every pull request to `main`, one job per check: `Hook tests`, `Biome`, `knip`, `Contract`, `Typecheck` and `Tests`. `deploy.yml` calls it as a reusable workflow.
 - `.github/workflows/deploy.yml`: on a push to `main`, the same checks, then one chain: the API deployed to `preview` and smoke-tested, the web app built for `preview`, deployed and checked, then the same two for `production`. One run at a time; the token comes from the GitHub environments `preview` and `production`, which only `main` may use.
