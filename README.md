@@ -33,7 +33,9 @@ decided.
 The login prototype, throwaway code in
 [`prototypes/login`](prototypes/login), measures login with Better Auth on a
 Worker on the free plan, with its users in Postgres reached through
-Hyperdrive, on Neon and on PlanetScale; the database host is not decided.
+Hyperdrive, on Neon and on PlanetScale; the database host is not decided. It
+also measures login without a password, by a code sent by email and by
+passkey, which is being tried and is not decided either.
 
 [`docs/product.md`](docs/product.md) says what the app must do, and
 [`docs/roadmap.md`](docs/roadmap.md) in what order it is being built.

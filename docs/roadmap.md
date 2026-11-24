@@ -13,7 +13,7 @@ needs, and a phase gets its issues when it is next.
 | --- | ----------------------------- | ----------- | ---------------------------------------------------------------------- |
 | 1   | The API's base                | Done        | [#35](https://github.com/julian-palomo/paste-and-taste/issues/35)      |
 | 2   | The Instagram prototype       | In progress | [#22](https://github.com/julian-palomo/paste-and-taste/issues/22)      |
-| 3   | Database and login            | In progress | [#42](https://github.com/julian-palomo/paste-and-taste/issues/42)      |
+| 3   | Database and login            | In progress | [#42](https://github.com/julian-palomo/paste-and-taste/issues/42), [#58](https://github.com/julian-palomo/paste-and-taste/issues/58) |
 | 4   | The first recipe, end to end  | In progress | [#46](https://github.com/julian-palomo/paste-and-taste/issues/46)      |
 | 5   | The real import               | Not started |                                                                        |
 | 6   | The native app                | Not started |                                                                        |
@@ -35,7 +35,9 @@ needs, and a phase gets its issues when it is next.
    first table with its migrations, and Better Auth, which needs the database.
    It starts with a spike, #42: login with Better Auth through Hyperdrive,
    measured from a deployed Worker on Neon's free plan and on PlanetScale's
-   smallest node, before anything is built on either.
+   smallest node, before anything is built on either. Hashing a password
+   took far more CPU than the free plan allows, so #58 measures login without
+   a password, by a code sent by email and by passkey, on the same Worker.
 4. **The first recipe, end to end.** A table, its endpoints, and the web app
    in TanStack Start with one screen that lists a recipe, opens it and edits
    it, in Spanish and English. A service and a repository appear in the API
