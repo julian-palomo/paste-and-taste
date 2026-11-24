@@ -42,7 +42,7 @@ to run it.
 - **Act on PR reviews.** Read the owner's review, check each point against the code before applying it, and reply on the PR with what you didn't apply and why. No agreement for show. A review from the cloud session starts with `Verdict: changes requested` or `Verdict: ready for the owner`. That session pushes to the branch only when every fix is mechanical and that closes the review; otherwise it pushes nothing (`docs/adr/2026-11-15-fixes-after-a-review.md`).
 - **Leave the docs true.** Before handing off, re-read every doc the change could have made false, and fix it. "No doc changes needed" is a fine answer when it follows from that check.
 - **One word per concept.** Issues, plans, tests, code names and docs use the terms in `GLOSSARY.md`. A new concept, or a sharper word for one, goes into `GLOSSARY.md` in the same pull request.
-- **What the PR says.** What changed and why, every check run with its result, what was not run or not verified, and `## What this practises`: the concept the issue names and one sentence on how it was applied here.
+- **What the PR says.** What changed and why, every check run with its result, what was not run or not verified, `## Merge danger` (whether merging is a one-way or a two-way door, and its blast radius), and `## What this practises`: the concept the issue names and one sentence on how it was applied here.
 - **The loop has skills.** `/implement-issue <N>` runs it from reading the issue to acting on the review; `/handoff` and `/ship-pr` are its last steps.
 - Each commit passes the checks on its own. Subjects are short, lowercase and imperative ("add …", "fix …").
 

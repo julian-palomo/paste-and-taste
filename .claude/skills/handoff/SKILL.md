@@ -73,6 +73,11 @@ into another conversation:
 
 - What wasn't checked, and what was checked instead. "Nothing" if nothing.
 
+## Merge danger
+
+- **Door**: `two-way` (merging can be undone with a revert and nothing is lost) or `one-way` (it deletes or changes data, touches an account or a secret, or is otherwise hard to walk back), and one sentence why.
+- **Blast radius**: what a mistake in it would affect, in a few words ("the API's sign-in", "docs only").
+
 ## Not staged
 
 - Files left alone because they aren't this task's. "Nothing" if nothing.
