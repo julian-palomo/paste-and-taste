@@ -4,7 +4,7 @@ import { betterAuth } from "better-auth";
 import { emailOTP } from "better-auth/plugins/email-otp";
 import type { Database } from "../database/database.ts";
 import { authAccount, passkey, session, user, verification } from "../database/schema.ts";
-import type { CodeSender } from "./code-sender.ts";
+import type { Outbox } from "./outbox.ts";
 import { rememberMeHook } from "./remember-me.ts";
 
 const DAY_SECONDS = 24 * 60 * 60;
@@ -18,7 +18,7 @@ export type AuthSettings = {
   baseURL: string;
   passkeyRpId: string;
   passkeyOrigin: string;
-  codeSender: CodeSender;
+  outbox: Outbox;
 };
 
 // One Better Auth instance for one request. Never hoist it to module scope or
@@ -49,8 +49,9 @@ export function createAuth(db: Database, settings: AuthSettings) {
         // Encrypted with the secret. "hashed" is an unsalted SHA-256, which
         // anyone who reads the row reverses by trying the 10^6 codes.
         storeOTP: "encrypted",
+        // Only kept for the route to send: see outbox.ts for why.
         sendVerificationOTP: async ({ email, otp }) => {
-          await settings.codeSender.send(email, otp);
+          settings.outbox.put(email, otp);
         },
       }),
       // The passkey belongs to rpID; the browser runs the ceremony on the web

@@ -958,6 +958,8 @@ export interface components {
         CodeRequest: {
             /** Format: email */
             email: string;
+            /** @enum {string} */
+            language?: "es" | "en";
         };
         SignedIn: {
             user: components["schemas"]["User"];

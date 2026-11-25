@@ -86,6 +86,13 @@
           "email": {
             "type": "string",
             "format": "email"
+          },
+          "language": {
+            "type": "string",
+            "enum": [
+              "es",
+              "en"
+            ]
           }
         },
         "required": [

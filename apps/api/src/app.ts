@@ -42,14 +42,20 @@ export function createApp(
   if (config.APP_ENV === "development") {
     const withAuth = createWithAuth({
       withDatabase: withThisDatabase,
-      codeSender: options.codeSender ?? consoleCodeSender,
       settings: {
         secret: config.BETTER_AUTH_SECRET,
         passkeyRpId: config.PASSKEY_RP_ID,
         passkeyOrigin: config.PASSKEY_ORIGIN,
       },
     });
-    app.route("/login", loginRoutes({ withAuth, requestLimiter: createRequestLimiter() }));
+    app.route(
+      "/login",
+      loginRoutes({
+        withAuth,
+        requestLimiter: createRequestLimiter(),
+        codeSender: options.codeSender ?? consoleCodeSender,
+      }),
+    );
     // A user's recipes need a session, so they run where the login does.
     app.route(
       "/recipes",

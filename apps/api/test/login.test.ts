@@ -1,7 +1,14 @@
 import { Client } from "pg";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { createApp, noDatabase } from "../src/app.ts";
-import { cookieHeader, json, loginApp, recordingSender, setCookies } from "./login-helpers.ts";
+import {
+  cookieHeader,
+  json,
+  LOGIN_SETTINGS,
+  loginApp,
+  recordingSender,
+  setCookies,
+} from "./login-helpers.ts";
 import { startTestPostgres, type TestPostgres } from "./postgres.ts";
 
 type SignedIn = { user: { id: string; email: string; name: string } };
@@ -21,6 +28,7 @@ afterAll(async () => {
 
 afterEach(() => {
   vi.useRealTimers();
+  vi.restoreAllMocks();
 });
 
 async function query<T>(text: string, values: unknown[] = []): Promise<T[]> {
@@ -84,7 +92,7 @@ describe("a code by email", () => {
 
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ sent: true });
-    expect(sent).toEqual([{ email, code: expect.stringMatching(/^\d{6}$/) }]);
+    expect(sent).toEqual([{ email, code: expect.stringMatching(/^\d{6}$/), language: "en" }]);
     const rows = await query<{ value: string }>(
       "select value from verification where identifier = $1",
       [`sign-in-otp-${email}`],
@@ -158,6 +166,45 @@ describe("a code by email", () => {
     ).json() as Promise<SignedIn>);
 
     expect(second.user.id).toBe(first.user.id);
+  });
+});
+
+describe("the code's language and sending", () => {
+  it("hands the sender the language asked for, and English when none is", async () => {
+    const { app, sent } = setup();
+    const spanish = someone();
+    const none = someone();
+
+    await app.request(
+      "/login/code",
+      json({ email: spanish.email, language: "es" }, { "cf-connecting-ip": spanish.ip }),
+    );
+    await askForCode(app, none.email, none.ip);
+
+    expect(sent.map(({ email, language }) => ({ email, language }))).toEqual([
+      { email: spanish.email, language: "es" },
+      { email: none.email, language: "en" },
+    ]);
+  });
+
+  it("answers an error, not sent, when the sender fails", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const failing = {
+      send: async () => {
+        throw new Error("the sender failed");
+      },
+    };
+    const app = createApp(
+      { APP_ENV: "development", ...LOGIN_SETTINGS },
+      { connectionString: () => postgres.connectionString },
+      { codeSender: failing },
+    );
+    const { email, ip } = someone();
+
+    const response = await askForCode(app, email, ip);
+
+    expect(response.status).toBe(500);
+    expect(response.headers.get("content-type")).toMatch(/^application\/problem\+json/);
   });
 });
 
