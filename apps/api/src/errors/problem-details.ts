@@ -1,6 +1,7 @@
 import { z } from "@hono/zod-openapi";
 import type { Context } from "hono";
 import { HTTPException } from "hono/http-exception";
+import type { ContentfulStatusCode } from "hono/utils/http-status";
 import { AppError } from "./app-error.ts";
 
 // The one place an error becomes a response: Problem Details, RFC 9457.
@@ -62,7 +63,7 @@ const REASON_PHRASES: Record<number, string> = {
 };
 
 export function notFound(c: Context): Response {
-  return problemResponse({
+  return problemResponse(c, {
     type: "about:blank",
     title: title(404),
     status: 404,
@@ -70,17 +71,17 @@ export function notFound(c: Context): Response {
   });
 }
 
-export function onError(error: Error): Response {
+export function onError(error: Error, c: Context): Response {
   if (error instanceof AppError) {
     const { type, title, status, message } = error;
-    return problemResponse({ type, title, status, detail: message });
+    return problemResponse(c, { type, title, status, detail: message });
   }
 
   // Hono's own errors. Its message is an empty string unless one was given,
   // and `detail` must be a string a client can show.
   if (error instanceof HTTPException) {
     const { status, message } = error;
-    return problemResponse({
+    return problemResponse(c, {
       type: "about:blank",
       title: title(status),
       status,
@@ -91,7 +92,7 @@ export function onError(error: Error): Response {
   // Unexpected: its message and stack go to the log only. Never put them in
   // the body, they can name hosts, queries or values.
   console.error(error);
-  return problemResponse({
+  return problemResponse(c, {
     type: "about:blank",
     title: title(500),
     status: 500,
@@ -103,9 +104,11 @@ function title(status: number): string {
   return REASON_PHRASES[status] ?? "Error";
 }
 
-function problemResponse(problem: Problem): Response {
-  return new Response(JSON.stringify(problem), {
-    status: problem.status,
-    headers: { "Content-Type": "application/problem+json" },
+// Built through the context, never as a bare Response: headers a middleware
+// already set, such as a renewed session's Set-Cookie, must go out with the
+// error too. A bare Response would drop them.
+function problemResponse(c: Context, problem: Problem): Response {
+  return c.body(JSON.stringify(problem), problem.status as ContentfulStatusCode, {
+    "Content-Type": "application/problem+json",
   });
 }

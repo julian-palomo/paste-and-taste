@@ -257,6 +257,20 @@ describe("the session", () => {
     }
   });
 
+  it("still renews a remembered session when the recipes route answers an error", async () => {
+    const { app, recorder } = setup();
+    const { cookie } = await signedIn(app, recorder, true);
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(Date.now() + 2 * 24 * 60 * 60 * 1000);
+
+    const response = await app.request(`/recipes/${randomUUID()}`, { headers: { cookie } });
+
+    expect(response.status).toBe(404);
+    expect(setCookies(response).get("better-auth.session_token")).toContain(
+      `Max-Age=${NINETY_DAYS}`,
+    );
+  });
+
   it("renews a remembered session through a recipes route, as through the login's", async () => {
     const { app, recorder } = setup();
     const { cookie } = await signedIn(app, recorder, true);
