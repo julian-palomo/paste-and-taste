@@ -77,5 +77,6 @@
   "signInErrorTooSoon": "Espera un minuto antes de pedir otro código.",
   "signInErrorStartAgain": "Ha pasado demasiado tiempo. Escribe tu correo y te enviamos un código nuevo.",
   "signInErrorPasskeyFailed": "No se ha podido usar la llave de acceso. Vuelve a probar o entra con un código.",
-  "signInErrorPasskeyNotCreated": "No se ha podido crear la llave de acceso. Vuelve a probar o hazlo más tarde."
+  "signInErrorPasskeyNotCreated": "No se ha podido crear la llave de acceso. Vuelve a probar o hazlo más tarde.",
+  "signInErrorCodeNotSent": "No hemos podido enviar el código. Vuelve a probar en un momento."
 }

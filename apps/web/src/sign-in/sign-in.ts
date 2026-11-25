@@ -87,7 +87,8 @@ export async function sendCode(
     return { redirect: withError(lang, "too-soon") };
   }
   try {
-    await deps.client.post("/login/code", { ...call(deps), body: { email } });
+    // The email goes out in the page's language.
+    await deps.client.post("/login/code", { ...call(deps), body: { email, language: lang } });
   } catch (error) {
     // The typed address stays, so the field shows it again.
     deps.appendSetCookie(pendingCookie({ email }, secure(deps)));

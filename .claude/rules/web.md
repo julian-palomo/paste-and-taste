@@ -66,7 +66,9 @@ cookie of the web app's own, `sign_in_pending` (`HttpOnly`, 15 minutes, and
 step is a form posted to a server function's `url`, which answers with a 303
 back to the page, the cookies on it, and `?error=<kind>` when it failed; the
 field with the error is rendered with `autoFocus`, which React writes into
-the server's HTML. Start refuses a server function request that carries no
+the server's HTML. Asking for a code sends the page's language, so the email
+arrives in it, and a 502 (the email couldn't be sent) is `code-not-sent`, shown
+only on the email step. Start refuses a server function request that carries no
 `Sec-Fetch-Site`, `Origin` or `Referer` of the same origin, with 403, so a
 script trying a form has to send them as a browser does. The passkey needs
 JavaScript: WebAuthn runs in the browser with its own JSON helpers, and its

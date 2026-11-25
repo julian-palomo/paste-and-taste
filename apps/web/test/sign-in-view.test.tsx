@@ -63,6 +63,7 @@ const errorText = (lang: Language, kind: SignInErrorKind) => {
     "start-again": m.signInErrorStartAgain,
     "passkey-failed": m.signInErrorPasskeyFailed,
     "passkey-not-created": m.signInErrorPasskeyNotCreated,
+    "code-not-sent": m.signInErrorCodeNotSent,
   }[kind];
 };
 
@@ -129,6 +130,7 @@ describe.each(["en", "es"] as const)("in %s", (lang) => {
     ["too-many", {}, "email"],
     ["unreachable", {}, "email"],
     ["start-again", {}, "email"],
+    ["code-not-sent", {}, "email"],
     ["wrong-code", { pending: sent }, "code"],
     ["too-many", { pending: sent }, "code"],
     ["unreachable", { pending: sent }, "code"],
@@ -173,6 +175,31 @@ describe.each(["en", "es"] as const)("in %s", (lang) => {
     expect(html).not.toContain(escaped(m.signInErrorPasskeyNotCreated));
     expect(html).not.toContain("autofocus");
     expect(html).not.toContain('aria-invalid="true"');
+  });
+
+  // A code that couldn't be sent sends the page back to the email step; typed
+  // into any other state's address, it shows nothing and takes no focus.
+  it.each([
+    ["the code step", { pending: sent }],
+    ["the signed-in page", { session: signedIn }],
+    ["the passkey offer", { session: signedIn, step: "passkey" as const }],
+  ])("code-not-sent shows nothing on %s", (_, props) => {
+    const html = render(lang, { ...props, error: "code-not-sent" });
+
+    expect(html).not.toContain(escaped(m.signInErrorCodeNotSent));
+    expect(html).not.toContain("autofocus");
+    expect(html).not.toContain('aria-invalid="true"');
+  });
+
+  // "Enviar otro código" posts the page's language, as the first code's form does.
+  it("sends the page's language with another code", () => {
+    const html = render(lang, { pending: sent });
+
+    expect(html).toMatch(
+      new RegExp(
+        `<form[^>]*action="${actions.sendCode}"[^>]*><input type="hidden" name="lang" value="${lang}"/><input type="hidden" name="email" value="ana@example.com"/>`,
+      ),
+    );
   });
 
   describe("signed in", () => {

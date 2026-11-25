@@ -96,6 +96,7 @@ describe("error kinds", () => {
 
   it.each([
     [apiError(400), "invalid-email"],
+    [apiError(502), "code-not-sent"],
     [apiError(429), "too-many-codes"],
     [apiError(503), "unreachable"],
     [apiError(500), "unreachable"],
@@ -163,6 +164,7 @@ describe("parseErrorKind", () => {
     "start-again",
     "passkey-failed",
     "passkey-not-created",
+    "code-not-sent",
   ])("reads %s from the page's address", (kind) => {
     expect(parseErrorKind(kind)).toBe(kind);
   });

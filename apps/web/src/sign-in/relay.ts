@@ -71,6 +71,7 @@ const ERROR_KINDS = [
   "start-again",
   "passkey-failed",
   "passkey-not-created",
+  "code-not-sent",
 ] as const;
 export type SignInErrorKind = (typeof ERROR_KINDS)[number];
 
@@ -90,8 +91,9 @@ function byStatus(error: unknown, statuses: Record<number, SignInErrorKind>): Si
   throw error;
 }
 
+// 502: the API couldn't hand the code to the email sender.
 export const codeError = (error: unknown) =>
-  byStatus(error, { 400: "invalid-email", 429: "too-many-codes" });
+  byStatus(error, { 400: "invalid-email", 429: "too-many-codes", 502: "code-not-sent" });
 
 export const signInError = (error: unknown) =>
   byStatus(error, { 401: "wrong-code", 429: "too-many" });

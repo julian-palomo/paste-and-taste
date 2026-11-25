@@ -35,6 +35,7 @@ function errorText(messages: Messages, kind: SignInErrorKind): string {
     "start-again": messages.signInErrorStartAgain,
     "passkey-failed": messages.signInErrorPasskeyFailed,
     "passkey-not-created": messages.signInErrorPasskeyNotCreated,
+    "code-not-sent": messages.signInErrorCodeNotSent,
   }[kind];
 }
 
@@ -115,7 +116,8 @@ function AddressStep({ lang, messages, pending, error, actions, passkeySignIn }:
 }
 
 function CodeStep({ lang, messages, error, actions, email }: Props & { email: string }) {
-  const fieldError = fieldErrorOf(error);
+  // A code that couldn't be sent sends the page back to the email step.
+  const fieldError = error === "code-not-sent" ? undefined : fieldErrorOf(error);
   return (
     <section className="flex flex-col gap-8">
       <div className="flex flex-col gap-2">
@@ -168,6 +170,8 @@ function SignedIn({
   passkeyRegister,
   user,
 }: Props & { user: { email: string } }) {
+  // A code that couldn't be sent belongs to the email step only.
+  const shownError = error === "code-not-sent" ? undefined : error;
   return (
     <section className="flex flex-col gap-8">
       <div className="flex flex-col gap-2">
@@ -182,7 +186,7 @@ function SignedIn({
             <h2 className="font-display text-xl font-bold">{messages.signInPasskeyOfferHeading}</h2>
             <p className="text-body">{messages.signInPasskeyOfferBody}</p>
             {passkeyRegister}
-            {error && <Alert text={errorText(messages, error)} />}
+            {shownError && <Alert text={errorText(messages, shownError)} />}
             <a
               href={`/${lang}`}
               className="text-body text-accent underline underline-offset-4 transition-colors hover:text-text"
@@ -193,7 +197,7 @@ function SignedIn({
         </Card>
       )}
       {step === "passkey-added" && <p className="text-body">{messages.signInPasskeyAdded}</p>}
-      {step !== "passkey" && error && <Alert text={errorText(messages, error)} />}
+      {step !== "passkey" && shownError && <Alert text={errorText(messages, shownError)} />}
       <PostForm action={actions.signOut} lang={lang}>
         <Button kind="secondary" type="submit">
           {messages.signInSignOut}

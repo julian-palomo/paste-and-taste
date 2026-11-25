@@ -131,13 +131,28 @@ describe.each(calls)("%s", (_, body, call) => {
 });
 
 describe("sendCode", () => {
+  // The email goes out in the page's language, for the first code and for
+  // "Enviar otro código", which posts to the same function.
+  it.each([
+    ["es", "the first code", undefined],
+    ["en", "the first code", undefined],
+    ["es", "another code", { email: "ana@example.com", sentAt: NOW - 61_000 }],
+    ["en", "another code", { email: "ana@example.com", sentAt: NOW - 61_000 }],
+  ] as const)("from a %s page, asks for %s in that language", async (lang, _, pending) => {
+    const { deps, requests } = api(() => json({ sent: true }));
+
+    await sendCode(deps, { lang, email: "ana@example.com", pending });
+
+    expect(await requests[0]?.json()).toEqual({ email: "ana@example.com", language: lang });
+  });
+
   it("asks the API for a code, remembers the address and goes to the code step", async () => {
     const { deps, requests, setCookies } = api(() => json({ sent: true }));
 
     const result = await sendCode(deps, { lang: "es", email: "ana@example.com" });
 
     expect(new URL(requests[0]?.url ?? "").pathname).toBe("/login/code");
-    expect(await requests[0]?.json()).toEqual({ email: "ana@example.com" });
+    expect(await requests[0]?.json()).toEqual({ email: "ana@example.com", language: "es" });
     expect(readPending(setCookies.at(-1)?.split(";")[0])).toEqual({
       email: "ana@example.com",
       sentAt: NOW,
@@ -147,6 +162,7 @@ describe("sendCode", () => {
 
   it.each([
     [400, "invalid-email"],
+    [502, "code-not-sent"],
     [429, "too-many-codes"],
     [503, "unreachable"],
   ])("on a %i, goes back with ?error=%s and keeps the typed address", async (status, kind) => {
