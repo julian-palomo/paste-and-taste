@@ -10,7 +10,12 @@
   // stop working.
   "compatibility_date": "2026-11-15",
   "vars": {
-    "APP_ENV": "development"
+    "APP_ENV": "development",
+    // Login runs only in development. The passkey belongs to localhost, and the
+    // browser runs its ceremony on the web app's page. BETTER_AUTH_SECRET is
+    // not here: it lives in apps/api/.env (docs/deploying-the-api.md).
+    "PASSKEY_RP_ID": "localhost",
+    "PASSKEY_ORIGIN": "http://localhost:5173"
   },
   // The zeros are a placeholder that lets `wrangler dev` and the dry-run build
   // start. Locally, `wrangler dev` connects straight to the database named by
