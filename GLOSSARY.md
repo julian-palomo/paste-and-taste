@@ -117,6 +117,18 @@ writes when sending or sharing a recipe is its conversation's first message.
 The app's buttons say "Comentar" in a group and "Responder" between friends.\
 _Avoid_: comment, note (as names for it).
 
+## Building the interface
+
+**Piece**: A button, text field, checkbox or card that screens are made of,
+in the look `DESIGN.md` describes. A screen arranges pieces and picks no
+colour or size of its own.\
+_Avoid_: widget, primitive.
+
+**Showcase page**: The page that shows every piece in every state, for the
+owner to look at. It answers in development and preview, never in
+production.\
+_Avoid_: style guide, storybook.
+
 ## Running the app
 
 **Wake request**: The cheap request an app sends when it or any of its pages
