@@ -1,0 +1,11 @@
+# Workers Static Assets reads this file and doesn't serve it. It applies only
+# to static assets, never to what the Worker renders.
+#
+# Everything the build writes under /assets/ has a content hash in its name, so
+# a changed file gets a new address and the old one can be kept for a year with
+# no revalidation. A cached font is then used with no request at all, which
+# matters because font-display: optional (src/styles/fonts.css) never swaps in
+# a font that misses the first paint. Never widen this rule to a file without
+# a hash in its name: browsers would keep a stale copy for a year.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable

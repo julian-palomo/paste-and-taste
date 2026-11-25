@@ -1,0 +1,88 @@
+/*
+ * The one file that holds every colour, font, radius, duration and easing the
+ * web app uses, each named by its role. Components write Tailwind utilities
+ * from these names (bg-surface, text-text-muted, duration-quick), never a raw
+ * value, so the look changes here without touching a component. The values
+ * are the ones DESIGN.md gives.
+ *
+ * `static` writes every variable into the CSS, used or not. The `initial`
+ * lines remove Tailwind's own palette, fonts, radii and easings, so a utility
+ * like bg-red-500 doesn't exist here.
+ */
+@theme static {
+  --color-*: initial;
+  --color-surface: #f5f8ec;
+  --color-surface-raised: #ffffff;
+  --color-text: #1f2a17;
+  --color-text-muted: #52603f;
+  --color-accent: #3b7a1e;
+  --color-on-accent: #ffffff;
+  /* The three steps' tones, and the green text written on the two lighter ones. */
+  --color-accent-soft: #e6f1d6;
+  --color-accent-middle: #cbe3b0;
+  --color-on-accent-soft: #2f6416;
+  --color-chip: #d7e9c2;
+  --color-border: #d9e0c8;
+  --color-border-control: #6c7a5c;
+  --color-danger: #b93226;
+  --color-focus: #3b7a1e;
+
+  --font-*: initial;
+  /* Each first family is one fonts.css declares; the rest is the system's. */
+  --font-sans: "Nunito Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Outfit", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --radius-*: initial;
+  /* Buttons, inputs, tags and filters are pills; Tailwind's rounded-full is this value. */
+  --radius-control: calc(infinity * 1px);
+
+  /* Tailwind's duration-* utilities read --transition-duration-*. */
+  --transition-duration-quick: 120ms;
+  --transition-duration-base: 200ms;
+
+  --ease-*: initial;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  /* What a bare transition-colors takes when no duration-* or ease-* is given. */
+  --default-transition-duration: var(--transition-duration-quick);
+  --default-transition-timing-function: var(--ease-standard);
+}
+
+:root {
+  color-scheme: light;
+}
+
+/*
+ * The dark values of the same names, so no component knows which mode is on.
+ * The mode follows the device; a switch inside the app would add its selector
+ * here, beside the media query's, and rename nothing.
+ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --color-surface: #11170d;
+    --color-surface-raised: #1a2314;
+    --color-text: #ecf3e4;
+    --color-text-muted: #aebba0;
+    --color-accent: #8fd46a;
+    --color-on-accent: #11170d;
+    --color-accent-soft: #243319;
+    --color-accent-middle: #35501f;
+    --color-on-accent-soft: #8fd46a;
+    --color-chip: #35501f;
+    --color-border: #2c3823;
+    --color-border-control: #8a987c;
+    --color-danger: #ff8f80;
+    --color-focus: #8fd46a;
+  }
+}
+
+/* Everything that moves reads the durations above, so zeroing them stops it all. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --transition-duration-quick: 0s;
+    --transition-duration-base: 0s;
+    --default-transition-duration: 0s;
+  }
+}

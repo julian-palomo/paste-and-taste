@@ -16,7 +16,7 @@ const MAX_REDIRECTS = 3;
 
 export type Answer = { status: number; body: string; loginRedirect: boolean };
 
-async function get(address: string): Promise<Answer> {
+export async function get(address: string): Promise<Answer> {
   let current = address;
   for (let hop = 0; ; hop++) {
     // "manual" returns the 3xx itself, so a redirect to the login page is

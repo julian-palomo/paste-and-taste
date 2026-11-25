@@ -38,17 +38,24 @@ needs, and a phase gets its issues when it is next.
    smallest node, before anything is built on either. Hashing a password
    took far more CPU than the free plan allows, so #58 measures login without
    a password, by a code sent by email and by passkey, on the same Worker.
+   The first table holds an owner and who may see each recipe
+   ([the record](adr/2026-11-24-friends-groups-and-copies.md)).
 4. **The first recipe, end to end.** A table, its endpoints, and the web app
    in TanStack Start with one screen that lists a recipe, opens it and edits
    it, in Spanish and English. A service and a repository appear in the API
    here for the first time. The web app's skeleton came first, #46, while
    phase 3 is in progress, because it needs neither the database nor login:
    one page rendered on the server, in both languages, that shows the API's
-   health through the typed client.
+   health through the typed client. Since #48 the pipeline deploys it after
+   the API, to preview and production. Since #50 it has the base the first
+   screen is built on: Tailwind CSS from one tokens file, a layout every page
+   shares, and its own error and not-found pages. Since #54 the tokens hold the
+   look's colours, light and dark, and its two typefaces.
 5. **The real import.** Workflows in the background and the limit per user.
    Web pages first, the cheapest source to read, then Instagram, then YouTube.
 6. **The native app.** Android first, with sharing a post to the app. iPhone
    is tested early.
 7. **What makes the product.** Tags, editing a recipe with a note, a user's
    own photos, the cooking mode that reads aloud, and the social part:
-   sharing, commenting and rating.
+   friends and groups, sending recipes as copies, the conversation on each
+   recipe, and rating.
