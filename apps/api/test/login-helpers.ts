@@ -13,10 +13,10 @@ export const LOGIN_SETTINGS = {
 
 // Keeps every code it is handed, for the test to read.
 export function recordingSender() {
-  const sent: { email: string; code: string }[] = [];
+  const sent: { email: string; code: string; language: string }[] = [];
   const sender: CodeSender = {
-    send: async (email, code) => {
-      sent.push({ email, code });
+    send: async (email, code, language) => {
+      sent.push({ email, code, language });
     },
   };
   return {

@@ -53,8 +53,10 @@ needs, and a phase gets its issues when it is next.
    migrations. #80 lets the typed client post, send the browser's headers
    and hand back the API's cookies, which the web app's server relays. #77
    adds the sign-in page to the web app, in development only: a code by
-   email, the "Mantener la sesión iniciada" box, and a passkey. Next come
-   sending real email and the login in preview and production.
+   email, the "Mantener la sesión iniciada" box, and a passkey. #87 sends the
+   code by email through Resend, from `mail.pasteandtaste.app`. Next comes
+   the login in preview and production, with Workers Paid and a Resend
+   webhook that alerts on failed and bounced emails.
    The first table, a user's recipes, holds each recipe's copy owner; who
    else may see a recipe comes with sending and sharing, in their own issue
    ([the record](adr/2026-11-24-friends-groups-and-copies.md)).

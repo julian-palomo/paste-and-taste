@@ -20,6 +20,13 @@ const configSchema = z.object({
     .string()
     .optional()
     .describe("The site a passkey belongs to: localhost in development, the app's domain later."),
+  RESEND_API_KEY: z
+    .string()
+    .min(1)
+    .optional()
+    .describe(
+      "Resend's key for sending the sign-in code by email. Without it, development prints the code.",
+    ),
   PASSKEY_ORIGIN: z
     .url()
     .optional()
@@ -28,7 +35,7 @@ const configSchema = z.object({
 
 export type AppConfig = z.infer<typeof configSchema>;
 
-class ConfigError extends Error {
+export class ConfigError extends Error {
   override name = "ConfigError";
 }
 

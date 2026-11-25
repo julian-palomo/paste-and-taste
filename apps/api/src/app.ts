@@ -3,7 +3,7 @@ import { parseConfig } from "./config/config.schema.ts";
 import { type DatabaseSource, type WithDatabase, withDatabase } from "./database/database.ts";
 import { notFound, onError } from "./errors/problem-details.ts";
 import { healthRoutes } from "./health/health.routes.ts";
-import { type CodeSender, consoleCodeSender } from "./login/code-sender.ts";
+import { type CodeSender, chooseCodeSender } from "./login/code-sender.ts";
 import { loginRoutes } from "./login/login.routes.ts";
 import { createRequestLimiter } from "./login/request-limiter.ts";
 import { createSessionReader } from "./login/session-reader.ts";
@@ -42,14 +42,20 @@ export function createApp(
   if (config.APP_ENV === "development") {
     const withAuth = createWithAuth({
       withDatabase: withThisDatabase,
-      codeSender: options.codeSender ?? consoleCodeSender,
       settings: {
         secret: config.BETTER_AUTH_SECRET,
         passkeyRpId: config.PASSKEY_RP_ID,
         passkeyOrigin: config.PASSKEY_ORIGIN,
       },
     });
-    app.route("/login", loginRoutes({ withAuth, requestLimiter: createRequestLimiter() }));
+    app.route(
+      "/login",
+      loginRoutes({
+        withAuth,
+        requestLimiter: createRequestLimiter(),
+        codeSender: options.codeSender ?? chooseCodeSender(config),
+      }),
+    );
     // A user's recipes need a session, so they run where the login does.
     app.route(
       "/recipes",

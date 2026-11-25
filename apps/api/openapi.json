@@ -86,6 +86,13 @@
           "email": {
             "type": "string",
             "format": "email"
+          },
+          "language": {
+            "type": "string",
+            "enum": [
+              "es",
+              "en"
+            ]
           }
         },
         "required": [
@@ -480,6 +487,16 @@
           },
           "429": {
             "description": "Too many codes for this address or from this IP.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "The code could not be sent: try again in a moment.",
             "content": {
               "application/problem+json": {
                 "schema": {

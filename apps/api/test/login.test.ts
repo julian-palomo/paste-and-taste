@@ -1,7 +1,15 @@
 import { Client } from "pg";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { createApp, noDatabase } from "../src/app.ts";
-import { cookieHeader, json, loginApp, recordingSender, setCookies } from "./login-helpers.ts";
+import { createResendCodeSender } from "../src/login/resend-code-sender.ts";
+import {
+  cookieHeader,
+  json,
+  LOGIN_SETTINGS,
+  loginApp,
+  recordingSender,
+  setCookies,
+} from "./login-helpers.ts";
 import { startTestPostgres, type TestPostgres } from "./postgres.ts";
 
 type SignedIn = { user: { id: string; email: string; name: string } };
@@ -21,6 +29,7 @@ afterAll(async () => {
 
 afterEach(() => {
   vi.useRealTimers();
+  vi.restoreAllMocks();
 });
 
 async function query<T>(text: string, values: unknown[] = []): Promise<T[]> {
@@ -84,7 +93,7 @@ describe("a code by email", () => {
 
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ sent: true });
-    expect(sent).toEqual([{ email, code: expect.stringMatching(/^\d{6}$/) }]);
+    expect(sent).toEqual([{ email, code: expect.stringMatching(/^\d{6}$/), language: "en" }]);
     const rows = await query<{ value: string }>(
       "select value from verification where identifier = $1",
       [`sign-in-otp-${email}`],
@@ -158,6 +167,85 @@ describe("a code by email", () => {
     ).json() as Promise<SignedIn>);
 
     expect(second.user.id).toBe(first.user.id);
+  });
+});
+
+describe("the code's language and sending", () => {
+  it("hands the sender the language asked for, and English when none is", async () => {
+    const { app, sent } = setup();
+    const spanish = someone();
+    const none = someone();
+
+    await app.request(
+      "/login/code",
+      json({ email: spanish.email, language: "es" }, { "cf-connecting-ip": spanish.ip }),
+    );
+    await askForCode(app, none.email, none.ip);
+
+    expect(sent.map(({ email, language }) => ({ email, language }))).toEqual([
+      { email: spanish.email, language: "es" },
+      { email: none.email, language: "en" },
+    ]);
+  });
+
+  it("answers 502 when Resend refuses the code, and logs none of its secrets", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const key = "re_test_key_never_real";
+    const app = createApp(
+      { APP_ENV: "development", ...LOGIN_SETTINGS },
+      { connectionString: () => postgres.connectionString },
+      {
+        codeSender: createResendCodeSender({
+          apiKey: key,
+          fetch: async () =>
+            new Response(JSON.stringify({ name: "invalid_parameter" }), { status: 422 }),
+        }),
+      },
+    );
+    const { email, ip } = someone();
+
+    const response = await askForCode(app, email, ip);
+    const logged = error.mock.calls.map((call) => call.map(String).join(" ")).join("\n");
+
+    expect(response.status).toBe(502);
+    expect(response.headers.get("content-type")).toMatch(/^application\/problem\+json/);
+    expect(logged).not.toContain(email);
+    expect(logged).not.toContain(key);
+    expect(logged).not.toMatch(/\b\d{6}\b/);
+  });
+
+  it("prints the code in development when no key and no sender are given", async () => {
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    const app = createApp(
+      { APP_ENV: "development", ...LOGIN_SETTINGS },
+      { connectionString: () => postgres.connectionString },
+    );
+    const { email, ip } = someone();
+
+    const response = await askForCode(app, email, ip);
+
+    expect(response.status).toBe(200);
+    expect(log.mock.calls.flat().join(" ")).toMatch(/Sign-in code for .+: \d{6}/);
+  });
+
+  it("answers an error, not sent, when the sender fails", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const failing = {
+      send: async () => {
+        throw new Error("the sender failed");
+      },
+    };
+    const app = createApp(
+      { APP_ENV: "development", ...LOGIN_SETTINGS },
+      { connectionString: () => postgres.connectionString },
+      { codeSender: failing },
+    );
+    const { email, ip } = someone();
+
+    const response = await askForCode(app, email, ip);
+
+    expect(response.status).toBe(500);
+    expect(response.headers.get("content-type")).toMatch(/^application\/problem\+json/);
   });
 });
 

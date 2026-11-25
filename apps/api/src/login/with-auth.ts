@@ -1,7 +1,7 @@
 import type { Database, WithDatabase } from "../database/database.ts";
 import { createAuth } from "./auth.ts";
-import type { CodeSender } from "./code-sender.ts";
 import { LoginNotConfiguredError } from "./login-errors.ts";
+import { createOutbox, type Outbox } from "./outbox.ts";
 
 export type Auth = ReturnType<typeof createAuth>;
 
@@ -12,20 +12,16 @@ type LoginSettings = {
 };
 
 // Runs `work` with one Better Auth instance and one database client for this
-// request, both gone when it ends. Everything that reaches Better Auth goes
-// through it.
+// request, both gone when it ends, and the request's outbox for a sign-in
+// code. Everything that reaches Better Auth goes through it.
 export type WithAuth = <T>(
   request: Request,
-  work: (auth: Auth, db: Database) => Promise<T>,
+  work: (auth: Auth, db: Database, outbox: Outbox) => Promise<T>,
 ) => Promise<T>;
 
-type WithAuthDeps = {
-  withDatabase: WithDatabase;
-  codeSender: CodeSender;
-  settings: LoginSettings;
-};
+type WithAuthDeps = { withDatabase: WithDatabase; settings: LoginSettings };
 
-export function createWithAuth({ withDatabase, codeSender, settings }: WithAuthDeps): WithAuth {
+export function createWithAuth({ withDatabase, settings }: WithAuthDeps): WithAuth {
   return (request, work) => {
     const { secret, passkeyRpId, passkeyOrigin } = settings;
     if (!secret || !passkeyRpId || !passkeyOrigin) {
@@ -37,8 +33,9 @@ export function createWithAuth({ withDatabase, codeSender, settings }: WithAuthD
       throw new LoginNotConfiguredError(missing);
     }
     const baseURL = new URL(request.url).origin;
+    const outbox = createOutbox();
     return withDatabase((db) =>
-      work(createAuth(db, { secret, baseURL, passkeyRpId, passkeyOrigin, codeSender }), db),
+      work(createAuth(db, { secret, baseURL, passkeyRpId, passkeyOrigin, outbox }), db, outbox),
     );
   };
 }

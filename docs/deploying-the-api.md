@@ -231,9 +231,10 @@ terminal, and nothing it prints is pasted anywhere.
    ```
 
    Never `>` here: it would replace the file and lose the connection string.
-3. **Try it.** `pnpm -C apps/api dev` prints each sign-in code in its
-   terminal, as `Sign-in code for <address>: <code>`; no email is sent. In a
-   second terminal, with any address of your own:
+3. **Try it.** Without `RESEND_API_KEY` in `apps/api/.env`, `pnpm -C apps/api
+   dev` prints each sign-in code in its terminal, as `Sign-in code for
+   <address>: <code>`, and no email is sent; with it, the code arrives by
+   email (section 6). In a second terminal, with any address of your own:
 
    ```bash
    curl -s -X POST localhost:8787/login/code -H 'content-type: application/json' -d '{"email":"<address>"}'
@@ -262,6 +263,59 @@ A code lasts 5 minutes and allows 3 tries. Asking for codes is limited to 3
 per address every 15 minutes and 10 per IP every hour, and any other login
 request to 60 per IP every hour; past a limit the API answers 429
 ([the record](adr/2026-11-25-login-behind-the-apis-own-routes.md)).
+
+### 6. Sending the sign-in code
+
+The code goes by email through Resend, from `Paste & Taste
+<login@mail.pasteandtaste.app>`
+([the record](adr/2026-11-25-resend-for-the-sign-in-code.md)). Without its key,
+development prints the code instead, so none of this is needed to sign in
+locally. As above, every step is the owner's, and nothing it shows is pasted
+anywhere.
+
+1. **The app's own Resend account**, apart from any other project's: the free
+   plan's limits and the bounce rate are per account.
+2. **The domain.** In Resend, **Domains** > **Add Domain**: `mail.pasteandtaste.app`.
+   Resend shows the DNS records it needs for SPF and DKIM; add each, exactly
+   as shown, at the domain's DNS host, then **Verify** in Resend.
+3. **DMARC**, at the same DNS host, as a TXT record:
+
+   ```text
+   _dmarc.pasteandtaste.app   TXT   v=DMARC1; p=none
+   ```
+
+   No `rua=`: that address would be public in DNS, and the app publishes none.
+   If reports are wanted later, use a dedicated address on the domain, never a
+   personal one. Move `p=` to `quarantine`, then `reject`, once the emails
+   pass ([Resend's DMARC page](https://resend.com/docs/dashboard/domains/dmarc)).
+4. **The key.** In Resend, **API Keys** > **Create**: **Sending access**,
+   limited to `mail.pasteandtaste.app`. Then add it to `apps/api/.env` without
+   showing it, appending so the other lines stay:
+
+   ```bash
+   read -rs RESEND_API_KEY     # paste the key, then Enter; nothing shows
+   printf 'RESEND_API_KEY=%s\n' "$RESEND_API_KEY" >> apps/api/.env
+   unset RESEND_API_KEY
+   ```
+
+   For preview and production, in the issue that deploys the login there:
+   `pnpm -C apps/api exec wrangler secret put RESEND_API_KEY --env <env>`
+   ([Cloudflare's secrets page](https://developers.cloudflare.com/workers/configuration/secrets/)).
+   Without it there, the Worker refuses to start, naming the key.
+5. **Try it**, as in section 5, with `"language":"es"` and then `"en"` in the
+   code request:
+
+   ```bash
+   curl -s -X POST localhost:8787/login/code -H 'content-type: application/json' \
+     -d '{"email":"<address>","language":"es"}'
+   ```
+
+   It answers `{"sent":true}` and the code arrives in that language; check it
+   isn't in spam. A 502 means Resend refused it: the terminal shows one line
+   with Resend's status and error name.
+6. **Watching it.** Resend's dashboard, **Metrics**, shows the bounce rate,
+   which Resend asks to keep under 4%. An alert by webhook comes with the
+   issue that deploys the login: a webhook can't reach a local run.
 
 ## Reading a run
 
