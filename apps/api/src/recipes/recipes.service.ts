@@ -10,6 +10,7 @@ export type RecipesService = {
   get(userId: string, id: string): Promise<Recipe>;
   add(userId: string, input: RecipeInput): Promise<Recipe>;
   edit(userId: string, id: string, input: RecipeInput): Promise<Recipe>;
+  delete(userId: string, id: string): Promise<void>;
 };
 
 // The clock stamps when a recipe is created and changed; tests pass their own.
@@ -32,6 +33,10 @@ export function createRecipesService(
       const recipe = await repository.replace(userId, id, input, clock());
       if (!recipe) throw new RecipeNotFoundError();
       return recipe;
+    },
+
+    async delete(userId, id) {
+      if (!(await repository.remove(userId, id))) throw new RecipeNotFoundError();
     },
   };
 }
