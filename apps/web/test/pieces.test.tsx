@@ -102,6 +102,18 @@ describe("Checkbox", () => {
     expect(attribute(inputTag(html), "checked")).toBe("");
   });
 
+  // With forced colours (Windows high contrast) the drawn box loses its fill
+  // and the tick keeps its own colour, so a ticked box can look unticked:
+  // there the browser draws its own checkbox in the system's colours instead.
+  it("hands over to the browser's own checkbox with forced colours", () => {
+    const html = renderToString(<Checkbox label="Keep me signed in" name="remember" />);
+    const classes = (tag: string) => attribute(tag, "class")?.split(/\s+/) ?? [];
+    const svg = /<svg[^>]*>/.exec(html)?.[0] ?? "";
+
+    expect(classes(inputTag(html))).toContain("forced-colors:appearance-auto");
+    expect(classes(svg)).toContain("forced-colors:hidden");
+  });
+
   it("is disabled as a form control, so the browser leaves it out", () => {
     const html = inForm(<Checkbox label="Keep me signed in" name="remember" disabled />);
 

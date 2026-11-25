@@ -8,6 +8,11 @@
 // pathLength="1" and strokeDasharray 1 on the path; the svg's
 // stroke-dashoffset reaches the path because the property is inherited. The
 // svg must come right after the input: peer-checked reads its sibling.
+//
+// Don't remove the forced-colors: classes. With forced colours (Windows high
+// contrast) the drawn box loses its fill and the tick keeps its own colour,
+// so a ticked box can look unticked; there the browser draws its own
+// checkbox in the system's colours, and the tick is hidden.
 export function Checkbox({
   label,
   name,
@@ -30,7 +35,7 @@ export function Checkbox({
           value={value}
           defaultChecked={defaultChecked}
           disabled={disabled}
-          className="peer size-6 cursor-pointer appearance-none rounded-checkbox border-2 border-border-control bg-surface-raised checked:animate-bounce checked:border-accent checked:bg-accent disabled:cursor-not-allowed disabled:border-dashed"
+          className="peer size-6 cursor-pointer appearance-none forced-colors:appearance-auto rounded-checkbox border-2 border-border-control bg-surface-raised checked:animate-bounce checked:border-accent checked:bg-accent disabled:cursor-not-allowed disabled:border-dashed"
         />
         <svg
           aria-hidden="true"
@@ -40,7 +45,7 @@ export function Checkbox({
           strokeWidth={3}
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="pointer-events-none invisible absolute inset-0 size-6 text-on-accent peer-checked:visible peer-checked:animate-draw"
+          className="pointer-events-none invisible absolute inset-0 size-6 text-on-accent peer-checked:visible peer-checked:animate-draw forced-colors:hidden"
         >
           <path d="M6 12.5l4 4 8-9" pathLength={1} strokeDasharray={1} />
         </svg>
