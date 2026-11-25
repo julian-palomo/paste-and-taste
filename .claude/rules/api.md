@@ -20,7 +20,9 @@ leaves the next ones hung on Workers. `createApp` takes the database as a
 `DatabaseSource`, which `src/worker.ts` builds from the Hyperdrive binding,
 and hands a module `withDatabase`, which opens a client, runs the work under
 one deadline and closes the client before it returns
-(`src/database/database.ts`). Tests pass a real Postgres from
+(`src/database/database.ts`). Only a failed connect or the deadline becomes a
+503 `DatabaseUnavailableError`; an error the work throws comes back as it is,
+so a repository's own `AppError` keeps its status. Tests pass a real Postgres from
 `test/postgres.ts`, or `noDatabase` when the routes they call don't touch it.
 
 **A module** is one feature in one folder, `src/<feature>/`. It exports

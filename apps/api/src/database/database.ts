@@ -29,6 +29,9 @@ const CLOSE_TIMEOUT_MS = 1000;
 
 class DeadlinePassed extends Error {}
 
+// Wraps what `connect` threw, so it can be told apart from what the work threw.
+class ConnectFailed extends Error {}
+
 // One client per call, closed before it returns. Never keep a client at module
 // scope or share it between requests: on Workers, a request that waits on
 // another request's connection hangs (docs/adr/2026-11-25-database-host-and-drizzle.md).
@@ -47,7 +50,11 @@ export async function withDatabase<T>(
     timer = setTimeout(() => reject(new DeadlinePassed()), timeoutMs);
   });
   const running = (async () => {
-    await client.connect();
+    try {
+      await client.connect();
+    } catch (error) {
+      throw new ConnectFailed("connect failed", { cause: error });
+    }
     return work(drizzle(client));
   })();
   // When the deadline wins, `running` may still fail later; nobody awaits it.
@@ -57,11 +64,20 @@ export async function withDatabase<T>(
   try {
     result = await Promise.race([running, deadline]);
   } catch (error) {
-    console.error(error);
     await closeWithin(client, CLOSE_TIMEOUT_MS);
-    throw error instanceof DeadlinePassed
-      ? DatabaseUnavailableError.timedOut(timeoutMs)
-      : DatabaseUnavailableError.unreachable();
+    // Only a failed connect or the deadline is the database being unavailable.
+    // An error from the work is rethrown as it is: an AppError keeps its own
+    // status, and anything else reaches onError as a 500. A connection that
+    // drops in the middle of the work is reported that way too, as a 500.
+    if (error instanceof DeadlinePassed) {
+      console.error(error);
+      throw DatabaseUnavailableError.timedOut(timeoutMs);
+    }
+    if (error instanceof ConnectFailed) {
+      console.error(error.cause);
+      throw DatabaseUnavailableError.unreachable();
+    }
+    throw error;
   } finally {
     clearTimeout(timer);
   }

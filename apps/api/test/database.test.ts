@@ -57,3 +57,15 @@ it("gives connecting and the query one deadline together, and still closes the c
   expect(elapsed).toBeLessThan(750);
   expect(end).toHaveBeenCalledTimes(1);
 });
+
+it("rethrows an error from the work as it is, and still closes the client", async () => {
+  const end = vi.spyOn(Client.prototype, "end");
+  const bug = new TypeError("a bug in the work");
+
+  const outcome = withDatabase({ connectionString: () => postgres.connectionString }, async () => {
+    throw bug;
+  });
+
+  await expect(outcome).rejects.toBe(bug);
+  expect(end).toHaveBeenCalledTimes(1);
+});
