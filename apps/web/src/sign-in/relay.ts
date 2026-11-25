@@ -70,6 +70,7 @@ const ERROR_KINDS = [
   "too-soon",
   "start-again",
   "passkey-failed",
+  "passkey-not-created",
 ] as const;
 export type SignInErrorKind = (typeof ERROR_KINDS)[number];
 
@@ -95,5 +96,10 @@ export const codeError = (error: unknown) =>
 export const signInError = (error: unknown) =>
   byStatus(error, { 401: "wrong-code", 429: "too-many" });
 
+// Signing in with a passkey.
 export const passkeyError = (error: unknown) =>
   byStatus(error, { 400: "passkey-failed", 401: "passkey-failed", 429: "too-many" });
+
+// Creating one: a refused registration, or a session that ended before it.
+export const registrationError = (error: unknown) =>
+  byStatus(error, { 400: "passkey-not-created", 401: "passkey-not-created", 429: "too-many" });

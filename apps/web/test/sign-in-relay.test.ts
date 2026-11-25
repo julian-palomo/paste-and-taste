@@ -7,6 +7,7 @@ import {
   passkeyError,
   pendingCookie,
   readPending,
+  registrationError,
   relayHeaders,
   signInError,
 } from "../src/sign-in/relay.ts";
@@ -122,6 +123,16 @@ describe("error kinds", () => {
     expect(passkeyError(error)).toBe(kind);
   });
 
+  it.each([
+    [apiError(400), "passkey-not-created"],
+    [apiError(401), "passkey-not-created"],
+    [apiError(429), "too-many"],
+    [apiError(503), "unreachable"],
+    [unreachable, "unreachable"],
+  ])("creating a passkey: %s is %s", (error, kind) => {
+    expect(registrationError(error)).toBe(kind);
+  });
+
   // Anything else is a bug here, not a state of the API.
   it("rethrows an error that isn't the API's", () => {
     const bug = new TypeError("bug");
@@ -151,6 +162,7 @@ describe("parseErrorKind", () => {
     "too-soon",
     "start-again",
     "passkey-failed",
+    "passkey-not-created",
   ])("reads %s from the page's address", (kind) => {
     expect(parseErrorKind(kind)).toBe(kind);
   });

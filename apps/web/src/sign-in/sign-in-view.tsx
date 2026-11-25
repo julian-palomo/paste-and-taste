@@ -34,8 +34,14 @@ function errorText(messages: Messages, kind: SignInErrorKind): string {
     "too-soon": messages.signInErrorTooSoon,
     "start-again": messages.signInErrorStartAgain,
     "passkey-failed": messages.signInErrorPasskeyFailed,
+    "passkey-not-created": messages.signInErrorPasskeyNotCreated,
   }[kind];
 }
+
+// The passkey's errors belong to the passkey, not to a step's field.
+const PASSKEY_KINDS: readonly SignInErrorKind[] = ["passkey-failed", "passkey-not-created"];
+const fieldErrorOf = (error: SignInErrorKind | undefined) =>
+  error && !PASSKEY_KINDS.includes(error) ? error : undefined;
 
 // <h1> and <p role="alert"> carry no class: tests match them exactly.
 export function SignInView(props: Props) {
@@ -78,8 +84,9 @@ function Alert({ text }: { text: string }) {
 }
 
 function AddressStep({ lang, messages, pending, error, actions, passkeySignIn }: Props) {
-  // A failed passkey has no field of its own: it is said next to the passkey.
-  const fieldError = error === "passkey-failed" ? undefined : error;
+  // A failed passkey is said next to the passkey; creating one happens only
+  // from the offer, so passkey-not-created shows nothing here.
+  const fieldError = fieldErrorOf(error);
   return (
     <section className="flex flex-col gap-8">
       <h1>{messages.signInHeading}</h1>
@@ -108,7 +115,7 @@ function AddressStep({ lang, messages, pending, error, actions, passkeySignIn }:
 }
 
 function CodeStep({ lang, messages, error, actions, email }: Props & { email: string }) {
-  const fieldError = error === "passkey-failed" ? undefined : error;
+  const fieldError = fieldErrorOf(error);
   return (
     <section className="flex flex-col gap-8">
       <div className="flex flex-col gap-2">

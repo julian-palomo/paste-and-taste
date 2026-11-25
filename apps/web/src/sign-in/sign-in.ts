@@ -6,6 +6,7 @@ import {
   type Pending,
   passkeyError,
   pendingCookie,
+  registrationError,
   type SignInErrorKind,
   signInError,
 } from "./relay.ts";
@@ -46,6 +47,19 @@ const secure = (deps: SignInDeps) => ({ secure: new URL(deps.origin).protocol ==
 const notShownPasskey = { ok: false, error: "unreachable" } as const;
 
 type WebAuthnJson = Record<string, unknown>;
+
+// The browser's answer to a ceremony, as the JSON text it crossed in. The API
+// checks its shape itself; anything that isn't a JSON object fails here.
+function parseAnswer(text: string): WebAuthnJson | undefined {
+  try {
+    const value: unknown = JSON.parse(text);
+    return typeof value === "object" && value !== null && !Array.isArray(value)
+      ? (value as WebAuthnJson)
+      : undefined;
+  } catch {
+    return undefined;
+  }
+}
 type PasskeyResult<T> = ({ ok: true } & T) | { ok: false; error: SignInErrorKind };
 
 // How long after a code the address step refuses to send another.
@@ -153,20 +167,22 @@ export async function passkeyRegistrationOptions(
       options: await deps.client.post("/login/passkey/registration-options", call(deps)),
     };
   } catch (error) {
-    return { ok: false, error: passkeyError(error) };
+    return { ok: false, error: registrationError(error) };
   }
 }
 
 export async function registerPasskey(
   deps: SignInDeps,
-  { response }: { response: WebAuthnJson },
+  { responseJson }: { responseJson: string },
 ): Promise<PasskeyResult<object>> {
   if (!deps.shown) return notShownPasskey;
+  const response = parseAnswer(responseJson);
+  if (!response) return { ok: false, error: "passkey-not-created" };
   try {
     await deps.client.post("/login/passkey/registration", { ...call(deps), body: { response } });
     return { ok: true };
   } catch (error) {
-    return { ok: false, error: passkeyError(error) };
+    return { ok: false, error: registrationError(error) };
   }
 }
 
@@ -186,9 +202,11 @@ export async function passkeySignInOptions(
 
 export async function passkeySignIn(
   deps: SignInDeps,
-  { response, rememberMe }: { response: WebAuthnJson; rememberMe: boolean },
+  { responseJson, rememberMe }: { responseJson: string; rememberMe: boolean },
 ): Promise<PasskeyResult<object>> {
   if (!deps.shown) return notShownPasskey;
+  const response = parseAnswer(responseJson);
+  if (!response) return { ok: false, error: "passkey-failed" };
   try {
     await deps.client.post("/login/passkey/sign-in", {
       ...call(deps),

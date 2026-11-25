@@ -132,19 +132,6 @@ function asText(result: Awaited<ReturnType<typeof passkeySignInOptions>>): Optio
   return result.ok ? { ok: true, optionsJson: JSON.stringify(result.options) } : result;
 }
 
-// The browser's answer, which the API checks itself; anything that isn't a
-// JSON object is a refused passkey.
-function parseAnswer(text: string): Record<string, unknown> | undefined {
-  try {
-    const value: unknown = JSON.parse(text);
-    return typeof value === "object" && value !== null && !Array.isArray(value)
-      ? (value as Record<string, unknown>)
-      : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
 export const passkeyRegistrationOptionsFn = createServerFn({ method: "POST" })
   .middleware([withConfig])
   .handler(async ({ context }) =>
@@ -154,11 +141,7 @@ export const passkeyRegistrationOptionsFn = createServerFn({ method: "POST" })
 export const registerPasskeyFn = createServerFn({ method: "POST" })
   .middleware([withConfig])
   .validator((input: { responseJson: string }) => input)
-  .handler(async ({ data, context }) => {
-    const response = parseAnswer(data.responseJson);
-    if (!response) return { ok: false as const, error: "passkey-failed" as const };
-    return registerPasskey(deps(context, appendToResponse), { response });
-  });
+  .handler(({ data, context }) => registerPasskey(deps(context, appendToResponse), data));
 
 export const passkeySignInOptionsFn = createServerFn({ method: "POST" })
   .middleware([withConfig])
@@ -169,11 +152,4 @@ export const passkeySignInOptionsFn = createServerFn({ method: "POST" })
 export const passkeySignInFn = createServerFn({ method: "POST" })
   .middleware([withConfig])
   .validator((input: { responseJson: string; rememberMe: boolean }) => input)
-  .handler(async ({ data, context }) => {
-    const response = parseAnswer(data.responseJson);
-    if (!response) return { ok: false as const, error: "passkey-failed" as const };
-    return passkeySignIn(deps(context, appendToResponse), {
-      response,
-      rememberMe: data.rememberMe,
-    });
-  });
+  .handler(({ data, context }) => passkeySignIn(deps(context, appendToResponse), data));

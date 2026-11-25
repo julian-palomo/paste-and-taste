@@ -42,6 +42,8 @@ const withCookies = (response: Response) => {
 };
 
 const NOW = 1_700_000_000_000;
+// The browser's answer to a WebAuthn ceremony, as JSON text.
+const answer = '{"id":"k"}';
 
 // An API that answers `answer` to every call, and keeps each request.
 function api(answer: () => Response | Promise<Response>) {
@@ -89,13 +91,13 @@ const calls = [
   [
     "registerPasskey",
     { registered: true },
-    (d: SignInDeps) => registerPasskey(d, { response: { id: "k" } }),
+    (d: SignInDeps) => registerPasskey(d, { responseJson: answer }),
   ],
   ["passkeySignInOptions", { challenge: "c" }, (d: SignInDeps) => passkeySignInOptions(d)],
   [
     "passkeySignIn",
     { user },
-    (d: SignInDeps) => passkeySignIn(d, { response: { id: "k" }, rememberMe: false }),
+    (d: SignInDeps) => passkeySignIn(d, { responseJson: answer, rememberMe: false }),
   ],
 ] as const;
 
@@ -308,24 +310,61 @@ describe("passkeys", () => {
   ])("signing in with the box ticked %s sends rememberMe: %s", async (rememberMe, sentValue) => {
     const { deps, requests } = api(() => json({ user }));
 
-    await passkeySignIn(deps, { response: { id: "k" }, rememberMe });
+    await passkeySignIn(deps, { responseJson: answer, rememberMe });
 
     expect(await requests[0]?.json()).toEqual({ response: { id: "k" }, rememberMe: sentValue });
   });
 
+  // Creating a passkey and signing in with one fail in words of their own.
   it.each([
-    ["a refused registration (400)", () => registerPasskey, 400, "passkey-failed"],
-    ["a refused sign-in (401)", () => passkeySignIn, 401, "passkey-failed"],
-    ["too many requests", () => passkeySignIn, 429, "too-many"],
-    ["an API that is down", () => passkeySignIn, 503, "unreachable"],
-  ])("%s is %s", async (_, fn, status, error) => {
+    ["a refused registration (400)", 400, "passkey-not-created"],
+    ["a registration with no session (401)", 401, "passkey-not-created"],
+    ["too many requests", 429, "too-many"],
+    ["an API that is down", 503, "unreachable"],
+  ])("registering: %s is %s", async (_, status, error) => {
     const { deps } = api(() => problem(status));
 
-    expect(await fn()(deps, { response: { id: "k" }, rememberMe: false })).toEqual({
+    expect(await registerPasskey(deps, { responseJson: answer })).toEqual({ ok: false, error });
+  });
+
+  it("asking for registration options with no session (401) is passkey-not-created", async () => {
+    const { deps } = api(() => problem(401));
+
+    expect(await passkeyRegistrationOptions(deps)).toEqual({
+      ok: false,
+      error: "passkey-not-created",
+    });
+  });
+
+  it.each([
+    ["a refused sign-in (401)", 401, "passkey-failed"],
+    ["too many requests", 429, "too-many"],
+    ["an API that is down", 503, "unreachable"],
+  ])("signing in: %s is %s", async (_, status, error) => {
+    const { deps } = api(() => problem(status));
+
+    expect(await passkeySignIn(deps, { responseJson: answer, rememberMe: false })).toEqual({
       ok: false,
       error,
     });
   });
+
+  it.each(["not json", "[]", "null", '"text"'])(
+    "an answer that isn't a JSON object (%s) calls nothing and fails in each one's words",
+    async (responseJson) => {
+      const { deps, requests } = api(() => json({ registered: true }));
+
+      expect(await registerPasskey(deps, { responseJson })).toEqual({
+        ok: false,
+        error: "passkey-not-created",
+      });
+      expect(await passkeySignIn(deps, { responseJson, rememberMe: false })).toEqual({
+        ok: false,
+        error: "passkey-failed",
+      });
+      expect(requests).toHaveLength(0);
+    },
+  );
 });
 
 describe("where the sign-in isn't shown", () => {
@@ -352,11 +391,11 @@ describe("where the sign-in isn't shown", () => {
 
   it.each([
     ["passkeyRegistrationOptions", (d: SignInDeps) => passkeyRegistrationOptions(d)],
-    ["registerPasskey", (d: SignInDeps) => registerPasskey(d, { response: { id: "k" } })],
+    ["registerPasskey", (d: SignInDeps) => registerPasskey(d, { responseJson: answer })],
     ["passkeySignInOptions", (d: SignInDeps) => passkeySignInOptions(d)],
     [
       "passkeySignIn",
-      (d: SignInDeps) => passkeySignIn(d, { response: { id: "k" }, rememberMe: false }),
+      (d: SignInDeps) => passkeySignIn(d, { responseJson: answer, rememberMe: false }),
     ],
   ])("%s calls nothing and fails", async (_, call) => {
     const { deps, requests } = notShown();

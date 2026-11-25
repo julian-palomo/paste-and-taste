@@ -76,5 +76,6 @@
   "signInErrorUnreachable": "Ahora no podemos dejarte entrar. Vuelve a probar en unos minutos.",
   "signInErrorTooSoon": "Espera un minuto antes de pedir otro código.",
   "signInErrorStartAgain": "Ha pasado demasiado tiempo. Escribe tu correo y te enviamos un código nuevo.",
-  "signInErrorPasskeyFailed": "No se ha podido usar la llave de acceso. Vuelve a probar o entra con un código."
+  "signInErrorPasskeyFailed": "No se ha podido usar la llave de acceso. Vuelve a probar o entra con un código.",
+  "signInErrorPasskeyNotCreated": "No se ha podido crear la llave de acceso. Vuelve a probar o hazlo más tarde."
 }
