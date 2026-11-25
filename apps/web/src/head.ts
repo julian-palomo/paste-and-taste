@@ -4,6 +4,7 @@ import { type Language, languages, type Messages, messagesFor } from "./i18n/i18
 // description.
 const pages = {
   home: { path: "", title: "title", description: "description" },
+  health: { path: "/health", title: "title", description: "description" },
   showcase: { path: "/showcase", title: "showcaseTitle", description: "showcaseDescription" },
   signIn: { path: "/sign-in", title: "signInTitle", description: "signInDescription" },
 } as const satisfies Record<

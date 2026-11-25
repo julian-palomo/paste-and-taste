@@ -61,3 +61,22 @@ describe.each(["en", "es"] as const)("pageHead for the sign-in page in %s", (lan
     ]);
   });
 });
+
+describe.each(["en", "es"] as const)("pageHead for the health page in %s", (lang) => {
+  const head = pageHead(lang, "https://web.test", "health");
+
+  it("has the health's title and description", () => {
+    expect(head.meta).toEqual([
+      { title: messagesFor(lang).title },
+      { name: "description", content: messagesFor(lang).description },
+    ]);
+  });
+
+  it("points to the health page in each language, and to the English one as the default", () => {
+    expect(head.links).toEqual([
+      { rel: "alternate", hrefLang: "en", href: "https://web.test/en/health" },
+      { rel: "alternate", hrefLang: "es", href: "https://web.test/es/health" },
+      { rel: "alternate", hrefLang: "x-default", href: "https://web.test/en/health" },
+    ]);
+  });
+});
