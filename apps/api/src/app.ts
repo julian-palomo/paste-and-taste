@@ -6,7 +6,11 @@ import { healthRoutes } from "./health/health.routes.ts";
 import { type CodeSender, consoleCodeSender } from "./login/code-sender.ts";
 import { loginRoutes } from "./login/login.routes.ts";
 import { createRequestLimiter } from "./login/request-limiter.ts";
+import { createSessionReader } from "./login/session-reader.ts";
 import { createWithAuth } from "./login/with-auth.ts";
+import { createPostgresRecipesRepository } from "./recipes/postgres-recipes.repository.ts";
+import { recipesRoutes } from "./recipes/recipes.routes.ts";
+import { createRecipesService } from "./recipes/recipes.service.ts";
 import { wakeRoutes } from "./wake/wake.routes.ts";
 
 // The only path other workspaces import (package.json, "./app"), so what
@@ -34,7 +38,7 @@ export function createApp(
   app.route("/health", healthRoutes({ config }));
   app.route("/wake", wakeRoutes({ withDatabase: withThisDatabase }));
   // Login runs only in development until the issue that deploys it; in
-  // preview and production /login/* is the usual 404.
+  // preview and production /login/* and /recipes/* are the usual 404.
   if (config.APP_ENV === "development") {
     const withAuth = createWithAuth({
       withDatabase: withThisDatabase,
@@ -46,6 +50,14 @@ export function createApp(
       },
     });
     app.route("/login", loginRoutes({ withAuth, requestLimiter: createRequestLimiter() }));
+    // A user's recipes need a session, so they run where the login does.
+    app.route(
+      "/recipes",
+      recipesRoutes({
+        service: createRecipesService(createPostgresRecipesRepository(withThisDatabase)),
+        currentUser: createSessionReader(withAuth),
+      }),
+    );
   }
 
   app.notFound(notFound);
