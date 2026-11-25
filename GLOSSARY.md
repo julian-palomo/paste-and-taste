@@ -157,6 +157,14 @@ _Avoid_: style guide, storybook.
 
 ## Running the app
 
+**Building page**: Production's home while the app isn't open: what the app
+is, and that it is being built. No form, and nothing about a visitor kept.\
+_Avoid_: coming soon, landing page (the landing page is `DESIGN.md`'s Portada).
+
+**Health page**: The web page that shows whether the API answers, and in which
+environment, at `/en/health` and `/es/health`. The deploy's smoke reads it.\
+_Avoid_: status page.
+
 **Wake request**: The cheap request an app sends when it or any of its pages
 opens, so the database, which sleeps when idle, is awake by the time the user
 acts. The API answers it at `/wake`. Never shown in the app.\

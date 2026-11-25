@@ -14,7 +14,7 @@ needs, and a phase gets its issues when it is next.
 | 1   | The API's base                | Done        | [#35](https://github.com/julian-palomo/paste-and-taste/issues/35)      |
 | 2   | The Instagram prototype       | In progress | [#22](https://github.com/julian-palomo/paste-and-taste/issues/22)      |
 | 3   | Database and login            | In progress | [#42](https://github.com/julian-palomo/paste-and-taste/issues/42), [#58](https://github.com/julian-palomo/paste-and-taste/issues/58), [#66](https://github.com/julian-palomo/paste-and-taste/issues/66), [#69](https://github.com/julian-palomo/paste-and-taste/issues/69), [#80](https://github.com/julian-palomo/paste-and-taste/issues/80), [#77](https://github.com/julian-palomo/paste-and-taste/issues/77), [#90](https://github.com/julian-palomo/paste-and-taste/issues/90), [#93](https://github.com/julian-palomo/paste-and-taste/issues/93) |
-| 4   | The first recipe, end to end  | In progress | [#46](https://github.com/julian-palomo/paste-and-taste/issues/46), [#73](https://github.com/julian-palomo/paste-and-taste/issues/73) |
+| 4   | The first recipe, end to end  | In progress | [#46](https://github.com/julian-palomo/paste-and-taste/issues/46), [#73](https://github.com/julian-palomo/paste-and-taste/issues/73), [#98](https://github.com/julian-palomo/paste-and-taste/issues/98) |
 | 5   | The real import               | Not started |                                                                        |
 | 6   | The native app                | Not started |                                                                        |
 | 7   | What makes the product        | Not started |                                                                        |
@@ -74,7 +74,8 @@ needs, and a phase gets its issues when it is next.
    look's colours, light and dark, and its two typefaces. Since #74 it has the
    first pieces its screens are built from, a button, a text field, a
    checkbox and a card, and a page that shows them in development and
-   preview. #73 is the API's half: a user's recipes in Postgres, listed,
+   preview. Since #98 production's home says the app is being built, and the
+   health has its own page, which the deploy's smoke reads. #73 is the API's half: a user's recipes in Postgres, listed,
    opened, added and edited through the API, in development, with the first
    service and repository
    ([the record](adr/2026-11-25-ingredients-and-steps-as-jsonb.md)). The
