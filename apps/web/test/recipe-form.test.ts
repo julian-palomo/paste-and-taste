@@ -3,6 +3,7 @@ import {
   checkRecipe,
   clearDraftCookies,
   draftCookies,
+  parseRecipeError,
   type RecipeFormValues,
   readDraft,
   readRecipeForm,
@@ -217,5 +218,25 @@ describe("the draft cookies", () => {
     for (const cookie of cleared) {
       expect(cookie.split("; ")).toEqual(expect.arrayContaining(["Max-Age=0", "Path=/", "Secure"]));
     }
+  });
+});
+
+describe("parseRecipeError", () => {
+  it.each([
+    ["title-missing", "title"],
+    ["ingredient-name-missing", "ingredient-name-3"],
+    ["steps-missing", "step-text-0"],
+  ])("reads %s on %s", (kind, field) => {
+    expect(parseRecipeError(kind, field)).toEqual({ kind, field });
+  });
+
+  it.each([
+    ["other", "title"],
+    ["title-missing", "other"],
+    ["title-missing", "ingredient-name-"],
+    [undefined, "title"],
+    ["title-missing", undefined],
+  ])("reads %s on %s as none", (kind, field) => {
+    expect(parseRecipeError(kind, field)).toBeUndefined();
   });
 });

@@ -65,6 +65,18 @@ export async function readRecipe(deps: RecipesDeps, id: string) {
   }
 }
 
+// The API's types, as the client gives them, never copied.
+export type RecipeSummary = Extract<
+  Awaited<ReturnType<typeof listRecipes>>,
+  { kind: "ok" }
+>["recipes"][number];
+export type Recipe = Extract<Awaited<ReturnType<typeof readRecipe>>, { kind: "ok" }>["recipe"];
+
+// The sign-in, and back to `path` once signed in.
+export function signInFor(lang: Language, path: string): string {
+  return `/${lang}/sign-in?${new URLSearchParams({ next: path })}`;
+}
+
 // Saves the form: POST for a new recipe, PUT for an edited one, then the
 // recipe's page. On an error, back to the form with the error's field and
 // what was typed, kept in the draft cookies.
@@ -93,7 +105,7 @@ export async function saveRecipe(
     if (error instanceof ApiError && error.status === 401) {
       // The draft stays: back on the form after signing in, it is still there.
       for (const cookie of draftCookies(values, secure(deps)) ?? []) deps.appendSetCookie(cookie);
-      return { redirect: `/${lang}/sign-in?${new URLSearchParams({ next: formPage })}` };
+      return { redirect: signInFor(lang, formPage) };
     }
     // An edited recipe that is gone or another user's: its page says not found.
     if (id && error instanceof ApiError && (error.status === 404 || error.status === 400)) {

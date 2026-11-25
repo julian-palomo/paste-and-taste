@@ -78,15 +78,32 @@ export function toRecipeInput(values: RecipeFormValues, language: string) {
   };
 }
 
-export type RecipeErrorKind =
-  | "title-missing"
-  | "source-invalid"
-  | "ingredient-name-missing"
-  | "ingredients-missing"
-  | "steps-missing"
-  | "refused"
-  | "unreachable"
-  | "api-error";
+const RECIPE_ERROR_KINDS = [
+  "title-missing",
+  "source-invalid",
+  "ingredient-name-missing",
+  "ingredients-missing",
+  "steps-missing",
+  "refused",
+  "unreachable",
+  "api-error",
+] as const;
+export type RecipeErrorKind = (typeof RECIPE_ERROR_KINDS)[number];
+
+// The form page's ?error= and ?field=, which anyone can type: a known kind on
+// a field the form has, or none.
+const FIELD =
+  /^(title|servings|time|source|ingredient-(order|quantity|unit|name)-\d+|step-(order|text)-\d+)$/;
+
+export function parseRecipeError(
+  kind: unknown,
+  field: unknown,
+): { kind: RecipeErrorKind; field: string } | undefined {
+  const known = RECIPE_ERROR_KINDS.find((k) => k === kind);
+  return known && typeof field === "string" && FIELD.test(field)
+    ? { kind: known, field }
+    : undefined;
+}
 
 // The API checks the source with zod's z.httpUrl() (apps/api/src/recipes/
 // recipes.routes.ts), which is stricter than the document's format: uri: an

@@ -6,6 +6,8 @@ const pages = {
   home: { path: "", title: "title", description: "description" },
   health: { path: "/health", title: "title", description: "description" },
   building: { path: "", title: "buildingTitle", description: "buildingDescription" },
+  recipes: { path: "/recipes", title: "recipesTitle", description: "recipesDescription" },
+  newRecipe: { path: "/recipes/new", title: "newRecipeTitle", description: "newRecipeDescription" },
   showcase: { path: "/showcase", title: "showcaseTitle", description: "showcaseDescription" },
   signIn: { path: "/sign-in", title: "signInTitle", description: "signInDescription" },
 } as const satisfies Record<
@@ -18,11 +20,22 @@ const pages = {
 // else: "/" for the home, which sends each visitor to their language, and the
 // English address for any other page. Search engines want those links
 // absolute, so they are built from the origin.
-export function pageHead(lang: Language, origin: string, page: keyof typeof pages) {
+// A page is a key of the table above, or, when its address and title depend on
+// its data (a recipe's), its own path and texts, already in its language.
+type OwnPage = { path: string; title: string; description: string };
+
+export function pageHead(lang: Language, origin: string, page: keyof typeof pages | OwnPage) {
   const messages = messagesFor(lang);
-  const { path, title, description } = pages[page];
+  const { path, title, description } =
+    typeof page === "string"
+      ? {
+          path: pages[page].path,
+          title: messages[pages[page].title],
+          description: messages[pages[page].description],
+        }
+      : page;
   return {
-    meta: [{ title: messages[title] }, { name: "description", content: messages[description] }],
+    meta: [{ title }, { name: "description", content: description }],
     links: [
       ...languages.map((language) => ({
         rel: "alternate",

@@ -14,6 +14,10 @@ import { Route as LangIndexRouteImport } from './routes/$lang/index'
 import { Route as LangHealthRouteImport } from './routes/$lang/health'
 import { Route as LangShowcaseRouteImport } from './routes/$lang/showcase'
 import { Route as LangSignInRouteImport } from './routes/$lang/sign-in'
+import { Route as LangRecipesIndexRouteImport } from './routes/$lang/recipes/index'
+import { Route as LangRecipesNewRouteImport } from './routes/$lang/recipes/new'
+import { Route as LangRecipesIdIndexRouteImport } from './routes/$lang/recipes/$id/index'
+import { Route as LangRecipesIdEditRouteImport } from './routes/$lang/recipes/$id/edit'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -40,6 +44,26 @@ const LangSignInRoute = LangSignInRouteImport.update({
   path: '/$lang/sign-in',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LangRecipesIndexRoute = LangRecipesIndexRouteImport.update({
+  id: '/$lang/recipes/',
+  path: '/$lang/recipes/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LangRecipesNewRoute = LangRecipesNewRouteImport.update({
+  id: '/$lang/recipes/new',
+  path: '/$lang/recipes/new',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LangRecipesIdIndexRoute = LangRecipesIdIndexRouteImport.update({
+  id: '/$lang/recipes/$id/',
+  path: '/$lang/recipes/$id/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LangRecipesIdEditRoute = LangRecipesIdEditRouteImport.update({
+  id: '/$lang/recipes/$id/edit',
+  path: '/$lang/recipes/$id/edit',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -47,6 +71,10 @@ export interface FileRoutesByFullPath {
   '/$lang/showcase': typeof LangShowcaseRoute
   '/$lang/sign-in': typeof LangSignInRoute
   '/$lang/': typeof LangIndexRoute
+  '/$lang/recipes/new': typeof LangRecipesNewRoute
+  '/$lang/recipes/': typeof LangRecipesIndexRoute
+  '/$lang/recipes/$id/edit': typeof LangRecipesIdEditRoute
+  '/$lang/recipes/$id/': typeof LangRecipesIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +82,10 @@ export interface FileRoutesByTo {
   '/$lang/showcase': typeof LangShowcaseRoute
   '/$lang/sign-in': typeof LangSignInRoute
   '/$lang': typeof LangIndexRoute
+  '/$lang/recipes/new': typeof LangRecipesNewRoute
+  '/$lang/recipes': typeof LangRecipesIndexRoute
+  '/$lang/recipes/$id/edit': typeof LangRecipesIdEditRoute
+  '/$lang/recipes/$id': typeof LangRecipesIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,13 +94,34 @@ export interface FileRoutesById {
   '/$lang/showcase': typeof LangShowcaseRoute
   '/$lang/sign-in': typeof LangSignInRoute
   '/$lang/': typeof LangIndexRoute
+  '/$lang/recipes/new': typeof LangRecipesNewRoute
+  '/$lang/recipes/': typeof LangRecipesIndexRoute
+  '/$lang/recipes/$id/edit': typeof LangRecipesIdEditRoute
+  '/$lang/recipes/$id/': typeof LangRecipesIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/$lang/health' | '/$lang/showcase' | '/$lang/sign-in' | '/$lang/'
+    | '/'
+    | '/$lang/health'
+    | '/$lang/showcase'
+    | '/$lang/sign-in'
+    | '/$lang/'
+    | '/$lang/recipes/new'
+    | '/$lang/recipes/'
+    | '/$lang/recipes/$id/edit'
+    | '/$lang/recipes/$id/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/$lang/health' | '/$lang/showcase' | '/$lang/sign-in' | '/$lang'
+  to:
+    | '/'
+    | '/$lang/health'
+    | '/$lang/showcase'
+    | '/$lang/sign-in'
+    | '/$lang'
+    | '/$lang/recipes/new'
+    | '/$lang/recipes'
+    | '/$lang/recipes/$id/edit'
+    | '/$lang/recipes/$id'
   id:
     | '__root__'
     | '/'
@@ -76,6 +129,10 @@ export interface FileRouteTypes {
     | '/$lang/showcase'
     | '/$lang/sign-in'
     | '/$lang/'
+    | '/$lang/recipes/new'
+    | '/$lang/recipes/'
+    | '/$lang/recipes/$id/edit'
+    | '/$lang/recipes/$id/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -84,6 +141,10 @@ export interface RootRouteChildren {
   LangShowcaseRoute: typeof LangShowcaseRoute
   LangSignInRoute: typeof LangSignInRoute
   LangIndexRoute: typeof LangIndexRoute
+  LangRecipesNewRoute: typeof LangRecipesNewRoute
+  LangRecipesIndexRoute: typeof LangRecipesIndexRoute
+  LangRecipesIdEditRoute: typeof LangRecipesIdEditRoute
+  LangRecipesIdIndexRoute: typeof LangRecipesIdIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -123,6 +184,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LangSignInRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$lang/recipes/': {
+      id: '/$lang/recipes/'
+      path: '/$lang/recipes'
+      fullPath: '/$lang/recipes/'
+      preLoaderRoute: typeof LangRecipesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$lang/recipes/new': {
+      id: '/$lang/recipes/new'
+      path: '/$lang/recipes/new'
+      fullPath: '/$lang/recipes/new'
+      preLoaderRoute: typeof LangRecipesNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$lang/recipes/$id/': {
+      id: '/$lang/recipes/$id/'
+      path: '/$lang/recipes/$id'
+      fullPath: '/$lang/recipes/$id/'
+      preLoaderRoute: typeof LangRecipesIdIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$lang/recipes/$id/edit': {
+      id: '/$lang/recipes/$id/edit'
+      path: '/$lang/recipes/$id/edit'
+      fullPath: '/$lang/recipes/$id/edit'
+      preLoaderRoute: typeof LangRecipesIdEditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -132,6 +221,10 @@ const rootRouteChildren: RootRouteChildren = {
   LangShowcaseRoute: LangShowcaseRoute,
   LangSignInRoute: LangSignInRoute,
   LangIndexRoute: LangIndexRoute,
+  LangRecipesNewRoute: LangRecipesNewRoute,
+  LangRecipesIndexRoute: LangRecipesIndexRoute,
+  LangRecipesIdEditRoute: LangRecipesIdEditRoute,
+  LangRecipesIdIndexRoute: LangRecipesIdIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

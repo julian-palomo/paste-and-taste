@@ -100,3 +100,27 @@ describe.each(["en", "es"] as const)("pageHead for the building page in %s", (la
     ]);
   });
 });
+
+// A page whose address and title depend on its data: a recipe's.
+describe.each(["en", "es"] as const)("pageHead for a page of its own in %s", (lang) => {
+  const head = pageHead(lang, "https://web.test", {
+    path: "/recipes/abc",
+    title: "Tortilla de patatas",
+    description: "A recipe.",
+  });
+
+  it("has the title and the description it was given", () => {
+    expect(head.meta).toEqual([
+      { title: "Tortilla de patatas" },
+      { name: "description", content: "A recipe." },
+    ]);
+  });
+
+  it("points to the page in each language, and to the English one as the default", () => {
+    expect(head.links).toEqual([
+      { rel: "alternate", hrefLang: "en", href: "https://web.test/en/recipes/abc" },
+      { rel: "alternate", hrefLang: "es", href: "https://web.test/es/recipes/abc" },
+      { rel: "alternate", hrefLang: "x-default", href: "https://web.test/en/recipes/abc" },
+    ]);
+  });
+});
