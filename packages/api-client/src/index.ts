@@ -17,9 +17,9 @@ export class ApiError extends Error {
   }
 }
 
-// No usable answer came back: `fetch` rejected, or a 200's body is empty or
-// isn't JSON (a captive portal, a wrong address). `cause` is the platform's
-// error when there is one.
+// No usable answer came back: `fetch` rejected, or a success's (200 or 201)
+// body is empty or isn't JSON (a captive portal, a wrong address). `cause` is
+// the platform's error when there is one.
 export class ApiUnreachableError extends Error {
   constructor(message: string, options?: ErrorOptions) {
     super(message, options);
@@ -53,17 +53,26 @@ function isProblemDetails(body: unknown): body is ProblemDetails {
 // Every call is typed from the API's OpenAPI document, through the types
 // generated from it: which paths a method takes, their path parameters, the
 // body each route needs, and what its success answers.
-type Method = "get" | "post";
+type Method = "get" | "post" | "put";
 type Operation<P extends keyof paths, M extends Method> = paths[P][M];
 
 type JsonOf<R> = R extends { content: { "application/json": infer Body } } ? Body : never;
 
-// The paths whose method M answers 200, and the JSON body of that 200.
+// The paths whose method M succeeds with 200 or 201, and the JSON body of
+// that success: the 200's, or else the 201's. No route answers both.
 type PathWith<M extends Method> = {
-  [P in keyof paths]: paths[P] extends { [K in M]: { responses: { 200: unknown } } } ? P : never;
+  [P in keyof paths]: paths[P] extends {
+    [K in M]: { responses: { 200: unknown } | { 201: unknown } };
+  }
+    ? P
+    : never;
 }[keyof paths];
 type Success<P extends keyof paths, M extends Method> =
-  Operation<P, M> extends { responses: { 200: infer Answer } } ? JsonOf<Answer> : never;
+  Operation<P, M> extends { responses: { 200: infer Answer } }
+    ? JsonOf<Answer>
+    : Operation<P, M> extends { responses: { 201: infer Answer } }
+      ? JsonOf<Answer>
+      : never;
 
 // The route's path parameters and JSON body, or `never` when it has none: a
 // path with no parameters has `path?: never`, a route with no body
@@ -130,6 +139,7 @@ export function createApiClient({ baseUrl, fetch }: ApiClientOptions) {
   const send = {
     get: client.GET,
     post: client.POST,
+    put: client.PUT,
   } as Record<Method, (path: string, init: Init) => Promise<Answer>>;
 
   // One reading of an answer for every method, so their errors are the same.
@@ -170,6 +180,9 @@ export function createApiClient({ baseUrl, fetch }: ApiClientOptions) {
     },
     async post<P extends PathWith<"post">>(path: P, ...[options]: Args<P, "post">) {
       return (await call("post", path, options)) as Success<P, "post">;
+    },
+    async put<P extends PathWith<"put">>(path: P, ...[options]: Args<P, "put">) {
+      return (await call("put", path, options)) as Success<P, "put">;
     },
   };
 }
