@@ -1,3 +1,5 @@
+Superseded by `2026-11-25-opus-reviews-when-fable-is-out.md`
+
 # A model per agent
 
 - **Status:** Accepted

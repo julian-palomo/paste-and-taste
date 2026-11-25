@@ -52,9 +52,10 @@ also measured login without a password, by a code sent by email and by
 passkey; those figures are in
 [`docs/research/passwordless-login.md`](docs/research/passwordless-login.md).
 The database and the login are decided from them, below. The API reaches its
-Postgres on Neon through Hyperdrive and answers the wake request, and has the
-login in development only: a code by email, printed in its terminal there,
-and an optional passkey.
+Postgres on Neon through Hyperdrive and answers the wake request, which the
+web app's server sends on every page load, and has the login in development
+only: a code by email, printed in its terminal there, and an optional
+passkey.
 
 [`docs/product.md`](docs/product.md) says what the app must do, and
 [`docs/roadmap.md`](docs/roadmap.md) in what order it is being built.

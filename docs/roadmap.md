@@ -46,12 +46,12 @@ needs, and a phase gets its issues when it is next.
    with Workers moving to the paid plan when the login is deployed. The
    phase's next issues are written from them. The first, #66, connects the
    API to Postgres on Neon through Hyperdrive, with a wake route that every
-   deploy's smoke calls. #69 adds the login to the API, in development only:
-   a code by email, printed in the terminal there, and an optional passkey,
-   with Better Auth behind the API's own routes and its tables under the
-   app's migrations. Next come the web app sending the wake request, then the
-   sign-in screen, and later sending real email and the login in preview and
-   production.
+   deploy's smoke calls. #67 has the web app's server send the wake request on
+   every page load. #69 adds the login to the API, in development only: a
+   code by email, printed in the terminal there, and an optional passkey, with
+   Better Auth behind the API's own routes and its tables under the app's
+   migrations. Next comes the sign-in screen, and later sending real email
+   and the login in preview and production.
    The first table holds an owner and who may see each recipe
    ([the record](adr/2026-11-24-friends-groups-and-copies.md)).
 4. **The first recipe, end to end.** A table, its endpoints, and the web app
