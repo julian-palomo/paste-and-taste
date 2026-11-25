@@ -38,7 +38,7 @@ here avoids macOS-only syntax.
 | `skills/implement-issue/`      | The whole loop for one issue: read it, branch, plan, plan review, implement, handoff, pull request, act on the review. `wait-for-reply.sh` is its bounded wait for the owner                                                       | `/implement-issue <N>`    |
 | `skills/handoff/`              | Closes a unit of work: the checks, each "Done when" run again, the docs, the commit and the change summary with its merge danger                                                                                                   | `/handoff`                |
 | `skills/ship-pr/`              | Pushes the branch, opens the pull request assigned to the owner and reports CI. Never merges                                                                                                                                       | `/ship-pr`                |
-| `agents/plan-reviewer.md`      | Reads a plan against its issue and the code, and the versions and documentation it cites against the web. Changes nothing, runs nothing, and answers `APPROVED`, `CHANGES` or `OWNER`. Its model is set in its first lines          | Step 4 of implement-issue |
+| `agents/plan-reviewer.md`      | Reads a plan against its issue and the code, and the versions and documentation it cites against the web. Changes nothing, runs nothing, and answers `APPROVED`, `CHANGES` or `OWNER`. Its model is set in its first lines; when that model is out, implement-issue runs it on Opus | Step 4 of implement-issue |
 
 ## How a plan gets its OK
 
