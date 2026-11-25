@@ -12,7 +12,9 @@
     "dev": "wrangler dev",
     "smoke": "node scripts/smoke.ts",
     "openapi": "node scripts/openapi.ts",
-    "openapi:check": "node scripts/openapi.ts --check"
+    "openapi:check": "node scripts/openapi.ts --check",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate"
   },
   "dependencies": {
     "@hono/zod-openapi": "catalog:",
@@ -28,6 +30,7 @@
     "@paste-and-taste/tsconfig": "workspace:*",
     "@types/node": "catalog:",
     "@types/pg": "catalog:",
+    "drizzle-kit": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:",
     "wrangler": "catalog:"
