@@ -9,7 +9,8 @@ Hono checks none of this; this rule and the reviews do. The record is
 `docs/adr/2026-11-16-hono-on-workers.md`.
 
 **The composition root.** `createApp` in `src/app.ts` builds the whole
-application. It is the only code that reads the raw variables (through
+application. It, and `createScheduledWork` beside it for the cron, are the
+only code that reads the raw variables (through
 `parseConfig`) or creates a dependency: the config, the database, a service.
 It passes each module what that module needs. Tests build the application
 through the same function, with the variables and the database they choose.
@@ -105,6 +106,14 @@ puts the code in the request's outbox (`src/login/outbox.ts`); `POST
 /login/code` sends it after `withAuth` returns, once the database client is
 closed, through the `CodeSender` that `chooseCodeSender` picked. A failure
 answers 502.
+
+**Work on a schedule.** The Worker's Cron Trigger (`wrangler.jsonc`) runs
+`createScheduledWork`, built in `src/app.ts` beside `createApp` from the same
+variables and database, so it follows the same composition rules: it reads
+the config once, opens its database through `withDatabase`, and logs counts,
+never values. It runs only where the login is mounted, through the same
+`loginIsMounted`. `src/worker.ts` exports `fetch` and `scheduled`, each built
+at start-up. Tests call `createScheduledWork`, as they call `createApp`.
 
 **Only the entry knows about Workers.** `src/worker.ts` is the only file that
 imports from `cloudflare:*`. Everything else runs on Node, which is what lets

@@ -54,7 +54,8 @@ needs, and a phase gets its issues when it is next.
    and hand back the API's cookies, which the web app's server relays. #77
    adds the sign-in page to the web app, in development only: a code by
    email, the "Mantener la sesión iniciada" box, and a passkey. #87 sends the
-   code by email through Resend, from `mail.pasteandtaste.app`. Next comes
+   code by email through Resend, from `mail.pasteandtaste.app`. #84 deletes
+   the login's expired rows once a day, on a Cron Trigger. Next comes
    the login in preview and production, with Workers Paid and a Resend
    webhook that alerts on failed and bounced emails.
    The first table, a user's recipes, holds each recipe's copy owner; who

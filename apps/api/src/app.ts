@@ -23,8 +23,8 @@ export { type DatabaseSource, noDatabase } from "./database/database.ts";
 // keeps the codes; everywhere else the default applies.
 type AppOptions = { codeSender?: CodeSender };
 
-// The composition root: the only place that reads the raw variables or
-// creates a dependency. Everything a module needs is created here and passed
+// The composition root, with createScheduledWork below for the cron: the
+// only places that read the raw variables or create a dependency. Everything a module needs is created here and passed
 // to it. The database is required: an application built without one is a
 // mistake typecheck should catch, so callers that never use it pass
 // noDatabase.
