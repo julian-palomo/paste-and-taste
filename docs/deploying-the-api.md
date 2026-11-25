@@ -201,25 +201,28 @@ awake, and nothing in the API refuses that yet. If more than half of the 100
 are spent by the middle of the month, something is keeping it awake: that is
 the sign to look at who calls `/wake`, or at the plan.
 
-### 5. The login, in development only
+### 5. The login and the recipes, in development only
 
-The API's login (`/login/*`) runs only when `APP_ENV` is `development`; in
-preview and production those routes answer 404 until the issue that deploys
-the login. It needs its tables in the development database, and Better
-Auth's secret in `apps/api/.env`. As above, every command runs in your own
+The API's login (`/login/*`) and a user's recipes (`/recipes/*`) run only
+when `APP_ENV` is `development`; in preview and production those routes
+answer 404 until the issue that deploys the login. They need their tables in
+the development database, and Better Auth's secret in `apps/api/.env`. As above, every command runs in your own
 terminal, and nothing it prints is pasted anywhere.
 
 1. **The migrations**, from `apps/api/drizzle/`, to the development
-   database:
+   database. The connection string is read from its line in `apps/api/.env`,
+   written in section 4, so it is never pasted or shown:
 
    ```bash
-   read -rs DATABASE_URL && export DATABASE_URL     # paste the development string, then Enter; nothing shows
+   export DATABASE_URL="$(sed -n 's/^CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE=//p' apps/api/.env)"
    pnpm -C apps/api db:migrate
    unset DATABASE_URL
    ```
 
-   An agent never runs this. Preview and production get the same migrations,
-   the same way, before the merge that deploys the login there.
+   Run it again after every merge that adds a migration; it applies only the
+   new ones. An agent never runs this. Preview and production get the same
+   migrations, with their own string pasted through `read -rs DATABASE_URL &&
+   export DATABASE_URL`, before the merge that deploys the login there.
 2. **The secret**, generated and **appended**, so the line from section 4
    stays:
 
@@ -242,6 +245,18 @@ terminal, and nothing it prints is pasted anywhere.
 
    The first answers `{"sent":true}`, the second and the third
    `{"user":{…}}` with that address.
+
+   With the same cookies, before removing them, a recipe can be added and
+   listed:
+
+   ```bash
+   curl -s -b /tmp/pt-cookies -X POST localhost:8787/recipes -H 'content-type: application/json' \
+     -d '{"title":"Gazpacho","language":"es","servings":null,"time":null,"ingredients":[{"name":"tomate","quantity":"1","unit":"kg"}],"steps":["Triturar y enfriar."],"source":null}'
+   curl -s -b /tmp/pt-cookies localhost:8787/recipes
+   ```
+
+   The first answers the recipe with its `id`, the second
+   `{"recipes":[…]}` with its summary.
 
 A code lasts 5 minutes and allows 3 tries. Asking for codes is limited to 3
 per address every 15 minutes and 10 per IP every hour, and any other login

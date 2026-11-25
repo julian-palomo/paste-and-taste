@@ -35,6 +35,16 @@ as the sender of a sign-in code, is a dependency `createApp` creates (or a
 test passes in its third argument), so swapping it touches nothing else.
 `src/login/` is the model.
 
+**Who is signed in.** A module that needs the user declares the function it
+needs (`src/recipes/current-user.ts`), and `createApp` gives it one built by
+the login (`src/login/session-reader.ts`), so the module never imports the
+login. It runs as the module's first middleware, before the routes'
+validators, so a request with no session is a 401 whatever its body; and it
+relays the cookie of a renewed session. `src/recipes/` is the model of a
+service and a repository: the service depends on the `RecipesRepository`
+type, the Postgres implementation is built in `createApp`, and the service's
+tests use one written for the test.
+
 **The tables** are a Drizzle schema in `src/database/schema.ts`. After any
 change, `pnpm -C apps/api db:generate` writes the migration to `drizzle/`,
 which is committed and never edited. Only the owner applies migrations to a
@@ -74,6 +84,8 @@ added: health and wake have neither.
 **Errors.** Raise an error by throwing a named subclass of `AppError`
 (`src/errors/app-error.ts`), never by building an error response by hand.
 `src/errors/problem-details.ts` is the one place an error becomes a response.
+It builds it through the request's context, so headers a middleware already
+set, such as a renewed session's cookie, go out with the error too.
 A module never sets `onError` or `notFound`: Hono calls `notFound` only on the
 root app, and a sub-app's `onError` would bypass the conversion.
 

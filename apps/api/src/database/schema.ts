@@ -1,4 +1,13 @@
-import { boolean, index, integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  index,
+  integer,
+  jsonb,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+} from "drizzle-orm/pg-core";
 
 // The app's tables. After any change, run `pnpm -C apps/api db:generate` and
 // commit the migration it writes to apps/api/drizzle/.
@@ -104,3 +113,31 @@ export const requestLimit = pgTable("request_limit", {
   windowStartedAt: timestamp("window_started_at").notNull(),
   count: integer("count").notNull(),
 });
+
+// A recipe kept by one user, its copy owner. Ingredients and steps are jsonb:
+// always read and written whole, in order, so an edit is one UPDATE
+// (docs/adr/2026-11-25-ingredients-and-steps-as-jsonb.md).
+export const recipe = pgTable(
+  "recipe",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    // Who may change it. Never in an answer (GLOSSARY.md, Copy owner).
+    copyOwnerId: text("copy_owner_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    language: text("language").notNull(),
+    servings: text("servings"),
+    time: text("time"),
+    ingredients: jsonb("ingredients")
+      .$type<{ name: string; quantity: string | null; unit: string | null }[]>()
+      .notNull(),
+    steps: jsonb("steps").$type<string[]>().notNull(),
+    source: text("source"),
+    createdAt: timestamp("created_at").notNull(),
+    updatedAt: timestamp("updated_at").notNull(),
+  },
+  (table) => [
+    index("recipe_copy_owner_id_updated_at_idx").on(table.copyOwnerId, table.updatedAt.desc()),
+  ],
+);

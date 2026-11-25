@@ -34,13 +34,16 @@ type SuccessfulRequest = { path: string; init?: RequestInit };
 // Signs in a new address with a code and returns its cookies, for the
 // operations that need a session.
 let signIns = 0;
+// Each from its own IP: they all count against the login's per-IP limits, and
+// enough of them from one IP would be refused with 429.
 async function signedInCookie(): Promise<string> {
   signIns += 1;
   const email = `contract-${signIns}@example.com`;
-  await app.request("/login/code", json({ email }));
+  const ip = { "cf-connecting-ip": `198.18.0.${signIns}` };
+  await app.request("/login/code", json({ email }, ip));
   const code = recorder.lastCodeFor(email) ?? "";
   return cookieHeader(
-    await app.request("/login/sign-in", json({ email, code, rememberMe: false })),
+    await app.request("/login/sign-in", json({ email, code, rememberMe: false }, ip)),
   );
 }
 
@@ -64,6 +67,23 @@ async function passkeyRegistration() {
     cookie: `${session}; ${cookieHeader(options)}`,
     response: device.register({ challenge, ...PASSKEY_SITE }),
   };
+}
+
+const RECIPE = {
+  title: "Gazpacho",
+  language: "es",
+  servings: null,
+  time: null,
+  ingredients: [{ name: "tomate", quantity: "1", unit: "kg" }],
+  steps: ["Triturar y enfriar."],
+  source: null,
+};
+
+// Signs in and adds a recipe: the cookie and the recipe's id.
+async function signedInWithRecipe(): Promise<{ cookie: string; id: string }> {
+  const cookie = await signedInCookie();
+  const added = await app.request("/recipes", json(RECIPE, { cookie }));
+  return { cookie, id: ((await added.json()) as { id: string }).id };
 }
 
 // A request meant to succeed for each operation, keyed "<method> <path>" as
@@ -99,6 +119,25 @@ const successfulRequests: Record<string, SuccessfulRequest | (() => Promise<Succ
     return { path: "/login/passkey/registration", init: json({ response }, { cookie }) };
   },
   "post /login/passkey/sign-in-options": { path: "/login/passkey/sign-in-options" },
+  "get /recipes": async () => ({
+    path: "/recipes",
+    init: { headers: { cookie: await signedInCookie() } },
+  }),
+  "post /recipes": async () => ({
+    path: "/recipes",
+    init: json(RECIPE, { cookie: await signedInCookie() }),
+  }),
+  "get /recipes/{id}": async () => {
+    const { cookie, id } = await signedInWithRecipe();
+    return { path: `/recipes/${id}`, init: { headers: { cookie } } };
+  },
+  "put /recipes/{id}": async () => {
+    const { cookie, id } = await signedInWithRecipe();
+    return {
+      path: `/recipes/${id}`,
+      init: { ...json({ ...RECIPE, servings: "4" }, { cookie }), method: "PUT" },
+    };
+  },
   "post /login/passkey/sign-in": async () => {
     const { cookie, response, device } = await passkeyRegistration();
     await app.request("/login/passkey/registration", json({ response }, { cookie }));

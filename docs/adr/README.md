@@ -60,6 +60,7 @@ is here, written down at the time instead of remembered afterwards.
 | 2026-11-25 | [A remembered session lasts 90 days from its last use](2026-11-25-a-remembered-session-lasts-90-days.md) |
 | 2026-11-25 | [Login behind the API's own routes, with its own limits](2026-11-25-login-behind-the-apis-own-routes.md) |
 | 2026-11-25 | [The deployed Workers' logs are kept in Workers Logs, with a line per request only in preview](2026-11-25-logs-in-workers-logs.md) |
+| 2026-11-25 | [A recipe's ingredients and steps as jsonb in its own row](2026-11-25-ingredients-and-steps-as-jsonb.md) |
 
 ## Not decided yet
 
