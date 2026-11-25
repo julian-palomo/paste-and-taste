@@ -63,6 +63,22 @@ _Avoid_: library, collection, cookbook.
 _Avoid_: member, customer.
 
 **Account** (cuenta): A user's name, email address, sign-in and avatar photo.
+Better Auth's own table of that name is `auth_account` in the database and
+`authAccount` in code, and is never shown.
+
+**Sign-in code** (código): The six digits sent to a user's email address to
+sign in. It lasts 5 minutes and allows 3 tries.\
+_Avoid_: OTP, token, PIN (in the app's words; OTP stays in Better Auth's own
+names).
+
+**Passkey**: A key a user's device keeps, offered after signing in with a
+code, to sign in the next times without one. Spanish word: open.\
+_Avoid_: biometrics, fingerprint login.
+
+**Session** (sesión): A user signed in on one device, kept by a cookie. It
+lasts while the app is open, or 90 days from its last use with **Mantener la
+sesión iniciada** ticked, the box at sign-in.\
+_Avoid_: login (for the session itself).
 
 **Friend** (amigo, amiga): A user joined to another by a mutual friendship.\
 _Avoid_: follower, contact, connection.

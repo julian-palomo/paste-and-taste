@@ -55,7 +55,9 @@ passkey; those figures are in
 [`docs/research/passwordless-login.md`](docs/research/passwordless-login.md).
 The database and the login are decided from them, below. The API reaches its
 Postgres on Neon through Hyperdrive and answers the wake request, which the
-web app's server sends on every page load; the login is not built yet.
+web app's server sends on every page load, and has the login in development
+only: a code by email, printed in its terminal there, and an optional
+passkey.
 
 [`docs/product.md`](docs/product.md) says what the app must do, and
 [`docs/roadmap.md`](docs/roadmap.md) in what order it is being built.
@@ -91,6 +93,8 @@ pnpm knip                         # unused files, exports and dependencies
 pnpm contract:check               # the OpenAPI document and the client's types are up to date
 bash .claude/hooks/tests/run.sh   # tests for the Claude Code hooks
 pnpm -C apps/api dev              # the API on the local Workers runtime, localhost:8787, against the database in apps/api/.env
+pnpm -C apps/api db:generate      # a migration from the schema, with no database
+pnpm -C apps/api types            # the Worker's types, from wrangler.jsonc
 pnpm -C apps/web dev              # the web app, localhost:5173, calling the API above
 pnpm -C apps/web smoke <address> <environment>  # checks a running web app: /en, /es and the redirect of /
 pnpm -C apps/api smoke <address> [environment]  # checks a running API: /health, with the environment it names, /wake and an unknown route

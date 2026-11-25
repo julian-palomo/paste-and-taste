@@ -193,6 +193,53 @@ awake, and nothing in the API refuses that yet. If more than half of the 100
 are spent by the middle of the month, something is keeping it awake: that is
 the sign to look at who calls `/wake`, or at the plan.
 
+### 5. The login, in development only
+
+The API's login (`/login/*`) runs only when `APP_ENV` is `development`; in
+preview and production those routes answer 404 until the issue that deploys
+the login. It needs its tables in the development database, and Better
+Auth's secret in `apps/api/.env`. As above, every command runs in your own
+terminal, and nothing it prints is pasted anywhere.
+
+1. **The migrations**, from `apps/api/drizzle/`, to the development
+   database:
+
+   ```bash
+   read -rs DATABASE_URL && export DATABASE_URL     # paste the development string, then Enter; nothing shows
+   pnpm -C apps/api db:migrate
+   unset DATABASE_URL
+   ```
+
+   An agent never runs this. Preview and production get the same migrations,
+   the same way, before the merge that deploys the login there.
+2. **The secret**, generated and **appended**, so the line from section 4
+   stays:
+
+   ```bash
+   printf 'BETTER_AUTH_SECRET=%s\n' "$(openssl rand -hex 32)" >> apps/api/.env
+   ```
+
+   Never `>` here: it would replace the file and lose the connection string.
+3. **Try it.** `pnpm -C apps/api dev` prints each sign-in code in its
+   terminal, as `Sign-in code for <address>: <code>`; no email is sent. In a
+   second terminal, with any address of your own:
+
+   ```bash
+   curl -s -X POST localhost:8787/login/code -H 'content-type: application/json' -d '{"email":"<address>"}'
+   curl -s -c /tmp/pt-cookies -X POST localhost:8787/login/sign-in -H 'content-type: application/json' \
+     -d '{"email":"<address>","code":"<code from the terminal>","rememberMe":false}'
+   curl -s -b /tmp/pt-cookies localhost:8787/login/session
+   rm /tmp/pt-cookies
+   ```
+
+   The first answers `{"sent":true}`, the second and the third
+   `{"user":{…}}` with that address.
+
+A code lasts 5 minutes and allows 3 tries. Asking for codes is limited to 3
+per address every 15 minutes and 10 per IP every hour, and any other login
+request to 60 per IP every hour; past a limit the API answers 429
+([the record](adr/2026-11-25-login-behind-the-apis-own-routes.md)).
+
 ## Reading a run
 
 The **Actions** tab, workflow **Deploy**. A run's graph has five boxes:

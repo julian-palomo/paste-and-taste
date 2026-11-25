@@ -123,7 +123,9 @@ How people meet and pass recipes is recorded in
 - A session lasts while the app is open. At sign-in, a "Mantener la sesión
   iniciada" box, unchecked, lets the user stay signed in; otherwise they are
   asked for their passkey or a code again
-  ([the record](adr/2026-11-24-staying-signed-in.md)).
+  ([the record](adr/2026-11-24-staying-signed-in.md)). Ticked, the session
+  lasts 90 days from its last use
+  ([the record](adr/2026-11-25-a-remembered-session-lasts-90-days.md)).
 - A user has an avatar photo.
 - Settings are as simple as possible. They include choosing how the app
   looks: like the device, light or dark.
@@ -170,7 +172,6 @@ How people meet and pass recipes is recorded in
   with screenshots and vignettes, and another way inside.
 - How a change of email address is confirmed (proposed: the new address is
   verified before the change, and the old one is told).
-- How long a session lasts when the user ticks "Mantener la sesión iniciada".
 - How a user who loses access to their email address gets back in.
 - What the native app does that the web app doesn't. The owner sees sharing a
   post from Instagram as the main one, and perhaps Facebook or TikTok later.

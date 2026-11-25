@@ -25,6 +25,21 @@ one deadline and closes the client before it returns
 so a repository's own `AppError` keeps its status. Tests pass a real Postgres from
 `test/postgres.ts`, or `noDatabase` when the routes they call don't touch it.
 
+**A library behind a module.** A library the app doesn't own, such as Better
+Auth, lives inside one module and never shapes the contract: the module
+declares its own routes with `createRoute` and calls the library on the
+server, one instance per request, built from that request's database client.
+What the library throws is turned into the module's `AppError`s in one place;
+what it doesn't expect is rethrown, a 500. What travels outside the API, such
+as the sender of a sign-in code, is a dependency `createApp` creates (or a
+test passes in its third argument), so swapping it touches nothing else.
+`src/login/` is the model.
+
+**The tables** are a Drizzle schema in `src/database/schema.ts`. After any
+change, `pnpm -C apps/api db:generate` writes the migration to `drizzle/`,
+which is committed and never edited. Only the owner applies migrations to a
+real database.
+
 **A module** is one feature in one folder, `src/<feature>/`. It exports
 `<feature>Routes(deps)`, which takes its dependencies as one typed argument and
 returns an `OpenAPIHono` sub-app; `createApp` mounts it with `app.route()`. A

@@ -9,6 +9,21 @@ const configSchema = z.object({
   APP_ENV: AppEnvironment.describe(
     "Where this API runs: development (local), preview or production.",
   ),
+  // Optional: only the login uses it, and a login route without it answers
+  // 503 naming it, so a caller that never signs in doesn't need one.
+  BETTER_AUTH_SECRET: z
+    .string()
+    .min(32)
+    .optional()
+    .describe("Better Auth's secret, at least 32 characters. Never committed."),
+  PASSKEY_RP_ID: z
+    .string()
+    .optional()
+    .describe("The site a passkey belongs to: localhost in development, the app's domain later."),
+  PASSKEY_ORIGIN: z
+    .url()
+    .optional()
+    .describe("The address of the page the browser runs the passkey ceremony on."),
 });
 
 export type AppConfig = z.infer<typeof configSchema>;
