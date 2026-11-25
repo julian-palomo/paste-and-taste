@@ -74,7 +74,8 @@ needs, and a phase gets its issues when it is next.
    opened, added and edited through the API, in development, with the first
    service and repository
    ([the record](adr/2026-11-25-ingredients-and-steps-as-jsonb.md)). The
-   screen that lists, opens and edits a recipe is next.
+   screen that lists, opens and edits a recipe is next; since #83 the typed
+   client reaches every recipes route, a path's `{id}` and `put` included.
 5. **The real import.** Workflows in the background and the limit per user.
    Web pages first, the cheapest source to read, then Instagram, then YouTube.
 6. **The native app.** Android first, with sharing a post to the app. iPhone

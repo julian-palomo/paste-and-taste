@@ -1,5 +1,5 @@
 import { createApp, noDatabase } from "@paste-and-taste/api/app";
-import { describe, expect, it } from "vitest";
+import { describe, expect, expectTypeOf, it } from "vitest";
 import { type ApiClient, ApiError, ApiUnreachableError, createApiClient } from "../src/index.ts";
 
 // The real application, called in process: `fetch` hands each request to it.
@@ -291,5 +291,203 @@ describe("onSetCookie", () => {
       .catch(() => {});
 
     expect(seen).toEqual([]);
+  });
+});
+
+// A recipe as the API answers it, for the recording fetch to hand back.
+const recipe = {
+  id: "1b2c",
+  title: "Gazpacho",
+  language: "es",
+  servings: null,
+  time: null,
+  ingredients: [{ name: "tomate", quantity: "1", unit: "kg" }],
+  steps: ["Triturar y enfriar."],
+  source: null,
+  createdAt: "2026-11-25T10:00:00.000Z",
+  updatedAt: "2026-11-25T10:00:00.000Z",
+};
+
+describe("path parameters", () => {
+  it("are checked against the API's types", () => {
+    // Never run: typecheck fails if any of these stops being an error. Each
+    // wrong call sits beside the valid one it differs from in one thing.
+    const typesOnly = () => {
+      client.get("/recipes/{id}", { params: { id: "1b2c" } });
+      // @ts-expect-error /recipes/{id} needs its id.
+      client.get("/recipes/{id}");
+      // @ts-expect-error /recipes/{id} needs its id whatever else the options hold.
+      client.get("/recipes/{id}", {});
+      // @ts-expect-error The same with only headers.
+      client.get("/recipes/{id}", { headers: { cookie: "a" } });
+      // @ts-expect-error The id is a string.
+      client.get("/recipes/{id}", { params: { id: 1 } });
+      client.get("/health");
+      // @ts-expect-error /health has no parameters.
+      client.get("/health", { params: { id: "1b2c" } });
+    };
+    expect(typesOnly).toBeTypeOf("function");
+  });
+
+  it("are filled into the path get calls", async () => {
+    const { client: recorded, requests } = recording(() => json(recipe));
+
+    await recorded.get("/recipes/{id}", { params: { id: "1b2c" } });
+
+    expect(new URL(requests[0]?.url ?? "").pathname).toBe("/recipes/1b2c");
+  });
+
+  it("are encoded, so a / in a value stays in it", async () => {
+    const { client: recorded, requests } = recording(() => json(recipe));
+
+    await recorded.get("/recipes/{id}", { params: { id: "a/b" } });
+
+    expect(new URL(requests[0]?.url ?? "").pathname).toBe("/recipes/a%2Fb");
+  });
+});
+
+// What a client sends to add or replace that recipe.
+const { id: _id, createdAt: _created, updatedAt: _updated, ...recipeInput } = recipe;
+const problem = { type: "about:blank", title: "Not Found", status: 404, detail: "No such recipe." };
+
+describe("post to a 201, and put", () => {
+  it("are checked against the API's types", () => {
+    // Never run: typecheck fails if any of these stops being an error.
+    const typesOnly = async () => {
+      const added = await client.post("/recipes", { body: recipeInput });
+      expectTypeOf(added.id).toEqualTypeOf<string>();
+      client.put("/recipes/{id}", { params: { id: "1b2c" }, body: recipeInput });
+      // @ts-expect-error /health has no PUT.
+      client.put("/health", { body: recipeInput });
+      // @ts-expect-error The title is a string.
+      client.put("/recipes/{id}", { params: { id: "1b2c" }, body: { ...recipeInput, title: 1 } });
+    };
+    expect(typesOnly).toBeTypeOf("function");
+  });
+
+  it("posts a recipe as JSON and reads the 201's recipe", async () => {
+    const { client: recorded, requests } = recording(() => json(recipe, { status: 201 }));
+
+    const added = await recorded.post("/recipes", { body: recipeInput });
+
+    expect(requests[0]?.method).toBe("POST");
+    expect(new URL(requests[0]?.url ?? "").pathname).toBe("/recipes");
+    expect(requests[0]?.headers.get("content-type")).toMatch(/^application\/json/);
+    expect(await requests[0]?.json()).toEqual(recipeInput);
+    expect(added).toEqual(recipe);
+  });
+
+  it("throws ApiUnreachableError when a 201 has an empty body", async () => {
+    const error = await answering(async () => new Response(null, { status: 201 }))
+      .post("/recipes", { body: recipeInput })
+      .catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(ApiUnreachableError);
+  });
+
+  it("puts a recipe as JSON to its filled path and reads the saved recipe", async () => {
+    const { client: recorded, requests } = recording(() => json(recipe));
+
+    const saved = await recorded.put("/recipes/{id}", {
+      params: { id: "1b2c" },
+      body: recipeInput,
+    });
+
+    expect(requests[0]?.method).toBe("PUT");
+    expect(new URL(requests[0]?.url ?? "").pathname).toBe("/recipes/1b2c");
+    expect(requests[0]?.headers.get("content-type")).toMatch(/^application\/json/);
+    expect(await requests[0]?.json()).toEqual(recipeInput);
+    expect(saved).toEqual(recipe);
+  });
+
+  it("encodes a / in put's path values", async () => {
+    const { client: recorded, requests } = recording(() => json(recipe));
+
+    await recorded.put("/recipes/{id}", { params: { id: "a/b" }, body: recipeInput });
+
+    expect(new URL(requests[0]?.url ?? "").pathname).toBe("/recipes/a%2Fb");
+  });
+
+  it("sends the headers put is given", async () => {
+    const { client: recorded, requests } = recording(() => json(recipe));
+
+    await recorded.put("/recipes/{id}", {
+      params: { id: "1b2c" },
+      body: recipeInput,
+      headers: { cookie: "session=abc", "cf-connecting-ip": "203.0.113.7" },
+    });
+
+    expect(requests[0]?.headers.get("cookie")).toBe("session=abc");
+    expect(requests[0]?.headers.get("cf-connecting-ip")).toBe("203.0.113.7");
+  });
+
+  it("gives put's cookies to onSetCookie, an error's too", async () => {
+    const seen: string[][] = [];
+    const cookie = "session_token=abc; Path=/; HttpOnly; Max-Age=7776000";
+    const withCookie = (response: Response) => {
+      response.headers.append("Set-Cookie", cookie);
+      return response;
+    };
+    const put = (response: () => Response) =>
+      answering(async () => withCookie(response()))
+        .put("/recipes/{id}", {
+          params: { id: "1b2c" },
+          body: recipeInput,
+          onSetCookie: (cookies) => seen.push(cookies),
+        })
+        .catch(() => {});
+
+    await put(() => json(recipe));
+    await put(() =>
+      json(problem, { status: 404, headers: { "Content-Type": "application/problem+json" } }),
+    );
+
+    expect(seen).toEqual([[cookie], [cookie]]);
+  });
+
+  it("throws ApiError with the Problem Details for an error answer", async () => {
+    const error = await answering(async () =>
+      json(problem, { status: 404, headers: { "Content-Type": "application/problem+json" } }),
+    )
+      .put("/recipes/{id}", { params: { id: "1b2c" }, body: recipeInput })
+      .catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error).toMatchObject({ status: 404, problem });
+  });
+
+  it("builds the problem from the status when put's error body isn't Problem Details", async () => {
+    const error = await answering(
+      async () => new Response("<html>Bad gateway</html>", { status: 502 }),
+    )
+      .put("/recipes/{id}", { params: { id: "1b2c" }, body: recipeInput })
+      .catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error).toMatchObject({ status: 502, problem: { type: "about:blank", status: 502 } });
+  });
+
+  it("throws ApiUnreachableError with the platform's error when put's fetch rejects", async () => {
+    const offline = new TypeError("fetch failed");
+
+    const error = await answering(async () => {
+      throw offline;
+    })
+      .put("/recipes/{id}", { params: { id: "1b2c" }, body: recipeInput })
+      .catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(ApiUnreachableError);
+    expect(error).toMatchObject({ cause: offline });
+  });
+
+  it.each([
+    ["an empty body", () => new Response(null, { status: 200 })],
+    ["a body that isn't JSON", () => new Response("<html>Wi-Fi</html>", { status: 200 })],
+  ])("throws ApiUnreachableError when put's 200 has %s", async (_, response) => {
+    const error = await answering(async () => response())
+      .put("/recipes/{id}", { params: { id: "1b2c" }, body: recipeInput })
+      .catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(ApiUnreachableError);
   });
 });
