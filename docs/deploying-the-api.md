@@ -171,7 +171,9 @@ Once, for the pull request that gives the Workers their Custom Domains:
    answer yet.
 4. **The run.** The deploy creates each Custom Domain, with its DNS record and
    certificate, turns the `workers.dev` addresses off, and checks the new
-   addresses.
+   addresses. Each of the four jobs creates its own domain and checks it at
+   once, with no wait: if a job's check can't reach its new address yet,
+   re-run that job.
 5. **After it**, paste in the pull request what these show:
 
    ```bash
@@ -185,8 +187,9 @@ Once, for the pull request that gives the Workers their Custom Domains:
    `200`.
 
 If that first deploy fails at the preview API step on a permission, fix the
-token and re-run the failed job; don't revert. Its error names the permission
-it lacks. Production isn't touched until preview passes.
+token and re-run the failed job; don't revert. The error may not name the
+permission it lacks, so look at the zone policy from step 2 first. Production
+isn't touched until preview passes.
 
 ### 4. The databases: Neon and Hyperdrive
 
