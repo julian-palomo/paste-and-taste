@@ -56,6 +56,7 @@ is here, written down at the time instead of remembered afterwards.
 | 2026-11-25 | [Postgres on Neon through Hyperdrive, with Drizzle](2026-11-25-database-host-and-drizzle.md) |
 | 2026-11-25 | [Login without a password: a code by email and an optional passkey](2026-11-25-login-without-a-password.md) |
 | 2026-11-25 | [Workers Free until the real login is deployed, then Workers Paid](2026-11-25-workers-free-until-login-ships.md) |
+| 2026-11-25 | [Opus reviews when Fable is out of credits](2026-11-25-opus-reviews-when-fable-is-out.md) |
 
 ## Not decided yet
 

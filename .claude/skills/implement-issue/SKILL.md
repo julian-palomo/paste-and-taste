@@ -68,7 +68,17 @@ cp <plan file> .plan-review/plan.md
 ```
 
 Run the `plan-reviewer` subagent. Post its answer whole, unedited, as a
-comment whose first line is `Plan review from local Claude Code`. Then:
+comment whose first line is `Plan review from local Claude Code`.
+
+If the run fails before answering because its model is unavailable, such as
+Fable out of usage credits (HTTP 429), run it once more on the same input with
+the Agent tool's `model` set to `opus`, and make the comment's second line
+`Reviewed by Opus: Fable was unavailable.`
+(`docs/adr/2026-11-25-opus-reviews-when-fable-is-out.md`). A run that gave no
+answer is not a review, so this is not running it twice. If the Opus run fails
+too, or the first failed for another reason, stop and say so in the session.
+
+Then:
 
 - **`APPROVED`**: go to step 5.
 - **`CHANGES`** on a plan the review says is not the owner's: fix the plan, post it again as a new comment and review it again. Two reviews at most: a second answer that isn't `APPROVED` counts as `OWNER`, and the owner reads both reviews.
