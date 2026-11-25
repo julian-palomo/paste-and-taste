@@ -77,5 +77,6 @@
   "signInErrorTooSoon": "Wait a minute before asking for another code.",
   "signInErrorStartAgain": "Too much time has passed. Write your email and we'll send you a new code.",
   "signInErrorPasskeyFailed": "The passkey couldn't be used. Try again, or sign in with a code.",
-  "signInErrorPasskeyNotCreated": "The passkey couldn't be created. Try again, or do it later."
+  "signInErrorPasskeyNotCreated": "The passkey couldn't be created. Try again, or do it later.",
+  "signInErrorCodeNotSent": "We couldn't send the code. Try again in a moment."
 }
