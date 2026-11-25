@@ -65,6 +65,7 @@ is here, written down at the time instead of remembered afterwards.
 | 2026-11-25 | [The login's expired rows are deleted once a day, by a Cron Trigger](2026-11-25-how-long-login-rows-live.md) |
 | 2026-11-25 | [Production's home is the building page, and the health moves to its own address](2026-11-25-production-home-is-the-building-page.md) |
 | 2026-11-25 | [A deleted recipe is removed at once, and the delete answers 204](2026-11-25-deleting-a-recipe.md) |
+| 2026-11-25 | [The Workers answer on pasteandtaste.app, and production stays unindexed until launch](2026-11-25-the-apps-own-domain.md) |
 
 ## Not decided yet
 

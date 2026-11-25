@@ -1,3 +1,5 @@
+Superseded in part by `2026-11-25-the-apps-own-domain.md`: only when production is indexed.
+
 # How the web app deploys, and how its server reaches the API
 
 - **Status:** Accepted
