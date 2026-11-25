@@ -12,10 +12,23 @@ const RELAYED = ["cookie", "cf-connecting-ip", "user-agent"] as const;
 export function relayHeaders(get: (name: string) => string | undefined): Record<string, string> {
   const headers: Record<string, string> = {};
   for (const name of RELAYED) {
-    const value = get(name);
+    const value = name === "cookie" ? withoutOwnCookies(get(name)) : get(name);
     if (value) headers[name] = value;
   }
   return headers;
+}
+
+// The web app's own cookies, which hold the address being signed in with and
+// a recipe's draft: they never go to the API. Keep this in step with the
+// cookies the web app sets (src/sign-in/relay.ts, src/recipes/recipe-form.ts).
+const OWN_COOKIE = /^(sign_in_pending|recipe_draft_\d+)=/;
+
+function withoutOwnCookies(header: string | undefined): string | undefined {
+  return header
+    ?.split(";")
+    .map((part) => part.trim())
+    .filter((part) => part && !OWN_COOKIE.test(part))
+    .join("; ");
 }
 
 // The options of a client call that relays: the browser's headers out, and

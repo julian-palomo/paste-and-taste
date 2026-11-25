@@ -35,6 +35,26 @@ describe("relayHeaders", () => {
     });
   });
 
+  // The web app's own cookies hold the address being signed in with and a
+  // recipe's draft: they are the browser's business with the web app, never
+  // the API's.
+  it("passes the browser's cookies on without the web app's own", () => {
+    const cookie =
+      "better-auth.session_token=abc; sign_in_pending=%7B%7D; recipe_draft_0=x; recipe_draft_1=y; theme=dark";
+
+    expect(relayHeaders((name) => (name === "cookie" ? cookie : undefined))).toEqual({
+      cookie: "better-auth.session_token=abc; theme=dark",
+    });
+  });
+
+  it("sends no cookie header when only the web app's own cookies are there", () => {
+    expect(
+      relayHeaders((name) =>
+        name === "cookie" ? "sign_in_pending=x; recipe_draft_0=y" : undefined,
+      ),
+    ).toEqual({});
+  });
+
   it("leaves out a header the browser didn't send", () => {
     expect(relayHeaders(() => undefined)).toEqual({});
   });
