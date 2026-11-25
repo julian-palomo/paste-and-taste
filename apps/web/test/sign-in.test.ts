@@ -1,0 +1,326 @@
+import { createApiClient } from "@paste-and-taste/api-client";
+import { describe, expect, it } from "vitest";
+import { clearPendingCookie, readPending } from "../src/sign-in/relay.ts";
+import {
+  changeAddress,
+  passkeyRegistrationOptions,
+  passkeySignIn,
+  passkeySignInOptions,
+  readSession,
+  registerPasskey,
+  type SignInDeps,
+  sendCode,
+  signIn,
+  signOut,
+} from "../src/sign-in/sign-in.ts";
+
+// What the browser sent the web app's server.
+const browser = {
+  cookie: "better-auth.session_token=abc",
+  "cf-connecting-ip": "203.0.113.7",
+  "user-agent": "Test browser",
+};
+
+// Two cookies with their attributes, as the API's Set-Cookie writes them.
+const first = "better-auth.session_token=new; Path=/; HttpOnly; SameSite=Lax; Max-Age=7776000";
+const second = "better-auth.session_data=xyz; Path=/; HttpOnly; SameSite=Lax";
+
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      "Content-Type": status < 400 ? "application/json" : "application/problem+json",
+    },
+  });
+const problem = (status: number) =>
+  json({ type: "about:blank", title: "Error", status, detail: "Detail." }, status);
+const withCookies = (response: Response) => {
+  response.headers.append("Set-Cookie", first);
+  response.headers.append("Set-Cookie", second);
+  return response;
+};
+
+const NOW = 1_700_000_000_000;
+
+// An API that answers `answer` to every call, and keeps each request.
+function api(answer: () => Response | Promise<Response>) {
+  const requests: Request[] = [];
+  const setCookies: string[] = [];
+  const deps: SignInDeps = {
+    client: createApiClient({
+      baseUrl: "http://api.test",
+      fetch: async (request) => {
+        requests.push(request);
+        return answer();
+      },
+    }),
+    headers: browser,
+    appendSetCookie: (cookie) => setCookies.push(cookie),
+    now: () => NOW,
+  };
+  return { deps, requests, setCookies };
+}
+
+const user = { id: "u1", email: "ana@example.com", name: "Ana" };
+const sent = { email: "ana@example.com", sentAt: NOW - 120_000 };
+
+// Each function that calls the API, with what the API answers it on success.
+const calls = [
+  [
+    "sendCode",
+    { sent: true },
+    (d: SignInDeps) => sendCode(d, { lang: "es", email: "ana@example.com" }),
+  ],
+  [
+    "signIn",
+    { user },
+    (d: SignInDeps) => signIn(d, { lang: "es", code: "123456", remember: false, pending: sent }),
+  ],
+  ["signOut", { signedOut: true }, (d: SignInDeps) => signOut(d, { lang: "es" })],
+  ["readSession", { user }, (d: SignInDeps) => readSession(d)],
+  [
+    "passkeyRegistrationOptions",
+    { challenge: "c" },
+    (d: SignInDeps) => passkeyRegistrationOptions(d),
+  ],
+  [
+    "registerPasskey",
+    { registered: true },
+    (d: SignInDeps) => registerPasskey(d, { response: { id: "k" } }),
+  ],
+  ["passkeySignInOptions", { challenge: "c" }, (d: SignInDeps) => passkeySignInOptions(d)],
+  [
+    "passkeySignIn",
+    { user },
+    (d: SignInDeps) => passkeySignIn(d, { response: { id: "k" }, rememberMe: false }),
+  ],
+] as const;
+
+describe.each(calls)("%s", (_, body, call) => {
+  it("sends the browser's cookie, IP and user agent to the API", async () => {
+    const { deps, requests } = api(() => json(body));
+
+    await call(deps);
+
+    expect(requests).toHaveLength(1);
+    expect(requests[0]?.headers.get("cookie")).toBe(browser.cookie);
+    expect(requests[0]?.headers.get("cf-connecting-ip")).toBe(browser["cf-connecting-ip"]);
+    expect(requests[0]?.headers.get("user-agent")).toBe(browser["user-agent"]);
+  });
+
+  it("hands each Set-Cookie of the API back to the browser, unchanged and in order", async () => {
+    const { deps, setCookies } = api(() => withCookies(json(body)));
+
+    await call(deps);
+
+    expect(setCookies.slice(0, 2)).toEqual([first, second]);
+  });
+
+  it("sends no IP when the browser's request had none", async () => {
+    const { deps, requests } = api(() => json(body));
+
+    await call({ ...deps, headers: { cookie: browser.cookie } });
+
+    expect(requests[0]?.headers.has("cf-connecting-ip")).toBe(false);
+  });
+});
+
+describe("sendCode", () => {
+  it("asks the API for a code, remembers the address and goes to the code step", async () => {
+    const { deps, requests, setCookies } = api(() => json({ sent: true }));
+
+    const result = await sendCode(deps, { lang: "es", email: "ana@example.com" });
+
+    expect(new URL(requests[0]?.url ?? "").pathname).toBe("/login/code");
+    expect(await requests[0]?.json()).toEqual({ email: "ana@example.com" });
+    expect(readPending(setCookies.at(-1)?.split(";")[0])).toEqual({
+      email: "ana@example.com",
+      sentAt: NOW,
+    });
+    expect(result).toEqual({ redirect: "/es/sign-in" });
+  });
+
+  it.each([
+    [400, "invalid-email"],
+    [429, "too-many-codes"],
+    [503, "unreachable"],
+  ])("on a %i, goes back with ?error=%s and keeps the typed address", async (status, kind) => {
+    const { deps, setCookies } = api(() => problem(status));
+
+    const result = await sendCode(deps, { lang: "en", email: "ana@" });
+
+    expect(result).toEqual({ redirect: `/en/sign-in?error=${kind}` });
+    expect(readPending(setCookies.at(-1)?.split(";")[0])).toEqual({ email: "ana@" });
+  });
+
+  it("refuses to send again within 60 seconds, without calling the API", async () => {
+    const { deps, requests } = api(() => json({ sent: true }));
+
+    const result = await sendCode(deps, {
+      lang: "es",
+      email: "ana@example.com",
+      pending: { email: "ana@example.com", sentAt: NOW - 59_999 },
+    });
+
+    expect(requests).toHaveLength(0);
+    expect(result).toEqual({ redirect: "/es/sign-in?error=too-soon" });
+  });
+
+  it("sends again from 60 seconds on", async () => {
+    const { deps, requests } = api(() => json({ sent: true }));
+
+    const result = await sendCode(deps, {
+      lang: "es",
+      email: "ana@example.com",
+      pending: { email: "ana@example.com", sentAt: NOW - 60_000 },
+    });
+
+    expect(requests).toHaveLength(1);
+    expect(result).toEqual({ redirect: "/es/sign-in" });
+  });
+});
+
+describe("signIn", () => {
+  it.each([
+    [true, true],
+    [false, false],
+  ])("with the box ticked %s, sends rememberMe: %s", async (remember, rememberMe) => {
+    const { deps, requests } = api(() => json({ user }));
+
+    await signIn(deps, { lang: "es", code: "123456", remember, pending: sent });
+
+    expect(new URL(requests[0]?.url ?? "").pathname).toBe("/login/sign-in");
+    expect(await requests[0]?.json()).toEqual({
+      email: "ana@example.com",
+      code: "123456",
+      rememberMe,
+    });
+  });
+
+  it("deletes the pending address and offers a passkey", async () => {
+    const { deps, setCookies } = api(() => json({ user }));
+
+    const result = await signIn(deps, {
+      lang: "es",
+      code: "123456",
+      remember: false,
+      pending: sent,
+    });
+
+    expect(setCookies).toContain(clearPendingCookie);
+    expect(result).toEqual({ redirect: "/es/sign-in?step=passkey" });
+  });
+
+  it.each([
+    [401, "wrong-code"],
+    [429, "too-many"],
+    [503, "unreachable"],
+  ])("on a %i, goes back with ?error=%s and keeps the address", async (status, kind) => {
+    const { deps, setCookies } = api(() => problem(status));
+
+    const result = await signIn(deps, {
+      lang: "en",
+      code: "000000",
+      remember: false,
+      pending: sent,
+    });
+
+    expect(result).toEqual({ redirect: `/en/sign-in?error=${kind}` });
+    expect(setCookies).not.toContain(clearPendingCookie);
+  });
+
+  it("with no address sent a code, starts again without calling the API", async () => {
+    const { deps, requests } = api(() => json({ user }));
+
+    const result = await signIn(deps, { lang: "es", code: "123456", remember: false });
+
+    expect(requests).toHaveLength(0);
+    expect(result).toEqual({ redirect: "/es/sign-in?error=start-again" });
+  });
+});
+
+describe("changeAddress", () => {
+  it("deletes the pending address and goes back to the address step", () => {
+    const { deps, requests, setCookies } = api(() => json({}));
+
+    const result = changeAddress(deps, { lang: "en" });
+
+    expect(requests).toHaveLength(0);
+    expect(setCookies).toEqual([clearPendingCookie]);
+    expect(result).toEqual({ redirect: "/en/sign-in" });
+  });
+});
+
+describe("signOut", () => {
+  it.each([
+    ["signed out", () => json({ signedOut: true })],
+    ["already signed out (401)", () => problem(401)],
+  ])("when %s, goes back to the address step", async (_, answer) => {
+    const { deps } = api(answer);
+
+    expect(await signOut(deps, { lang: "es" })).toEqual({ redirect: "/es/sign-in" });
+  });
+
+  it("when the API can't sign out, says so", async () => {
+    const { deps } = api(() => problem(503));
+
+    expect(await signOut(deps, { lang: "es" })).toEqual({
+      redirect: "/es/sign-in?error=unreachable",
+    });
+  });
+});
+
+describe("readSession", () => {
+  it("is the signed-in user", async () => {
+    const { deps } = api(() => json({ user }));
+
+    expect(await readSession(deps)).toEqual({ kind: "signed-in", user });
+  });
+
+  it("is signed out on a 401", async () => {
+    const { deps } = api(() => problem(401));
+
+    expect(await readSession(deps)).toEqual({ kind: "signed-out" });
+  });
+
+  it("is unreachable when the API is", async () => {
+    const { deps } = api(() => problem(503));
+
+    expect(await readSession(deps)).toEqual({ kind: "unreachable" });
+  });
+});
+
+describe("passkeys", () => {
+  it("pass the API's options through as they are", async () => {
+    const options = { challenge: "c", rp: { id: "localhost" } };
+    const { deps } = api(() => json(options));
+
+    expect(await passkeyRegistrationOptions(deps)).toEqual({ ok: true, options });
+    expect(await passkeySignInOptions(deps)).toEqual({ ok: true, options });
+  });
+
+  it.each([
+    [true, true],
+    [false, false],
+  ])("signing in with the box ticked %s sends rememberMe: %s", async (rememberMe, sentValue) => {
+    const { deps, requests } = api(() => json({ user }));
+
+    await passkeySignIn(deps, { response: { id: "k" }, rememberMe });
+
+    expect(await requests[0]?.json()).toEqual({ response: { id: "k" }, rememberMe: sentValue });
+  });
+
+  it.each([
+    ["a refused registration (400)", () => registerPasskey, 400, "passkey-failed"],
+    ["a refused sign-in (401)", () => passkeySignIn, 401, "passkey-failed"],
+    ["too many requests", () => passkeySignIn, 429, "too-many"],
+    ["an API that is down", () => passkeySignIn, 503, "unreachable"],
+  ])("%s is %s", async (_, fn, status, error) => {
+    const { deps } = api(() => problem(status));
+
+    expect(await fn()(deps, { response: { id: "k" }, rememberMe: false })).toEqual({
+      ok: false,
+      error,
+    });
+  });
+});
