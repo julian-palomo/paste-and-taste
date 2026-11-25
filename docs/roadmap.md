@@ -33,11 +33,15 @@ needs, and a phase gets its issues when it is next.
    it comes before anything is built on either.
 3. **Database and login.** Where Postgres lives and which ORM talks to it, the
    first table with its migrations, and Better Auth, which needs the database.
-   It starts with a spike, #42: login with Better Auth through Hyperdrive,
+   It started with a spike, #42: login with Better Auth through Hyperdrive,
    measured from a deployed Worker on Neon's free plan and on PlanetScale's
-   smallest node, before anything is built on either. Hashing a password
-   took far more CPU than the free plan allows, so #58 measures login without
-   a password, by a code sent by email and by passkey, on the same Worker.
+   smallest node, before anything is built on either
+   ([the report](research/login-on-workers.md)). Hashing a password took far
+   more CPU than the free plan allows, so #58 measured login without a
+   password, by a code sent by email and by passkey, on the same Worker
+   ([the report](research/passwordless-login.md)). The host is proposed in
+   [its record](adr/2026-11-25-database-host-and-drizzle.md); the owner decides
+   it, and how users sign in, before the phase's next issues are written.
    The first table holds an owner and who may see each recipe
    ([the record](adr/2026-11-24-friends-groups-and-copies.md)).
 4. **The first recipe, end to end.** A table, its endpoints, and the web app
