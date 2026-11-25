@@ -10,7 +10,7 @@
 
 import { appendFileSync, existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
-import { isAbsolute, join, relative, resolve } from "node:path";
+import { isAbsolute, join } from "node:path";
 import { parseArgs } from "node:util";
 import type { Candidate, CandidateId, PostInput } from "./candidates/candidate.ts";
 import { claudeCandidate } from "./candidates/claude.ts";
@@ -26,6 +26,7 @@ import {
   extractFrames,
   withTempDir,
 } from "./media-files.ts";
+import { insideRepo } from "./paths.ts";
 import { readPost } from "./post.ts";
 import { WHISPER } from "./prices.ts";
 import {
@@ -71,12 +72,6 @@ const [samplePath, ...extra] = positionals;
 if (!samplePath || !isAbsolute(samplePath) || extra.length > 0) fail(USAGE);
 if (!values.out || !isAbsolute(values.out)) fail(USAGE);
 
-// Answers and recordings are other people's content: they must never be in the repo.
-const repoRoot = resolve(import.meta.dirname, "../../..");
-function insideRepo(path: string): boolean {
-  const fromRepo = relative(repoRoot, path);
-  return !fromRepo.startsWith("..") && !isAbsolute(fromRepo);
-}
 if (insideRepo(values.out)) fail("--out must be outside the repo");
 const videos = values.videos;
 if (videos !== undefined && (!isAbsolute(videos) || insideRepo(videos))) {

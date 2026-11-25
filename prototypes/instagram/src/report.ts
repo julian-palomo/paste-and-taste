@@ -1,7 +1,7 @@
 // What the script prints: a line per post and route, then the totals as a
 // Markdown table for the pull request. Posts are named by number only.
 
-import { KINDS, type Kind, type Measurement, type Post, ROUTES, type RouteName } from "./types.ts";
+import { KINDS, type Kind, type Measurement, type Post, type RouteName } from "./types.ts";
 
 export type Result = { post: Post; measurement: Measurement };
 
@@ -84,7 +84,7 @@ function row(route: RouteName, kind: Kind, rows: Result[]): string {
  * them and listed apart: private accounts are out of the spike's scope, and the
  * embed view sends such a post to the login page, which isn't a rate limit.
  */
-export function formatTotals(results: Result[]): string {
+export function formatTotals(results: Result[], routes: readonly RouteName[]): string {
   const privatePosts = new Set(
     results.filter((r) => r.measurement.outcome === "private").map((r) => r.post.number),
   );
@@ -94,7 +94,7 @@ export function formatTotals(results: Result[]): string {
     "| Route | Kind | Posts | OK | Caption | Video address | Images | Median | Worst | Failures |",
     "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
   ];
-  for (const route of ROUTES) {
+  for (const route of routes) {
     for (const kind of KINDS) {
       lines.push(
         row(
