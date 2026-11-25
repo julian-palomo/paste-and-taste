@@ -41,6 +41,10 @@ function contentOf(media: Json): PostContent {
     images = sidecar.map((edge) => imageOf(at(edge, "node"))).filter((url) => url !== null);
   } else if (Array.isArray(carousel)) {
     images = carousel.map(imageOf).filter((url) => url !== null);
+  } else if (!videoOf(media) && media.is_video !== true) {
+    // A single image: its one address. A reel's display image is its cover, not content.
+    const single = imageOf(media);
+    if (single) images = [single];
   }
 
   return { caption, video: videoOf(media), images };

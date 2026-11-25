@@ -12,6 +12,8 @@ export type PostInput = {
   images: string[];
   frames: string[];
   transcript: string | null;
+  /** Above this size a video is sent through a provider's file upload, not inline. */
+  inlineLimitBytes: number;
 };
 
 /** One call to the model that writes the recipe. */

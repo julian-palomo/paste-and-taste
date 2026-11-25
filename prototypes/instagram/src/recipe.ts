@@ -1,12 +1,14 @@
 // Usage: pnpm -C prototypes/instagram recipe <absolute path to the sample>
 //          --candidates A[,B,C] --out <absolute folder outside the repo> [--budget 10]
+//          [--videos <absolute folder of the owner's recordings>] [--inline-limit-mb 70]
 // Reads each post through the embed view, downloads its media, and has each
-// candidate write the recipe. It prints only times, tokens and costs. The
+// candidate write the recipe. With --videos, a post whose post-NN.mp4 is in
+// that folder uses it as its video, which is never fetched from Instagram. It prints only times, tokens and costs. The
 // answers, the marks sheet and its key go to a run folder under --out; the
 // ledger, --out/ledger.json, counts every paid call of every run. The media
 // live in a temporary folder that is removed after each post.
 
-import { appendFileSync } from "node:fs";
+import { appendFileSync, existsSync } from "node:fs";
 import { mkdir, writeFile } from "node:fs/promises";
 import { isAbsolute, join, relative, resolve } from "node:path";
 import { parseArgs } from "node:util";
@@ -48,7 +50,7 @@ const CANDIDATES: Record<CandidateId, Candidate> = {
 };
 
 const USAGE =
-  "Usage: pnpm -C prototypes/instagram recipe <absolute path to the sample> --candidates A[,B,C] --out <absolute folder outside the repo> [--budget 10]";
+  "Usage: pnpm -C prototypes/instagram recipe <absolute path to the sample> --candidates A[,B,C] --out <absolute folder outside the repo> [--budget 10] [--videos <absolute folder outside the repo>] [--inline-limit-mb 70]";
 
 function fail(message: string): never {
   console.error(message);
@@ -61,16 +63,27 @@ const { values, positionals } = parseArgs({
     candidates: { type: "string" },
     out: { type: "string" },
     budget: { type: "string", default: "10" },
+    videos: { type: "string" },
+    "inline-limit-mb": { type: "string", default: "70" },
   },
 });
 const [samplePath, ...extra] = positionals;
 if (!samplePath || !isAbsolute(samplePath) || extra.length > 0) fail(USAGE);
 if (!values.out || !isAbsolute(values.out)) fail(USAGE);
 
-// Answers are other people's content: they must never land in the repo.
+// Answers and recordings are other people's content: they must never be in the repo.
 const repoRoot = resolve(import.meta.dirname, "../../..");
-const fromRepo = relative(repoRoot, values.out);
-if (!fromRepo.startsWith("..") && !isAbsolute(fromRepo)) fail("--out must be outside the repo");
+function insideRepo(path: string): boolean {
+  const fromRepo = relative(repoRoot, path);
+  return !fromRepo.startsWith("..") && !isAbsolute(fromRepo);
+}
+if (insideRepo(values.out)) fail("--out must be outside the repo");
+const videos = values.videos;
+if (videos !== undefined && (!isAbsolute(videos) || insideRepo(videos))) {
+  fail("--videos must be an absolute folder outside the repo");
+}
+const inlineLimitMb = Number(values["inline-limit-mb"]);
+if (!(inlineLimitMb >= 0)) fail("--inline-limit-mb must be a number of megabytes, 0 or more");
 
 const chosen: Candidate[] = [];
 for (const id of (values.candidates ?? "").split(",")) {
@@ -99,6 +112,11 @@ function print(line: string): void {
   appendFileSync(join(runDir, "output.txt"), `${line}\n`);
 }
 
+/** The owner's recording of a post, named by its line number in the sample. */
+function recordingOf(post: Post): string {
+  return join(videos ?? "", `post-${String(post.number).padStart(2, "0")}.mp4`);
+}
+
 let first = true;
 async function pause(): Promise<void> {
   if (!first) await new Promise((resolve) => setTimeout(resolve, PAUSE_MS));
@@ -114,6 +132,10 @@ async function timed<T>(work: () => Promise<T>): Promise<[T, number]> {
 print(`Date: ${new Date().toISOString()}`);
 print("Place: this machine");
 print(`Sample: ${posts.length} posts`);
+if (videos !== undefined) {
+  const found = posts.filter((post) => existsSync(recordingOf(post))).length;
+  print(`Videos: the owner's recordings, ${found} of ${posts.length} posts`);
+}
 for (const candidate of chosen) {
   print(`Candidate ${candidate.id}: ${candidate.label} (${candidate.model})`);
 }
@@ -144,13 +166,20 @@ for (const post of posts) {
       images: [],
       frames: [],
       transcript: null,
+      inlineLimitBytes: inlineLimitMb * 1_000_000,
     };
     let downloadMs = 0;
+    let downloaded = false;
     const video = content.video;
-    if (video) {
+    const recording = videos === undefined ? null : recordingOf(post);
+    if (recording && existsSync(recording)) {
+      input.video = recording;
+      input.videoSeconds = await durationSeconds(recording);
+    } else if (video) {
       await pause();
       const path = join(dir, "video.mp4");
       [, downloadMs] = await timed(() => download(video, path));
+      downloaded = true;
       input.video = path;
       input.videoSeconds = await durationSeconds(path);
     }
@@ -159,6 +188,7 @@ for (const post of posts) {
       const path = join(dir, `image-${index}.jpg`);
       const [, ms] = await timed(() => download(url, path));
       downloadMs += ms;
+      downloaded = true;
       input.images.push(path);
     }
 
@@ -218,7 +248,7 @@ for (const post of posts) {
       await writeFile(join(runDir, recipeFile), `${JSON.stringify(saved, null, 2)}\n`);
 
       const steps: Row["steps"] = [{ step: "read" as Step, ms: readMs }];
-      if (input.video || input.images.length > 0) steps.push({ step: "download", ms: downloadMs });
+      if (downloaded) steps.push({ step: "download", ms: downloadMs });
       const speech = candidate.needsExtract ? transcript : null;
       if (candidate.needsExtract && input.video) steps.push({ step: "extract", ms: extractMs });
       if (speech) steps.push({ step: "transcribe", ms: speech.ms });
