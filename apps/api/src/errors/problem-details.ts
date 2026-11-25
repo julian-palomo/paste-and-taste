@@ -2,6 +2,7 @@ import { z } from "@hono/zod-openapi";
 import type { Context } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { AppError } from "./app-error.ts";
+import { loggableError } from "./loggable-error.ts";
 
 // The one place an error becomes a response: Problem Details, RFC 9457.
 // createApp installs these on the root app; a module never sets its own
@@ -70,7 +71,7 @@ export function notFound(c: Context): Response {
   });
 }
 
-export function onError(error: Error): Response {
+export function onError(error: Error, c: Context): Response {
   if (error instanceof AppError) {
     const { type, title, status, message } = error;
     return problemResponse({ type, title, status, detail: message });
@@ -89,8 +90,10 @@ export function onError(error: Error): Response {
   }
 
   // Unexpected: its message and stack go to the log only. Never put them in
-  // the body, they can name hosts, queries or values.
-  console.error(error);
+  // the body, they can name hosts, queries or values. From the request, the
+  // log takes only the method and the path: never a header, a cookie or the
+  // query string.
+  console.error(`${c.req.method} ${c.req.path} failed: ${loggableError(error)}`);
   return problemResponse({
     type: "about:blank",
     title: title(500),
