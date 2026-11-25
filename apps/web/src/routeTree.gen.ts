@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LangIndexRouteImport } from './routes/$lang/index'
 import { Route as LangShowcaseRouteImport } from './routes/$lang/showcase'
+import { Route as LangSignInRouteImport } from './routes/$lang/sign-in'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -28,34 +29,43 @@ const LangShowcaseRoute = LangShowcaseRouteImport.update({
   path: '/$lang/showcase',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LangSignInRoute = LangSignInRouteImport.update({
+  id: '/$lang/sign-in',
+  path: '/$lang/sign-in',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$lang/showcase': typeof LangShowcaseRoute
+  '/$lang/sign-in': typeof LangSignInRoute
   '/$lang/': typeof LangIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$lang/showcase': typeof LangShowcaseRoute
+  '/$lang/sign-in': typeof LangSignInRoute
   '/$lang': typeof LangIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/$lang/showcase': typeof LangShowcaseRoute
+  '/$lang/sign-in': typeof LangSignInRoute
   '/$lang/': typeof LangIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/$lang/showcase' | '/$lang/'
+  fullPaths: '/' | '/$lang/showcase' | '/$lang/sign-in' | '/$lang/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/$lang/showcase' | '/$lang'
-  id: '__root__' | '/' | '/$lang/showcase' | '/$lang/'
+  to: '/' | '/$lang/showcase' | '/$lang/sign-in' | '/$lang'
+  id: '__root__' | '/' | '/$lang/showcase' | '/$lang/sign-in' | '/$lang/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LangShowcaseRoute: typeof LangShowcaseRoute
+  LangSignInRoute: typeof LangSignInRoute
   LangIndexRoute: typeof LangIndexRoute
 }
 
@@ -82,12 +92,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LangShowcaseRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$lang/sign-in': {
+      id: '/$lang/sign-in'
+      path: '/$lang/sign-in'
+      fullPath: '/$lang/sign-in'
+      preLoaderRoute: typeof LangSignInRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LangShowcaseRoute: LangShowcaseRoute,
+  LangSignInRoute: LangSignInRoute,
   LangIndexRoute: LangIndexRoute,
 }
 export const routeTree = rootRouteImport

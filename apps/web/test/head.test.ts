@@ -42,3 +42,22 @@ describe.each(["en", "es"] as const)("pageHead for the showcase page in %s", (la
     ]);
   });
 });
+
+describe.each(["en", "es"] as const)("pageHead for the sign-in page in %s", (lang) => {
+  const head = pageHead(lang, "https://web.test", "signIn");
+
+  it("has the sign-in page's title and description", () => {
+    expect(head.meta).toEqual([
+      { title: messagesFor(lang).signInTitle },
+      { name: "description", content: messagesFor(lang).signInDescription },
+    ]);
+  });
+
+  it("points to the sign-in page in each language, and to the English one as the default", () => {
+    expect(head.links).toEqual([
+      { rel: "alternate", hrefLang: "en", href: "https://web.test/en/sign-in" },
+      { rel: "alternate", hrefLang: "es", href: "https://web.test/es/sign-in" },
+      { rel: "alternate", hrefLang: "x-default", href: "https://web.test/en/sign-in" },
+    ]);
+  });
+});
