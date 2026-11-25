@@ -56,7 +56,7 @@ to run it.
 | `pnpm knip`                            | Unused files, exports and dependencies.                                                       |
 | `pnpm contract:check`                  | Fails, naming the file, if the OpenAPI document or the client's types are stale.              |
 | `bash .claude/hooks/tests/run.sh`      | Tests for the Claude Code hooks.                                                              |
-| `pnpm -C apps/api dev`                 | Serves the API on the local Workers runtime, `localhost:8787`, against the development database whose connection string `apps/api/.env` holds (git ignores it; `docs/deploying-the-api.md`). |
+| `pnpm -C apps/api dev`                 | Serves the API on the local Workers runtime, `localhost:8787`, against the development database whose connection string sits in a `.env` file in `apps/api`, which git ignores (`docs/deploying-the-api.md`). |
 | `pnpm -C apps/web dev`                 | Serves the web app on `localhost:5173`, its server on the local Workers runtime; it calls the API at `API_URL` (`wrangler.jsonc`), by default `pnpm -C apps/api dev`'s address. |
 | `pnpm -C apps/web smoke <address> <environment>` | Reads a running web app's `/en`, `/es` and `/`; exits 1 unless both pages show the status `ok` and that environment, each with its `lang`, and `/` answers 302. |
 | `pnpm -C apps/api smoke <address> [environment]` | Calls `/health`, `/wake` and an unknown route of a running API; exits 1 if any is off, or if `/health` names another environment than the one given. |
