@@ -95,7 +95,16 @@ holds an email address, a sign-in code, a cookie or a session token, and an
 unexpected error is logged only through `loggableError`
 (`src/errors/loggable-error.ts`). The one exception is the development code
 sender, `src/login/code-sender.ts`, which prints the code to the local
-terminal where login runs, never to a deployed Worker.
+terminal where login runs, never to a deployed Worker. The Resend sender logs
+a failure as Resend's status and error name only.
+
+**The sign-in code is sent by our route, not by Better Auth.** Better Auth
+calls its sender through a function that catches and only logs any error, so
+a send made there that failed would still answer "sent". Its callback only
+puts the code in the request's outbox (`src/login/outbox.ts`); `POST
+/login/code` sends it after `withAuth` returns, once the database client is
+closed, through the `CodeSender` that `chooseCodeSender` picked. A failure
+answers 502.
 
 **Only the entry knows about Workers.** `src/worker.ts` is the only file that
 imports from `cloudflare:*`. Everything else runs on Node, which is what lets

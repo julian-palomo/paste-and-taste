@@ -56,8 +56,9 @@ passkey; those figures are in
 The database and the login are decided from them, below. The API reaches its
 Postgres on Neon through Hyperdrive and answers the wake request, which the
 web app's server sends on every page load. In development only, it has the
-login, a code by email printed in its terminal and an optional passkey, and a
-user's recipes, which it lists, opens, adds and edits.
+login, a code by email (sent through Resend, or printed in its terminal
+without Resend's key) and an optional passkey, and a user's recipes, which it
+lists, opens, adds and edits.
 
 [`docs/product.md`](docs/product.md) says what the app must do, and
 [`docs/roadmap.md`](docs/roadmap.md) in what order it is being built.

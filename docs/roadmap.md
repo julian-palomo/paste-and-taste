@@ -51,9 +51,11 @@ needs, and a phase gets its issues when it is next.
    code by email, printed in the terminal there, and an optional passkey, with
    Better Auth behind the API's own routes and its tables under the app's
    migrations. #80 lets the typed client post, send the browser's headers
-   and hand back the API's cookies, which the web app's server relays. Next
-   comes the sign-in screen, and later sending real email and the login in
-   preview and production.
+   and hand back the API's cookies, which the web app's server relays. #87
+   sends the code by email through Resend, from `mail.pasteandtaste.app`.
+   Next comes the sign-in screen, and later the login in preview and
+   production, with Workers Paid and a Resend webhook that alerts on failed
+   and bounced emails.
    The first table, a user's recipes, holds each recipe's copy owner; who
    else may see a recipe comes with sending and sharing, in their own issue
    ([the record](adr/2026-11-24-friends-groups-and-copies.md)).
