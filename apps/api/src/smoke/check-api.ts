@@ -1,7 +1,8 @@
 // Checks a running API from outside: /health, /wake and one unknown route
-// must answer as specified. /wake proves the API reaches its database. scripts/smoke.ts runs this file with Node directly, which
-// strips the types: like every file in apps/api, its relative imports carry
-// `.ts` and it uses only erasable syntax (erasableSyntaxOnly checks that).
+// must answer as specified. /wake proves the API reaches its database.
+// scripts/smoke.ts runs this file with Node directly, which strips the types:
+// like every file in apps/api, its relative imports carry `.ts` and it uses
+// only erasable syntax (erasableSyntaxOnly checks that).
 
 type Fetch = (url: string) => Promise<Response>;
 
