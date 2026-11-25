@@ -43,6 +43,15 @@ which is the conversation's first message.
 **Servings**: How many people a recipe is for.\
 _Avoid_: portions, yield.
 
+**Ingredient** (ingrediente): What a recipe uses, with its quantity and unit
+when the source gives them.
+
+**Step** (paso): One instruction of a recipe, in its order.\
+_Avoid_: instruction (as the name for one), direction.
+
+**Time** (tiempo): How long a recipe takes, as its source states it.\
+_Avoid_: duration, cook time (for the whole).
+
 **Photo**: A picture on a recipe, from its source or added by a user.\
 _Avoid_: image (kept for the app's own drawings).
 
