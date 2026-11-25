@@ -316,6 +316,10 @@ describe("path parameters", () => {
       client.get("/recipes/{id}", { params: { id: "1b2c" } });
       // @ts-expect-error /recipes/{id} needs its id.
       client.get("/recipes/{id}");
+      // @ts-expect-error /recipes/{id} needs its id whatever else the options hold.
+      client.get("/recipes/{id}", {});
+      // @ts-expect-error The same with only headers.
+      client.get("/recipes/{id}", { headers: { cookie: "a" } });
       // @ts-expect-error The id is a string.
       client.get("/recipes/{id}", { params: { id: 1 } });
       client.get("/health");
