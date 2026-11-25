@@ -310,6 +310,10 @@ describe("where login exists", () => {
     ["POST", "/login/sign-in"],
     ["GET", "/login/session"],
     ["POST", "/login/sign-out"],
+    ["POST", "/login/passkey/registration-options"],
+    ["POST", "/login/passkey/registration"],
+    ["POST", "/login/passkey/sign-in-options"],
+    ["POST", "/login/passkey/sign-in"],
   ];
 
   it.each(["preview", "production"] as const)(

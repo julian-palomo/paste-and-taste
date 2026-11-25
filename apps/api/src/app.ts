@@ -41,7 +41,11 @@ export function createApp(
         withDatabase: withThisDatabase,
         codeSender: options.codeSender ?? consoleCodeSender,
         requestLimiter: createRequestLimiter(),
-        settings: { secret: config.BETTER_AUTH_SECRET },
+        settings: {
+          secret: config.BETTER_AUTH_SECRET,
+          passkeyRpId: config.PASSKEY_RP_ID,
+          passkeyOrigin: config.PASSKEY_ORIGIN,
+        },
       }),
     );
   }

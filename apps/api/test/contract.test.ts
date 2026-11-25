@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { Validator } from "@cfworker/json-schema";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createApp } from "../src/app.ts";
+import { createPasskeyDevice } from "./authenticator.ts";
 import { cookieHeader, json, LOGIN_SETTINGS, recordingSender } from "./login-helpers.ts";
 import { startTestPostgres, type TestPostgres } from "./postgres.ts";
 
@@ -43,6 +44,28 @@ async function signedInCookie(): Promise<string> {
   );
 }
 
+const PASSKEY_SITE = {
+  rpId: LOGIN_SETTINGS.PASSKEY_RP_ID,
+  origin: LOGIN_SETTINGS.PASSKEY_ORIGIN,
+};
+
+// Signs in, asks for registration options and has a software device answer
+// them: the registration request, not yet sent.
+async function passkeyRegistration() {
+  const session = await signedInCookie();
+  const options = await app.request("/login/passkey/registration-options", {
+    method: "POST",
+    headers: { cookie: session },
+  });
+  const { challenge } = (await options.json()) as { challenge: string };
+  const device = createPasskeyDevice();
+  return {
+    device,
+    cookie: `${session}; ${cookieHeader(options)}`,
+    response: device.register({ challenge, ...PASSKEY_SITE }),
+  };
+}
+
 // A request meant to succeed for each operation, keyed "<method> <path>" as
 // the document writes them. Every operation needs one: its path requested as
 // written (a `{id}` left in, no body, no login) would get an error, which the
@@ -67,6 +90,26 @@ const successfulRequests: Record<string, SuccessfulRequest | (() => Promise<Succ
     path: "/login/sign-out",
     init: { headers: { cookie: await signedInCookie() } },
   }),
+  "post /login/passkey/registration-options": async () => ({
+    path: "/login/passkey/registration-options",
+    init: { headers: { cookie: await signedInCookie() } },
+  }),
+  "post /login/passkey/registration": async () => {
+    const { cookie, response } = await passkeyRegistration();
+    return { path: "/login/passkey/registration", init: json({ response }, { cookie }) };
+  },
+  "post /login/passkey/sign-in-options": { path: "/login/passkey/sign-in-options" },
+  "post /login/passkey/sign-in": async () => {
+    const { cookie, response, device } = await passkeyRegistration();
+    await app.request("/login/passkey/registration", json({ response }, { cookie }));
+    const options = await app.request("/login/passkey/sign-in-options", { method: "POST" });
+    const { challenge } = (await options.json()) as { challenge: string };
+    const answer = device.signIn({ challenge, ...PASSKEY_SITE });
+    return {
+      path: "/login/passkey/sign-in",
+      init: json({ response: answer, rememberMe: false }, { cookie: cookieHeader(options) }),
+    };
+  },
 };
 
 const operations = Object.entries(

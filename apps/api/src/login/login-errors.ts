@@ -35,6 +35,30 @@ export class TooManyRequestsError extends AppError {
   }
 }
 
+// An unknown passkey, a signature that doesn't verify, or a sign-in with no
+// challenge first: one answer, which never tells which.
+export class PasskeyRefusedError extends AppError {
+  readonly type = "about:blank";
+  readonly title = "Unauthorized";
+  readonly status = 401;
+
+  constructor() {
+    super("The passkey was not accepted.");
+  }
+}
+
+// A registration that didn't verify: a refused or expired challenge, a
+// passkey registered before, or a session too old to add one (sign in again).
+export class PasskeyNotRegisteredError extends AppError {
+  readonly type = "about:blank";
+  readonly title = "Bad Request";
+  readonly status = 400;
+
+  constructor() {
+    super("The passkey could not be registered. Sign in again and retry.");
+  }
+}
+
 export class InvalidRequestError extends AppError {
   readonly type = "about:blank";
   readonly title = "Bad Request";

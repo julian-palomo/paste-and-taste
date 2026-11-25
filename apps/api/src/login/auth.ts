@@ -1,4 +1,5 @@
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
+import { passkey as passkeyPlugin } from "@better-auth/passkey";
 import { betterAuth } from "better-auth";
 import { emailOTP } from "better-auth/plugins/email-otp";
 import type { Database } from "../database/database.ts";
@@ -12,7 +13,13 @@ const DAY_SECONDS = 24 * 60 * 60;
 // model is under its table's name.
 const AUTH_SCHEMA = { user, session, verification, passkey, auth_account: authAccount };
 
-export type AuthSettings = { secret: string; baseURL: string; codeSender: CodeSender };
+export type AuthSettings = {
+  secret: string;
+  baseURL: string;
+  passkeyRpId: string;
+  passkeyOrigin: string;
+  codeSender: CodeSender;
+};
 
 // One Better Auth instance for one request. Never hoist it to module scope or
 // share it: it holds the request's database client, and a client shared
@@ -45,6 +52,13 @@ export function createAuth(db: Database, settings: AuthSettings) {
         sendVerificationOTP: async ({ email, otp }) => {
           await settings.codeSender.send(email, otp);
         },
+      }),
+      // The passkey belongs to rpID; the browser runs the ceremony on the web
+      // app's page, so that page's address is the origin, not the API's.
+      passkeyPlugin({
+        rpID: settings.passkeyRpId,
+        rpName: "Paste & Taste",
+        origin: settings.passkeyOrigin,
       }),
     ],
   });

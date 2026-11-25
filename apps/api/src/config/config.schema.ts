@@ -16,6 +16,14 @@ const configSchema = z.object({
     .min(32)
     .optional()
     .describe("Better Auth's secret, at least 32 characters. Never committed."),
+  PASSKEY_RP_ID: z
+    .string()
+    .optional()
+    .describe("The site a passkey belongs to: localhost in development, the app's domain later."),
+  PASSKEY_ORIGIN: z
+    .url()
+    .optional()
+    .describe("The address of the page the browser runs the passkey ceremony on."),
 });
 
 export type AppConfig = z.infer<typeof configSchema>;

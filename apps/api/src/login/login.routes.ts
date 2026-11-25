@@ -10,11 +10,17 @@ import {
   InvalidRequestError,
   LoginNotConfiguredError,
   NotSignedInError,
+  PasskeyNotRegisteredError,
+  PasskeyRefusedError,
 } from "./login-errors.ts";
 import { REMEMBER_ME_HEADER } from "./remember-me.ts";
 import { LIMITS, type RequestLimiter } from "./request-limiter.ts";
 
-type LoginSettings = { secret?: string | undefined };
+type LoginSettings = {
+  secret?: string | undefined;
+  passkeyRpId?: string | undefined;
+  passkeyOrigin?: string | undefined;
+};
 
 type LoginDeps = {
   withDatabase: WithDatabase;
@@ -31,6 +37,17 @@ const SignInRequest = z
   .object({ email: z.email(), code: z.string(), rememberMe: z.boolean() })
   .openapi("SignInRequest");
 const SignedOut = z.object({ signedOut: z.literal(true) }).openapi("SignedOut");
+// WebAuthn's options and a device's answer, passed through as they are: the
+// browser's WebAuthn API reads the first and writes the second.
+const WebAuthnJson = z.record(z.string(), z.unknown());
+const PasskeyOptions = WebAuthnJson.openapi("PasskeyOptions");
+const PasskeyRegistrationRequest = z
+  .object({ response: WebAuthnJson })
+  .openapi("PasskeyRegistrationRequest");
+const PasskeyRegistered = z.object({ registered: z.literal(true) }).openapi("PasskeyRegistered");
+const PasskeySignInRequest = z
+  .object({ response: WebAuthnJson, rememberMe: z.boolean() })
+  .openapi("PasskeySignInRequest");
 
 function problem(description: string) {
   return { description, content: { "application/problem+json": { schema: ProblemDetails } } };
@@ -101,6 +118,92 @@ const signOut = createRoute({
   },
 });
 
+const passkeyRegistrationOptions = createRoute({
+  method: "post",
+  path: "/passkey/registration-options",
+  responses: {
+    200: {
+      description:
+        "The options for the browser's WebAuthn registration. Sets the registration challenge cookie, which the registration needs.",
+      content: { "application/json": { schema: PasskeyOptions } },
+    },
+    401: problem("There is no session."),
+    429: problem("Too many login requests from this IP."),
+    503: problem("Login is not configured on this server."),
+    ...problemResponses,
+  },
+});
+
+const passkeyRegistration = createRoute({
+  method: "post",
+  path: "/passkey/registration",
+  request: jsonBody(PasskeyRegistrationRequest),
+  responses: {
+    200: {
+      description: "The passkey is registered for the signed-in user.",
+      content: { "application/json": { schema: PasskeyRegistered } },
+    },
+    400: problem("The passkey could not be registered: sign in again and retry."),
+    401: problem("There is no session."),
+    429: problem("Too many login requests from this IP."),
+    503: problem("Login is not configured on this server."),
+    ...problemResponses,
+  },
+});
+
+const passkeySignInOptions = createRoute({
+  method: "post",
+  path: "/passkey/sign-in-options",
+  responses: {
+    200: {
+      description:
+        "The options for the browser's WebAuthn sign-in. Sets the sign-in challenge cookie, which the sign-in needs.",
+      content: { "application/json": { schema: PasskeyOptions } },
+    },
+    429: problem("Too many login requests from this IP."),
+    503: problem("Login is not configured on this server."),
+    ...problemResponses,
+  },
+});
+
+const passkeySignIn = createRoute({
+  method: "post",
+  path: "/passkey/sign-in",
+  request: jsonBody(PasskeySignInRequest),
+  responses: {
+    200: {
+      description:
+        "Signed in. Sets the session cookie: with no expiry when rememberMe is false, for 90 days when true.",
+      content: { "application/json": { schema: SignedIn } },
+    },
+    401: problem("The passkey was not accepted."),
+    429: problem("Too many login requests from this IP."),
+    503: problem("Login is not configured on this server."),
+    ...problemResponses,
+  },
+});
+
+// The device's answer as Better Auth's sign-in types it. The route passes it
+// through untyped (WebAuthnJson), and Better Auth checks its shape itself.
+type PasskeyAnswer = NonNullable<
+  Parameters<ReturnType<typeof createAuth>["api"]["verifyPasskeyAuthentication"]>[0]
+>["body"]["response"];
+
+const PASSKEY_SIGN_IN_ERRORS = {
+  PASSKEY_NOT_FOUND: () => new PasskeyRefusedError(),
+  AUTHENTICATION_FAILED: () => new PasskeyRefusedError(),
+  CHALLENGE_NOT_FOUND: () => new PasskeyRefusedError(),
+};
+
+const PASSKEY_REGISTRATION_ERRORS = {
+  SESSION_REQUIRED: () => new NotSignedInError(),
+  CHALLENGE_NOT_FOUND: () => new PasskeyNotRegisteredError(),
+  FAILED_TO_VERIFY_REGISTRATION: () => new PasskeyNotRegisteredError(),
+  PREVIOUSLY_REGISTERED: () => new PasskeyNotRegisteredError(),
+  YOU_ARE_NOT_ALLOWED_TO_REGISTER_THIS_PASSKEY: () => new PasskeyNotRegisteredError(),
+  SESSION_NOT_FRESH: () => new PasskeyNotRegisteredError(),
+};
+
 const CODE_ERRORS = {
   INVALID_OTP: () => new InvalidCodeError(),
   OTP_EXPIRED: () => new InvalidCodeError(),
@@ -145,10 +248,19 @@ export function loginRoutes({
     c: Context,
     work: (auth: ReturnType<typeof createAuth>, db: Database) => Promise<T>,
   ): Promise<T> {
-    const { secret } = settings;
-    if (!secret) throw new LoginNotConfiguredError(["BETTER_AUTH_SECRET"]);
+    const { secret, passkeyRpId, passkeyOrigin } = settings;
+    if (!secret || !passkeyRpId || !passkeyOrigin) {
+      const missing = [
+        secret ? "" : "BETTER_AUTH_SECRET",
+        passkeyRpId ? "" : "PASSKEY_RP_ID",
+        passkeyOrigin ? "" : "PASSKEY_ORIGIN",
+      ].filter(Boolean);
+      throw new LoginNotConfiguredError(missing);
+    }
     const baseURL = new URL(c.req.url).origin;
-    return withDatabase((db) => work(createAuth(db, { secret, baseURL, codeSender }), db));
+    return withDatabase((db) =>
+      work(createAuth(db, { secret, baseURL, passkeyRpId, passkeyOrigin, codeSender }), db),
+    );
   }
 
   const app = new OpenAPIHono({
@@ -206,6 +318,68 @@ export function loginRoutes({
       const result = await auth.api.signOut({ headers, returnHeaders: true });
       relayCookies(c, result.headers);
       return c.json({ signedOut: true as const }, 200);
+    }),
+  );
+
+  app.openapi(passkeyRegistrationOptions, (c) =>
+    withAuth(c, async (auth, db) => {
+      await requestLimiter.check(db, LIMITS.loginPerIp, clientIp(c));
+      const headers = forwardedHeaders(c);
+      if (!(await auth.api.getSession({ headers }))) throw new NotSignedInError();
+      const result = await auth.api
+        .generatePasskeyRegistrationOptions({ headers, returnHeaders: true })
+        .catch((error: unknown) => {
+          throw toAppError(error, PASSKEY_REGISTRATION_ERRORS);
+        });
+      relayCookies(c, result.headers);
+      return c.json(result.response as unknown as Record<string, unknown>, 200);
+    }),
+  );
+
+  app.openapi(passkeyRegistration, (c) =>
+    withAuth(c, async (auth, db) => {
+      await requestLimiter.check(db, LIMITS.loginPerIp, clientIp(c));
+      const headers = forwardedHeaders(c);
+      if (!(await auth.api.getSession({ headers }))) throw new NotSignedInError();
+      const { response } = c.req.valid("json");
+      await auth.api
+        .verifyPasskeyRegistration({ body: { response }, headers })
+        .catch((error: unknown) => {
+          throw toAppError(error, PASSKEY_REGISTRATION_ERRORS);
+        });
+      return c.json({ registered: true as const }, 200);
+    }),
+  );
+
+  app.openapi(passkeySignInOptions, (c) =>
+    withAuth(c, async (auth, db) => {
+      await requestLimiter.check(db, LIMITS.loginPerIp, clientIp(c));
+      const result = await auth.api.generatePasskeyAuthenticationOptions({
+        headers: forwardedHeaders(c),
+        returnHeaders: true,
+      });
+      relayCookies(c, result.headers);
+      return c.json(result.response as unknown as Record<string, unknown>, 200);
+    }),
+  );
+
+  app.openapi(passkeySignIn, (c) =>
+    withAuth(c, async (auth, db) => {
+      const { response, rememberMe } = c.req.valid("json");
+      await requestLimiter.check(db, LIMITS.loginPerIp, clientIp(c));
+      const headers = forwardedHeaders(c);
+      headers.set(REMEMBER_ME_HEADER, String(rememberMe));
+      const result = await auth.api
+        .verifyPasskeyAuthentication({
+          body: { response: response as unknown as PasskeyAnswer },
+          headers,
+          returnHeaders: true,
+        })
+        .catch((error: unknown) => {
+          throw toAppError(error, PASSKEY_SIGN_IN_ERRORS);
+        });
+      relayCookies(c, result.headers);
+      return c.json({ user: toUser(result.response.user) }, 200);
     }),
   );
 
