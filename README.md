@@ -47,13 +47,11 @@ The login prototype, throwaway code in
 [`prototypes/login`](prototypes/login), measured login with Better Auth on a
 Worker on the free plan, with its users in Postgres reached through
 Hyperdrive, on Neon and on PlanetScale; the figures are in
-[`docs/research/login-on-workers.md`](docs/research/login-on-workers.md), and
-the database host is proposed in
-[`docs/adr/`](docs/adr/2026-11-25-database-host-and-drizzle.md) and not
-decided. It also measured login without a password, by a code sent by email
-and by passkey; those figures are in
-[`docs/research/passwordless-login.md`](docs/research/passwordless-login.md),
-and how users sign in is not decided either.
+[`docs/research/login-on-workers.md`](docs/research/login-on-workers.md). It
+also measured login without a password, by a code sent by email and by
+passkey; those figures are in
+[`docs/research/passwordless-login.md`](docs/research/passwordless-login.md).
+The database and the login are decided from them, below, and not built yet.
 
 [`docs/product.md`](docs/product.md) says what the app must do, and
 [`docs/roadmap.md`](docs/roadmap.md) in what order it is being built.
@@ -67,7 +65,8 @@ Each decision has its record, with the options that lost, in
 - Web: TanStack Start.
 - API: Hono on Cloudflare Workers, organised the way NestJS taught: one module per feature and one function that wires the dependencies. NestJS on Workers was deployed first and held, and was replaced for what it needed on Workers.
 - The API's contract: an OpenAPI document generated from the routes' zod schemas, and a typed client generated from that document.
-- Login: Better Auth.
+- Login: Better Auth, with no password: a code sent by email, and a passkey for the next times if the user wants one. A session lasts while the app is open unless the user ticks "Mantener la sesión iniciada".
+- Database: Postgres on Neon's Free plan, reached through Hyperdrive with Drizzle, with the apps waking it when they open. Workers stays on the free plan until the login is deployed.
 - Background work, such as importing a recipe: Cloudflare Workflows.
 - People: mutual friends and groups, with no followers. Whoever keeps a recipe gets their own copy, nobody signs one, and its conversation hangs from the recipe.
 - Recipes are organised with tags, fixed and the user's own, not with folders.

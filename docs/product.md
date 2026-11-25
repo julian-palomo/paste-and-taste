@@ -34,6 +34,7 @@ competition. Nobody becomes famous in it.
   from it. The app keeps the recipe, not the video.
 - A post can be a cooking tip instead of a recipe. The app saves it too, and
   a tag marks it as a tip.
+- A post that holds several recipes creates several recipes, one for each.
 
 ## Keeping and using recipes
 
@@ -59,6 +60,8 @@ competition. Nobody becomes famous in it.
   type and the screen kept on. Voice control comes later.
 - Users, comments and sending recipes between users are part of the minimum,
   with ingredient management. Shopping baskets and weekly menus come later.
+- Later, a user can connect their recipe book to an AI assistant, such as
+  Claude or ChatGPT, and use their recipes from there.
 - The app has a sample recipe of its own, and it can be sent to someone.
 
 ## Friends and groups
@@ -101,11 +104,18 @@ How people meet and pass recipes is recorded in
 
 ## The account
 
-- An account holds a name, an email address and a password, and nothing else
-  that has to be filled in: no address, no phone. The profile is made by the
-  recipes.
-- A user signs in with a password or with Google. Whoever signs in with
-  Google can create a password too, so they aren't tied to Google.
+- An account holds a name and an email address, and nothing else that has to
+  be filled in: no address, no phone. The profile is made by the recipes.
+- A user signs in with a code sent to their email address. Once signed in,
+  the app offers a passkey for the next times; it is optional, and on a new
+  device the code is the way in again. There is no password and no Google
+  ([the record](adr/2026-11-25-login-without-a-password.md)).
+- One email address, one account.
+- A user can change their email address.
+- A session lasts while the app is open. At sign-in, a "Mantener la sesión
+  iniciada" box, unchecked, lets the user stay signed in; otherwise they are
+  asked for their passkey or a code again
+  ([the record](adr/2026-11-24-staying-signed-in.md)).
 - A user has an avatar photo.
 - Settings are as simple as possible. They include choosing how the app
   looks: like the device, light or dark.
@@ -115,6 +125,11 @@ How people meet and pass recipes is recorded in
 - The interface is in Spanish and English from day one. Recipes stay in the
   language they were imported in.
 - The app is not paid.
+
+## Privacy
+
+- The app follows the rules of the UK and of Spain on cookies and privacy,
+  the stricter of each where they differ, and aims to need no cookie banner.
 
 ## Using the app
 
@@ -130,8 +145,6 @@ How people meet and pass recipes is recorded in
 - Whether a link that fails is sent to us on its own or only when the user
   reports it.
 - How a tip is kept apart from a recipe, beyond its tag.
-- What a post that holds several recipes becomes. One of the owner's sample
-  posts has three.
 - Which fixed tags the app has. A first list the owner finds fine for now:
   favourite, made; starter, main, side, dessert, breakfast, drink, sauces and
   basics; recipe or tip. In that list, time, servings and the main ingredient
@@ -147,8 +160,14 @@ How people meet and pass recipes is recorded in
   shared by link.
 - How the app teaches a new user. Perhaps the page before login explains it
   with screenshots and vignettes, and another way inside.
-- Whether signing in with Google and with a password on the same email
-  address opens the same account (proposed: one email, one account).
+- How a change of email address is confirmed (proposed: the new address is
+  verified before the change, and the old one is told).
+- How long a session lasts when the user ticks "Mantener la sesión iniciada".
+- How a user who loses access to their email address gets back in.
+- What a user does when the code doesn't arrive (proposed: a "No me llega el
+  código" link on the sign-in screen that opens a short form, the feedback
+  form with a reason "No puedo entrar", protected against spam, rather than a
+  published email address).
 - What the native app does that the web app doesn't. The owner sees sharing a
   post from Instagram as the main one, and perhaps Facebook or TikTok later.
 - The final name. Paste & Taste is the working one.

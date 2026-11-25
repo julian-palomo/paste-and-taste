@@ -39,9 +39,12 @@ needs, and a phase gets its issues when it is next.
    ([the report](research/login-on-workers.md)). Hashing a password took far
    more CPU than the free plan allows, so #58 measured login without a
    password, by a code sent by email and by passkey, on the same Worker
-   ([the report](research/passwordless-login.md)). The host is proposed in
-   [its record](adr/2026-11-25-database-host-and-drizzle.md); the owner decides
-   it, and how users sign in, before the phase's next issues are written.
+   ([the report](research/passwordless-login.md)). The owner decided both on
+   25 November 2026: Postgres on Neon
+   ([the record](adr/2026-11-25-database-host-and-drizzle.md)) and login
+   without a password ([the record](adr/2026-11-25-login-without-a-password.md)),
+   with Workers moving to the paid plan when the login is deployed. The
+   phase's next issues are written from them.
    The first table holds an owner and who may see each recipe
    ([the record](adr/2026-11-24-friends-groups-and-copies.md)).
 4. **The first recipe, end to end.** A table, its endpoints, and the web app
