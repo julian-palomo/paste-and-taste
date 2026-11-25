@@ -46,8 +46,8 @@ needs, and a phase gets its issues when it is next.
    with Workers moving to the paid plan when the login is deployed. The
    phase's next issues are written from them. The first, #66, connects the
    API to Postgres on Neon through Hyperdrive, with a wake route that every
-   deploy's smoke calls; next come the web app sending the wake request, then
-   login in the API, then its screen.
+   deploy's smoke calls. #67 has the web app's server send the wake request on
+   every page load. Next come login in the API, then its screen.
    The first table holds an owner and who may see each recipe
    ([the record](adr/2026-11-24-friends-groups-and-copies.md)).
 4. **The first recipe, end to end.** A table, its endpoints, and the web app
