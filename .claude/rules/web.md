@@ -53,6 +53,17 @@ server function in `<feature>.functions.ts`, the code that reads the API, and
 a view that is plain React with no router, so tests render it with
 `renderToString`. `src/health/` is the model.
 
+**Shared pieces live in `src/pieces/`**: the button, the text field, the
+checkbox and the card, one file each. A piece is plain React with no router
+and no server function, takes its texts as props, and is styled only from the
+tokens. Anything only one feature uses stays in that feature's folder; a
+piece moves to `src/pieces/` when a second feature needs it. A screen
+arranges pieces and never picks a colour or a size of its own. Every piece is
+shown in every state on the showcase page, `/en/showcase` and `/es/showcase`
+(`src/showcase/`), which answers in development and preview and is 404 in
+production, through `showcaseShown`: a new piece, or a new state of one, goes
+there too.
+
 **The API is called only from the web app's server**, inside a server
 function or by the wake below, through
 `createApiClient` from `@paste-and-taste/api-client` with `WebConfig.api`:
@@ -73,15 +84,20 @@ nothing is remembered between requests: each page load sends one, the redirect
 at `/` included. Server functions, the favicon and anything not asking for HTML
 send none.
 
-**Styles are Tailwind utilities from the tokens.** Every colour, font,
-radius, duration and easing is a token in `src/styles/tokens.css`, named by
-its role, never by its value. A component takes those only from the tokens'
-utilities (`bg-surface`, `text-text-muted`, `rounded-control`,
-`duration-quick`): never a raw or arbitrary one like `bg-[#fff]` or
-`duration-[300ms]`. Spacing, sizes and type sizes use Tailwind's own scale.
-Tailwind's own palette, fonts, radii and easings are removed there, so
-`bg-red-500` doesn't exist. Every colour has a light value in `@theme
-static` and a dark one in the `prefers-color-scheme: dark` block after it, so
+**Styles are Tailwind utilities from the tokens.** Every colour, font, text
+size, radius, control size, duration, easing and animation is a token in
+`src/styles/tokens.css`, named by its role, never by its value. A component
+takes those only from the tokens' utilities (`bg-surface`, `text-text-muted`,
+`rounded-control`, `duration-quick`): never a raw or arbitrary one like `bg-[#fff]` or
+`duration-[300ms]`, never a variable like `animate-(--x)`, and never a number
+Tailwind turns into a value with no token, like `duration-300`;
+`test/showcase.test.tsx` fails on all three in the showcase page. Spacing
+uses Tailwind's own scale; a control's height (`h-control`), the touch target
+(`min-h-touch`) and the text sizes of `DESIGN.md` (`text-body`,
+`text-small`) are tokens, and Tailwind's other type sizes stay. Tailwind's own
+palette, fonts, radii, easings and animations are removed there, so
+`bg-red-500` and `animate-spin` don't exist. Every colour has a light value in
+`@theme static` and a dark one in the `prefers-color-scheme: dark` block after it, so
 no component knows which mode is on; `test/tokens.test.ts` fails when the two
 sets name different tokens. A new role is a new token in that file,
 under Tailwind's namespace for it: a duration is `--transition-duration-*`,
@@ -100,9 +116,14 @@ role="alert">`) carries no class and is styled from its parent.
 transitions from the tokens' durations and easings; a bare `transition` takes
 the default ones, which the tokens set too. With `prefers-reduced-motion:
 reduce` the duration tokens are zero, so a transition written from them stops
-on its own. Page transitions, springs and gestures come with the screens that
-need them: keyframes, the Web Animations API, View Transitions and a small
-spring of our own.
+on its own. An animation is an `--animate-*` token with its `@keyframes` in
+`tokens.css`, like the checkbox's `bounce` and `draw`: it takes its duration
+from a duration token and fills `both`, and the element's own style is its
+last frame, so with the durations at zero it shows that frame and doesn't
+move. `test/tokens.test.ts` fails when an animation reads anything else, or a
+duration token isn't zeroed for reduced motion. Page transitions, springs and
+gestures come with the screens that need them: the Web Animations API, View
+Transitions and a small spring of our own.
 
 **Every text a person sees is in `src/i18n/en.json` and `src/i18n/es.json`.**
 `en.json` is the shape: a key missing from `es.json` fails `typecheck`. A
@@ -118,6 +139,9 @@ every `env` block (an environment inherits neither `vars` nor `services`),
 into `WebConfig` and its test, then `pnpm -C apps/web exec wrangler types`.
 `INDEXING` (`src/indexing.ts`) sets `X-Robots-Tag: noindex` on every response;
 keep it in step with `NOINDEX_ENVIRONMENTS` in `scripts/check-web.ts`.
+`APP_ENV` names the environment, `development`, `preview` or `production`, as
+`WebConfig.environment`; preview and production both block indexing, so code
+that differs between them reads this.
 
 **Environments are chosen at build time**, with `CLOUDFLARE_ENV`; `wrangler
 deploy` deploys what the build wrote. `scripts/check-web.ts`, run by

@@ -99,3 +99,38 @@ it.each(["sans", "display"])("--font-%s names first a family fonts.css declares"
   const first = css.match(new RegExp(`--font-${role}:\\s*"([^"]+)"`))?.[1];
   expect(declared).toContain(first);
 });
+
+describe("motion", () => {
+  const theme = block("@theme static");
+  const reduced = block("@media (prefers-reduced-motion: reduce)");
+  const animations = new Map(
+    [...theme.matchAll(/--animate-([a-z-]+):\s*([^;]+);/g)].map(([, name = "", value = ""]) => [
+      name,
+      value,
+    ]),
+  );
+
+  it("has the checkbox's bounce and draw", () => {
+    expect([...animations.keys()].sort()).toEqual(["bounce", "draw"]);
+  });
+
+  // A 0s animation shows its last frame only with fill mode forwards or both;
+  // with none it shows nothing of itself, and the element's own style stays.
+  it.each([...animations])(
+    "--animate-%s takes its duration from a duration token and fills both ways",
+    (_, value) => {
+      expect(value).toMatch(/^[a-z-]+ var\(--transition-duration-[a-z-]+\) /);
+      expect(value.split(/\s+/)).toContain("both");
+    },
+  );
+
+  it("with reduced motion, every duration token is zero", () => {
+    const durations = [...theme.matchAll(/--transition-duration-([a-z-]+):/g)].map(
+      ([, name]) => name,
+    );
+    expect(durations.length).toBeGreaterThan(0);
+    for (const name of durations) {
+      expect(reduced).toMatch(new RegExp(`--transition-duration-${name}:\\s*0s;`));
+    }
+  });
+});
