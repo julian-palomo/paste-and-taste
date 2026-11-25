@@ -13,7 +13,7 @@ needs, and a phase gets its issues when it is next.
 | --- | ----------------------------- | ----------- | ---------------------------------------------------------------------- |
 | 1   | The API's base                | Done        | [#35](https://github.com/julian-palomo/paste-and-taste/issues/35)      |
 | 2   | The Instagram prototype       | In progress | [#22](https://github.com/julian-palomo/paste-and-taste/issues/22)      |
-| 3   | Database and login            | In progress | [#42](https://github.com/julian-palomo/paste-and-taste/issues/42), [#58](https://github.com/julian-palomo/paste-and-taste/issues/58), [#66](https://github.com/julian-palomo/paste-and-taste/issues/66), [#69](https://github.com/julian-palomo/paste-and-taste/issues/69) |
+| 3   | Database and login            | In progress | [#42](https://github.com/julian-palomo/paste-and-taste/issues/42), [#58](https://github.com/julian-palomo/paste-and-taste/issues/58), [#66](https://github.com/julian-palomo/paste-and-taste/issues/66), [#69](https://github.com/julian-palomo/paste-and-taste/issues/69), [#80](https://github.com/julian-palomo/paste-and-taste/issues/80) |
 | 4   | The first recipe, end to end  | In progress | [#46](https://github.com/julian-palomo/paste-and-taste/issues/46)      |
 | 5   | The real import               | Not started |                                                                        |
 | 6   | The native app                | Not started |                                                                        |
@@ -50,8 +50,10 @@ needs, and a phase gets its issues when it is next.
    every page load. #69 adds the login to the API, in development only: a
    code by email, printed in the terminal there, and an optional passkey, with
    Better Auth behind the API's own routes and its tables under the app's
-   migrations. Next comes the sign-in screen, and later sending real email
-   and the login in preview and production.
+   migrations. #80 lets the typed client post, send the browser's headers
+   and hand back the API's cookies, which the web app's server relays. Next
+   comes the sign-in screen, and later sending real email and the login in
+   preview and production.
    The first table holds an owner and who may see each recipe
    ([the record](adr/2026-11-24-friends-groups-and-copies.md)).
 4. **The first recipe, end to end.** A table, its endpoints, and the web app
