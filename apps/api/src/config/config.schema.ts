@@ -9,6 +9,13 @@ const configSchema = z.object({
   APP_ENV: AppEnvironment.describe(
     "Where this API runs: development (local), preview or production.",
   ),
+  // Optional: only the login uses it, and a login route without it answers
+  // 503 naming it, so a caller that never signs in doesn't need one.
+  BETTER_AUTH_SECRET: z
+    .string()
+    .min(32)
+    .optional()
+    .describe("Better Auth's secret, at least 32 characters. Never committed."),
 });
 
 export type AppConfig = z.infer<typeof configSchema>;
