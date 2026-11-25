@@ -119,6 +119,21 @@ const replaceRecipe = createRoute({
   },
 });
 
+// Its success has no body, so typecheck doesn't check this handler's answer:
+// the contract test holds it to the document.
+const deleteRecipe = createRoute({
+  method: "delete",
+  path: "/{id}",
+  request: { params: RecipeId },
+  responses: {
+    204: { description: "The recipe was deleted." },
+    400: problem("The id is not a UUID."),
+    404: problem("No such recipe for this user."),
+    ...signedInOnly,
+    ...problemResponses,
+  },
+});
+
 function toBody(recipe: RecipeData) {
   return {
     id: recipe.id,
@@ -169,6 +184,11 @@ export function recipesRoutes({ service, currentUser }: RecipesDeps): OpenAPIHon
       200,
     ),
   );
+
+  app.openapi(deleteRecipe, async (c) => {
+    await service.delete(c.get("userId"), c.req.valid("param").id);
+    return c.body(null, 204);
+  });
 
   return app;
 }

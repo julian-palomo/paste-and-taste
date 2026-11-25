@@ -80,9 +80,10 @@ needs, and a phase gets its issues when it is next.
    service and repository
    ([the record](adr/2026-11-25-ingredients-and-steps-as-jsonb.md)). Since #83
    the typed client reaches every recipes route, a path's `{id}` and `put`
-   included. Since #85 the web app has the recipe pages, in development: the
-   list, a recipe, and one form to add one by hand or edit it, which works
-   with no JavaScript. Deleting a recipe, #95 and #96, is what phase 4 still
+   included. #95 deletes a recipe in the API and the client, removing its row.
+   Since #85 the web app has the recipe pages, in development: the list, a
+   recipe, and one form to add one by hand or edit it, which works with no
+   JavaScript. Deleting a recipe from the web app, #96, is what phase 4 still
    needs.
 5. **The real import.** Workflows in the background and the limit per user.
    Web pages first, the cheapest source to read, then Instagram, then YouTube.

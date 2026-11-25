@@ -491,3 +491,76 @@ describe("post to a 201, and put", () => {
     expect(error).toBeInstanceOf(ApiUnreachableError);
   });
 });
+
+describe("delete", () => {
+  it("is checked against the API's types", () => {
+    // Never run: typecheck fails if any of these stops being an error.
+    const typesOnly = async () => {
+      const deleted = await client.delete("/recipes/{id}", { params: { id: "1b2c" } });
+      expectTypeOf(deleted).toEqualTypeOf<undefined>();
+      // @ts-expect-error /recipes has no DELETE.
+      client.delete("/recipes");
+      // @ts-expect-error /recipes/{id} needs its id.
+      client.delete("/recipes/{id}");
+      // @ts-expect-error A delete takes no body.
+      client.delete("/recipes/{id}", { params: { id: "1b2c" }, body: recipeInput });
+    };
+    expect(typesOnly).toBeTypeOf("function");
+  });
+
+  it("sends DELETE to the filled, encoded path and resolves undefined on a 204", async () => {
+    const { client: recorded, requests } = recording(() => new Response(null, { status: 204 }));
+
+    const deleted = await recorded.delete("/recipes/{id}", { params: { id: "a b/c" } });
+
+    expect(requests[0]?.method).toBe("DELETE");
+    expect(new URL(requests[0]?.url ?? "").pathname).toBe("/recipes/a%20b%2Fc");
+    expect(deleted).toBeUndefined();
+  });
+
+  it("sends the headers it is given, and gives the answer's cookies to onSetCookie", async () => {
+    const cookie = "session_token=abc; Path=/; HttpOnly; Max-Age=7776000";
+    const { client: recorded, requests } = recording(() => {
+      const response = new Response(null, { status: 204 });
+      response.headers.append("Set-Cookie", cookie);
+      return response;
+    });
+    const seen: string[][] = [];
+
+    await recorded.delete("/recipes/{id}", {
+      params: { id: "1b2c" },
+      headers: { cookie: "session=abc" },
+      onSetCookie: (cookies) => seen.push(cookies),
+    });
+
+    expect(requests[0]?.headers.get("cookie")).toBe("session=abc");
+    expect(seen).toEqual([[cookie]]);
+  });
+
+  it("throws ApiError with the Problem Details for an error answer", async () => {
+    const error = await answering(async () =>
+      json(problem, { status: 404, headers: { "Content-Type": "application/problem+json" } }),
+    )
+      .delete("/recipes/{id}", { params: { id: "1b2c" } })
+      .catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error).toMatchObject({ status: 404, problem });
+  });
+
+  it("throws ApiUnreachableError when delete's 200 has an empty body", async () => {
+    const error = await answering(async () => new Response(null, { status: 200 }))
+      .delete("/recipes/{id}", { params: { id: "1b2c" } })
+      .catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(ApiUnreachableError);
+  });
+
+  it("still throws ApiUnreachableError when get answers 204: only delete accepts it", async () => {
+    const error = await answering(async () => new Response(null, { status: 204 }))
+      .get("/recipes")
+      .catch((e: unknown) => e);
+
+    expect(error).toBeInstanceOf(ApiUnreachableError);
+  });
+});

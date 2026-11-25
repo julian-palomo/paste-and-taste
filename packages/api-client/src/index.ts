@@ -18,8 +18,9 @@ export class ApiError extends Error {
 }
 
 // No usable answer came back: `fetch` rejected, or a success's (200 or 201)
-// body is empty or isn't JSON (a captive portal, a wrong address). `cause` is
-// the platform's error when there is one.
+// body is empty or isn't JSON (a captive portal, a wrong address). A 204 is a
+// usable answer only to `delete`; to any other method it is one of these.
+// `cause` is the platform's error when there is one.
 export class ApiUnreachableError extends Error {
   constructor(message: string, options?: ErrorOptions) {
     super(message, options);
@@ -53,26 +54,28 @@ function isProblemDetails(body: unknown): body is ProblemDetails {
 // Every call is typed from the API's OpenAPI document, through the types
 // generated from it: which paths a method takes, their path parameters, the
 // body each route needs, and what its success answers.
-type Method = "get" | "post" | "put";
+type Method = "get" | "post" | "put" | "delete";
 type Operation<P extends keyof paths, M extends Method> = paths[P][M];
 
 type JsonOf<R> = R extends { content: { "application/json": infer Body } } ? Body : never;
 
-// The paths whose method M succeeds with 200 or 201, and the JSON body of
-// that success: the 200's, or else the 201's. No route answers both.
+// The paths whose method M succeeds with 200 or 201, or with 204 for a
+// delete, and what that success gives: the 200's JSON body, or else the
+// 201's, or undefined for a 204. No route answers two of them.
+type SuccessStatus<M extends Method> = M extends "delete"
+  ? { 200: unknown } | { 201: unknown } | { 204: unknown }
+  : { 200: unknown } | { 201: unknown };
 type PathWith<M extends Method> = {
-  [P in keyof paths]: paths[P] extends {
-    [K in M]: { responses: { 200: unknown } | { 201: unknown } };
-  }
-    ? P
-    : never;
+  [P in keyof paths]: paths[P] extends { [K in M]: { responses: SuccessStatus<M> } } ? P : never;
 }[keyof paths];
 type Success<P extends keyof paths, M extends Method> =
   Operation<P, M> extends { responses: { 200: infer Answer } }
     ? JsonOf<Answer>
     : Operation<P, M> extends { responses: { 201: infer Answer } }
       ? JsonOf<Answer>
-      : never;
+      : Operation<P, M> extends { responses: { 204: unknown } }
+        ? undefined
+        : never;
 
 // The route's path parameters and JSON body, or `never` when it has none: a
 // path with no parameters has `path?: never`, a route with no body
@@ -140,18 +143,26 @@ export function createApiClient({ baseUrl, fetch }: ApiClientOptions) {
     get: client.GET,
     post: client.POST,
     put: client.PUT,
+    delete: client.DELETE,
   } as Record<Method, (path: string, init: Init) => Promise<Answer>>;
 
   // One reading of an answer for every method, so their errors are the same.
   // As text, so the JSON is parsed here: openapi-fetch's own parse throws a
   // bare SyntaxError on HTML and resolves an empty body as undefined. An
-  // error body is read the same way whatever parseAs says.
-  async function read(answer: Promise<Answer>, options: CallOptions): Promise<unknown> {
+  // error body is read the same way whatever parseAs says. A 204 is checked
+  // by its status, not by its empty body: openapi-fetch gives a 200 with
+  // Content-Length 0 the same empty data.
+  async function read(
+    answer: Promise<Answer>,
+    options: CallOptions,
+    acceptsNoContent: boolean,
+  ): Promise<unknown> {
     const { data, error, response } = await answer;
     options.onSetCookie?.(response.headers.getSetCookie());
     if (!response.ok || error !== undefined) {
       throw new ApiError(response.status, toProblem(error, response.status));
     }
+    if (acceptsNoContent && response.status === 204) return undefined;
     if (typeof data !== "string" || data === "") {
       throw new ApiUnreachableError(`The ${response.status} response had no body.`);
     }
@@ -171,7 +182,7 @@ export function createApiClient({ baseUrl, fetch }: ApiClientOptions) {
     };
     const init: Init = { body, headers: callOptions.headers, parseAs: "text" };
     if (params) init.params = { path: params };
-    return read(send[method](path, init), callOptions);
+    return read(send[method](path, init), callOptions, method === "delete");
   }
 
   return {
@@ -183,6 +194,9 @@ export function createApiClient({ baseUrl, fetch }: ApiClientOptions) {
     },
     async put<P extends PathWith<"put">>(path: P, ...[options]: Args<P, "put">) {
       return (await call("put", path, options)) as Success<P, "put">;
+    },
+    async delete<P extends PathWith<"delete">>(path: P, ...[options]: Args<P, "delete">) {
+      return (await call("delete", path, options)) as Success<P, "delete">;
     },
   };
 }

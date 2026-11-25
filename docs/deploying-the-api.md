@@ -262,6 +262,14 @@ terminal, and nothing it prints is pasted anywhere.
    The first answers the recipe with its `id`, the second
    `{"recipes":[…]}` with its summary.
 
+   Deleting it, with that `id`, answers with no body, so this prints only
+   the status, `204`; the list after it no longer has the recipe:
+
+   ```bash
+   curl -s -o /dev/null -w '%{http_code}\n' -b /tmp/pt-cookies -X DELETE localhost:8787/recipes/<id>
+   curl -s -b /tmp/pt-cookies localhost:8787/recipes
+   ```
+
 A code lasts 5 minutes and allows 3 tries. Asking for codes is limited to 3
 per address every 15 minutes and 10 per IP every hour, and any other login
 request to 60 per IP every hour; past a limit the API answers 429

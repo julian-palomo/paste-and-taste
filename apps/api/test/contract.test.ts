@@ -138,6 +138,10 @@ const successfulRequests: Record<string, SuccessfulRequest | (() => Promise<Succ
       init: { ...json({ ...RECIPE, servings: "4" }, { cookie }), method: "PUT" },
     };
   },
+  "delete /recipes/{id}": async () => {
+    const { cookie, id } = await signedInWithRecipe();
+    return { path: `/recipes/${id}`, init: { headers: { cookie } } };
+  },
   "post /login/passkey/sign-in": async () => {
     const { cookie, response, device } = await passkeyRegistration();
     await app.request("/login/passkey/registration", json({ response }, { cookie }));
@@ -168,9 +172,12 @@ function validate(schema: object, body: unknown) {
   return new Validator({ ...schema, components: document.components }, "2020-12").validate(body);
 }
 
+// Read as text, so a success the document gives no body, such as a 204, can
+// be checked to be empty.
 async function bodyAndType(response: Response) {
   const contentType = (response.headers.get("content-type") ?? "").split(";")[0] ?? "";
-  return { contentType, body: await response.json() };
+  const text = await response.text();
+  return { contentType, text, body: text === "" ? undefined : JSON.parse(text) };
 }
 
 describe("the real application against the committed document", () => {
@@ -189,7 +196,7 @@ describe("the real application against the committed document", () => {
       method: method.toUpperCase(),
       ...request.init,
     });
-    const { contentType, body } = await bodyAndType(response);
+    const { contentType, text, body } = await bodyAndType(response);
     // Only a 2xx the operation documents by its number. Never fall back to
     // `default`: it is Problem Details, so any error would pass.
     const documented = response.ok ? operation.responses[String(response.status)] : undefined;
@@ -198,7 +205,12 @@ describe("the real application against the committed document", () => {
         `${key} answered ${response.status}, not a documented success: ${JSON.stringify(body)}`,
       );
     }
-    const schema = documented.content?.[contentType]?.schema;
+    // A success documented with no content must answer nothing at all.
+    if (!documented.content) {
+      expect(text, `${key} documents no body for ${response.status}`).toBe("");
+      return;
+    }
+    const schema = documented.content[contentType]?.schema;
 
     expect(schema, `no schema for ${response.status} ${contentType}`).toBeDefined();
     expect(validate(schema as object, body).errors).toEqual([]);

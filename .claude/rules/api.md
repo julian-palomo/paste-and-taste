@@ -61,7 +61,11 @@ depends on: if it needs something, it is an argument.
 zod schema per response, registered as a component with `.openapi("Name")`,
 plus `...problemResponses` for its errors. The handler answers with
 `c.json(body, status)`, the status written out, so `typecheck` rejects a body
-its schema doesn't allow. The schema is the one source of the type, the
+its schema doesn't allow. A success with no body, such as a delete's 204, is
+documented with a description and no `content`, and answered with
+`c.body(null, status)`. That widens the handler's type to any `Response`, so
+for that route `typecheck` checks nothing, and the contract test checks that
+the body is empty. The schema is the one source of the type, the
 document (`openapi.json`) and the client's types: after changing a route, run
 `pnpm -C apps/api openapi` and `pnpm -C tools/openapi-typegen generate`, and
 commit both outputs. `pnpm contract:check` fails until you do.

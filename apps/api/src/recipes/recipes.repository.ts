@@ -12,4 +12,6 @@ export type RecipesRepository = {
   add(copyOwnerId: string, input: RecipeInput, now: Date): Promise<Recipe>;
   // null when no recipe has this id and this copy owner; nothing is written then.
   replace(copyOwnerId: string, id: string, input: RecipeInput, now: Date): Promise<Recipe | null>;
+  // false when no recipe has this id and this copy owner; nothing is deleted then.
+  remove(copyOwnerId: string, id: string): Promise<boolean>;
 };
