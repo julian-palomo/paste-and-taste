@@ -1,21 +1,5 @@
 import { ApiError, ApiUnreachableError } from "@paste-and-taste/api-client";
 
-// What the web app's server passes on to the API about the browser. Only
-// these three, so a browser can't set anything else on the API's request.
-// The IP is read as the cf-connecting-ip header, never with Start's
-// getRequestIP, which reads x-forwarded-for or the socket's address and finds
-// nothing on Workers.
-const RELAYED = ["cookie", "cf-connecting-ip", "user-agent"] as const;
-
-export function relayHeaders(get: (name: string) => string | undefined): Record<string, string> {
-  const headers: Record<string, string> = {};
-  for (const name of RELAYED) {
-    const value = get(name);
-    if (value) headers[name] = value;
-  }
-  return headers;
-}
-
 // The address being signed in with, between the address step and the code
 // step, in a cookie of the web app's own: never in the page's address, which
 // lands in history and logs. sentAt, in milliseconds, is when the last code

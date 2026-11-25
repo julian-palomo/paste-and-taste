@@ -4,10 +4,10 @@ import { appendResponseHeader, getRequestHeader } from "@tanstack/react-start/se
 import { withConfig } from "../config/config.middleware.ts";
 import type { WebConfig } from "../config/config.ts";
 import { type Language, parseLanguage } from "../i18n/i18n.ts";
-import { readPending, relayHeaders, type SignInErrorKind } from "./relay.ts";
+import { formResponse, relayHeaders } from "../session/relay.ts";
+import { readPending, type SignInErrorKind } from "./relay.ts";
 import {
   changeAddress,
-  formResponse,
   passkeyRegistrationOptions,
   passkeySignIn,
   passkeySignInOptions,

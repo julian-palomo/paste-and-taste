@@ -1,5 +1,6 @@
 import { type ApiClient, ApiError, ApiUnreachableError } from "@paste-and-taste/api-client";
 import type { Language } from "../i18n/i18n.ts";
+import { type FormResult, relayed } from "../session/relay.ts";
 import {
   clearPendingCookie,
   codeError,
@@ -26,20 +27,7 @@ export type SignInDeps = {
   origin: string;
 };
 
-// Where the browser goes next: each form's answer is a 303 to this address,
-// or a 404 where the sign-in isn't shown.
-type Redirect = { redirect: string };
-type FormResult = Redirect | { notFound: true };
 const notFound = { notFound: true } as const;
-
-// A form posted with no JavaScript gets this Response as it is: a 303 back to
-// the page, carrying every cookie to set, or a 404 with none.
-export function formResponse(result: FormResult, cookies: string[]): Response {
-  if ("notFound" in result) return new Response(null, { status: 404 });
-  const headers = new Headers({ Location: result.redirect });
-  for (const cookie of cookies) headers.append("Set-Cookie", cookie);
-  return new Response(null, { status: 303, headers });
-}
 
 const secure = (deps: SignInDeps) => ({ secure: new URL(deps.origin).protocol === "https:" });
 // Where the sign-in isn't shown, a passkey function fails without calling
@@ -68,14 +56,7 @@ const RESEND_WAIT_MS = 60_000;
 const page = (lang: Language, query = "") => `/${lang}/sign-in${query}`;
 const withError = (lang: Language, kind: SignInErrorKind) => page(lang, `?error=${kind}`);
 
-function call({ headers, appendSetCookie }: SignInDeps) {
-  return {
-    headers,
-    onSetCookie: (cookies: string[]) => {
-      for (const cookie of cookies) appendSetCookie(cookie);
-    },
-  };
-}
+const call = ({ headers, appendSetCookie }: SignInDeps) => relayed(headers, appendSetCookie);
 
 export async function sendCode(
   deps: SignInDeps,

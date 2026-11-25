@@ -1,5 +1,6 @@
 import { ApiError, ApiUnreachableError } from "@paste-and-taste/api-client";
 import { describe, expect, it } from "vitest";
+import { relayHeaders } from "../src/session/relay.ts";
 import {
   clearPendingCookie,
   codeError,
@@ -8,7 +9,6 @@ import {
   pendingCookie,
   readPending,
   registrationError,
-  relayHeaders,
   signInError,
 } from "../src/sign-in/relay.ts";
 import { signInShown } from "../src/sign-in/sign-in-shown.ts";

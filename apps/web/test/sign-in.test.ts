@@ -1,9 +1,9 @@
 import { createApiClient } from "@paste-and-taste/api-client";
 import { describe, expect, it } from "vitest";
+import { formResponse } from "../src/session/relay.ts";
 import { clearPendingCookie, readPending } from "../src/sign-in/relay.ts";
 import {
   changeAddress,
-  formResponse,
   passkeyRegistrationOptions,
   passkeySignIn,
   passkeySignInOptions,
