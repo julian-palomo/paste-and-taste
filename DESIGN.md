@@ -261,7 +261,10 @@ and finding recipes (round 12).
   account: the invitation, with "Ver una receta de ejemplo", and the whole
   recipe with "Guardar en mi recetario".
 - **Tu cuenta y ajustes:** photo, name, language, password, how it looks,
-  signing out and deleting the account.
+  signing out and deleting the account. The password drawn here is gone: login
+  has none since 25 November 2026
+  ([the record](docs/adr/2026-11-25-login-without-a-password.md)), so this
+  screen will show the user's passkeys instead (proposed).
 - **Mis recetas:** search, one-tap filters (favourites, made, under 30
   minutes, from a friend), the pinned tags with a cover, and the last ones
   saved.
