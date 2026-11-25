@@ -3,7 +3,7 @@ import { parseConfig } from "./config/config.schema.ts";
 import { type DatabaseSource, type WithDatabase, withDatabase } from "./database/database.ts";
 import { notFound, onError } from "./errors/problem-details.ts";
 import { healthRoutes } from "./health/health.routes.ts";
-import { type CodeSender, consoleCodeSender } from "./login/code-sender.ts";
+import { type CodeSender, chooseCodeSender } from "./login/code-sender.ts";
 import { loginRoutes } from "./login/login.routes.ts";
 import { createRequestLimiter } from "./login/request-limiter.ts";
 import { createSessionReader } from "./login/session-reader.ts";
@@ -53,7 +53,7 @@ export function createApp(
       loginRoutes({
         withAuth,
         requestLimiter: createRequestLimiter(),
-        codeSender: options.codeSender ?? consoleCodeSender,
+        codeSender: options.codeSender ?? chooseCodeSender(config),
       }),
     );
     // A user's recipes need a session, so they run where the login does.

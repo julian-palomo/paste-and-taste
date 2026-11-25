@@ -59,6 +59,18 @@ export class PasskeyNotRegisteredError extends AppError {
   }
 }
 
+// Resend didn't take the code: an error answer, no answer, or none in time.
+// What went wrong is in the log; the client only learns to try again.
+export class CodeNotSentError extends AppError {
+  readonly type = "about:blank";
+  readonly title = "Bad Gateway";
+  readonly status = 502;
+
+  constructor() {
+    super("The code could not be sent. Try again in a moment.");
+  }
+}
+
 // Names the variables that are missing, never their values.
 export class LoginNotConfiguredError extends AppError {
   readonly type = "about:blank";

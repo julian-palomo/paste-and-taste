@@ -61,6 +61,7 @@ const askForCode = createRoute({
       content: { "application/json": { schema: CodeSent } },
     },
     429: problem("Too many codes for this address or from this IP."),
+    502: problem("The code could not be sent: try again in a moment."),
     503: problem("Login is not configured on this server."),
     ...problemResponses,
   },

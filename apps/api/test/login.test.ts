@@ -1,6 +1,7 @@
 import { Client } from "pg";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { createApp, noDatabase } from "../src/app.ts";
+import { createResendCodeSender } from "../src/login/resend-code-sender.ts";
 import {
   cookieHeader,
   json,
@@ -185,6 +186,46 @@ describe("the code's language and sending", () => {
       { email: spanish.email, language: "es" },
       { email: none.email, language: "en" },
     ]);
+  });
+
+  it("answers 502 when Resend refuses the code, and logs none of its secrets", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
+    const key = "re_test_key_never_real";
+    const app = createApp(
+      { APP_ENV: "development", ...LOGIN_SETTINGS },
+      { connectionString: () => postgres.connectionString },
+      {
+        codeSender: createResendCodeSender({
+          apiKey: key,
+          fetch: async () =>
+            new Response(JSON.stringify({ name: "invalid_parameter" }), { status: 422 }),
+        }),
+      },
+    );
+    const { email, ip } = someone();
+
+    const response = await askForCode(app, email, ip);
+    const logged = error.mock.calls.map((call) => call.map(String).join(" ")).join("\n");
+
+    expect(response.status).toBe(502);
+    expect(response.headers.get("content-type")).toMatch(/^application\/problem\+json/);
+    expect(logged).not.toContain(email);
+    expect(logged).not.toContain(key);
+    expect(logged).not.toMatch(/\b\d{6}\b/);
+  });
+
+  it("prints the code in development when no key and no sender are given", async () => {
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    const app = createApp(
+      { APP_ENV: "development", ...LOGIN_SETTINGS },
+      { connectionString: () => postgres.connectionString },
+    );
+    const { email, ip } = someone();
+
+    const response = await askForCode(app, email, ip);
+
+    expect(response.status).toBe(200);
+    expect(log.mock.calls.flat().join(" ")).toMatch(/Sign-in code for .+: \d{6}/);
   });
 
   it("answers an error, not sent, when the sender fails", async () => {
