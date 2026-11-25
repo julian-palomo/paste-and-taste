@@ -16,6 +16,17 @@
     "INDEXING": "allowed",
     "APP_ENV": "development"
   },
+  // Workers Logs keeps what the Worker logs, for the dashboard. Environments
+  // inherit this block, unlike vars, so production takes it as it is: our own
+  // log lines only, with no line per request, since a request's log may hold
+  // the visitor's IP and rough location. Preview, visited only by the owner
+  // and CI, replaces it with one that keeps a line per request too
+  // (docs/adr/2026-11-25-logs-in-workers-logs.md).
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+    "logs": { "invocation_logs": false }
+  },
   // An environment is chosen at build time, with CLOUDFLARE_ENV, and doesn't
   // inherit vars or services: each one sets every value again. Deployed, the
   // API is reached through a Service binding to that environment's API Worker,
@@ -23,6 +34,12 @@
   // NOINDEX_ENVIRONMENTS in scripts/check-web.ts.
   "env": {
     "preview": {
+      // Replaces the top-level block whole: a line per request as well.
+      "observability": {
+        "enabled": true,
+        "head_sampling_rate": 1,
+        "logs": { "invocation_logs": true }
+      },
       "vars": {
         "INDEXING": "blocked",
         "APP_ENV": "preview"
