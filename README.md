@@ -58,7 +58,7 @@ Postgres on Neon through Hyperdrive and answers the wake request, which the
 web app's server sends on every page load. In development only, it has the
 login, a code by email (sent through Resend, or printed in its terminal
 without Resend's key) and an optional passkey, and a user's recipes, which it
-lists, opens, adds and edits. The web app has the sign-in page that goes with
+lists, opens, adds, edits and deletes. The web app has the sign-in page that goes with
 it, also in development only, at `/en/sign-in` and `/es/sign-in`.
 
 [`docs/product.md`](docs/product.md) says what the app must do, and
