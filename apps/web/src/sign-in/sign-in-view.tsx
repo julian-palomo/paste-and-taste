@@ -18,6 +18,8 @@ type Props = {
   pending: Pending | undefined;
   error: SignInErrorKind | undefined;
   step: "passkey" | "passkey-added" | undefined;
+  // The page to go back to after signing in, sent back by every form.
+  next: string | undefined;
   actions: Actions;
   // The passkey buttons, which need JavaScript; null when rendered without.
   passkeySignIn: ReactNode;
@@ -57,10 +59,12 @@ export function SignInView(props: Props) {
 function PostForm({
   action,
   lang,
+  next,
   children,
 }: {
   action: string;
   lang: Language;
+  next?: string | undefined;
   children: ReactNode;
 }) {
   return (
@@ -71,6 +75,7 @@ function PostForm({
       className="flex flex-col items-start gap-4"
     >
       <input type="hidden" name="lang" value={lang} />
+      {next && <input type="hidden" name="next" value={next} />}
       {children}
     </form>
   );
@@ -84,14 +89,14 @@ function Alert({ text }: { text: string }) {
   );
 }
 
-function AddressStep({ lang, messages, pending, error, actions, passkeySignIn }: Props) {
+function AddressStep({ lang, messages, pending, error, actions, passkeySignIn, next }: Props) {
   // A failed passkey is said next to the passkey; creating one happens only
   // from the offer, so passkey-not-created shows nothing here.
   const fieldError = fieldErrorOf(error);
   return (
     <section className="flex flex-col gap-8">
       <h1>{messages.signInHeading}</h1>
-      <PostForm action={actions.sendCode} lang={lang}>
+      <PostForm action={actions.sendCode} lang={lang} next={next}>
         <TextField
           label={messages.signInEmail}
           name="email"
@@ -115,7 +120,7 @@ function AddressStep({ lang, messages, pending, error, actions, passkeySignIn }:
   );
 }
 
-function CodeStep({ lang, messages, error, actions, email }: Props & { email: string }) {
+function CodeStep({ lang, messages, error, actions, email, next }: Props & { email: string }) {
   // A code that couldn't be sent sends the page back to the email step.
   const fieldError = error === "code-not-sent" ? undefined : fieldErrorOf(error);
   return (
@@ -127,7 +132,7 @@ function CodeStep({ lang, messages, error, actions, email }: Props & { email: st
         </p>
         <p className="text-body text-text-muted">{messages.signInSpam}</p>
       </div>
-      <PostForm action={actions.signIn} lang={lang}>
+      <PostForm action={actions.signIn} lang={lang} next={next}>
         <TextField
           label={messages.signInCode}
           name="code"
@@ -145,14 +150,14 @@ function CodeStep({ lang, messages, error, actions, email }: Props & { email: st
           {messages.signInEnter}
         </Button>
       </PostForm>
-      <PostForm action={actions.sendCode} lang={lang}>
+      <PostForm action={actions.sendCode} lang={lang} next={next}>
         <input type="hidden" name="email" value={email} />
         <p className="text-small text-text-muted">{messages.signInResendHint}</p>
         <Button kind="secondary" type="submit">
           {messages.signInResend}
         </Button>
       </PostForm>
-      <PostForm action={actions.changeAddress} lang={lang}>
+      <PostForm action={actions.changeAddress} lang={lang} next={next}>
         <Button kind="secondary" type="submit">
           {messages.signInChangeAddress}
         </Button>

@@ -2,9 +2,11 @@ import { ApiError, ApiUnreachableError } from "@paste-and-taste/api-client";
 import { describe, expect, it } from "vitest";
 import { relayHeaders } from "../src/session/relay.ts";
 import {
+  afterSignIn,
   clearPendingCookie,
   codeError,
   parseErrorKind,
+  parseNext,
   passkeyError,
   pendingCookie,
   readPending,
@@ -171,5 +173,42 @@ describe("parseErrorKind", () => {
 
   it.each([undefined, "", "other", 401, ["wrong-code"]])("reads %o as none", (value) => {
     expect(parseErrorKind(value)).toBeUndefined();
+  });
+});
+
+// Where a visitor goes after signing in: back to the page they asked for, but
+// only a page of this site, so a link can't send them elsewhere.
+describe("parseNext", () => {
+  it.each(["/es/recipes", "/en/recipes/7c0c1f9e-2d0a-4e5b-9f1a-0b2c3d4e5f60/edit", "/en"])(
+    "keeps %s",
+    (next) => {
+      expect(parseNext(next)).toBe(next);
+    },
+  );
+
+  it.each([
+    undefined,
+    "",
+    "recipes",
+    "//evil.test/es/recipes",
+    "https://evil.test/es/recipes",
+    "/fr/recipes",
+    "/es//evil.test",
+    "/es\\evil.test",
+    "/es/recipes\n",
+    42,
+  ])("drops %o", (next) => {
+    expect(parseNext(next)).toBeUndefined();
+  });
+});
+
+describe("afterSignIn", () => {
+  it.each([
+    ["code", undefined, "/es/sign-in?step=passkey"],
+    ["passkey", undefined, "/es/sign-in"],
+    ["code", "/es/recipes", "/es/recipes"],
+    ["passkey", "/es/recipes", "/es/recipes"],
+  ] as const)("after a %s sign-in with next %s, goes to %s", (by, next, destination) => {
+    expect(afterSignIn("es", next, by)).toBe(destination);
   });
 });

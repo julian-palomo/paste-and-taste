@@ -463,3 +463,57 @@ describe("the pending cookie's Secure", () => {
     }
   });
 });
+
+describe("next, through the sign-in", () => {
+  it("is kept through the address step's redirect", async () => {
+    const { deps } = api(() => json({ sent: true }));
+
+    expect(
+      await sendCode(deps, { lang: "es", email: "ana@example.com", next: "/es/recipes" }),
+    ).toEqual({ redirect: "/es/sign-in?next=%2Fes%2Frecipes" });
+  });
+
+  it("is kept when the address step fails", async () => {
+    const { deps } = api(() => problem(429));
+
+    expect(await sendCode(deps, { lang: "es", email: "ana@", next: "/es/recipes" })).toEqual({
+      redirect: "/es/sign-in?error=too-many-codes&next=%2Fes%2Frecipes",
+    });
+  });
+
+  it("is where a code sign-in goes", async () => {
+    const { deps } = api(() => json({ user }));
+
+    expect(
+      await signIn(deps, {
+        lang: "es",
+        code: "123456",
+        remember: false,
+        pending: sent,
+        next: "/es/recipes",
+      }),
+    ).toEqual({ redirect: "/es/recipes" });
+  });
+
+  it("is kept when the code is wrong", async () => {
+    const { deps } = api(() => problem(401));
+
+    expect(
+      await signIn(deps, {
+        lang: "es",
+        code: "000000",
+        remember: false,
+        pending: sent,
+        next: "/es/recipes",
+      }),
+    ).toEqual({ redirect: "/es/sign-in?error=wrong-code&next=%2Fes%2Frecipes" });
+  });
+
+  it("is kept when changing the address", () => {
+    const { deps } = api(() => json({}));
+
+    expect(changeAddress(deps, { lang: "es", next: "/es/recipes" })).toEqual({
+      redirect: "/es/sign-in?next=%2Fes%2Frecipes",
+    });
+  });
+});

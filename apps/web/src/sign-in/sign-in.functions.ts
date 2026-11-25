@@ -5,7 +5,7 @@ import { withConfig } from "../config/config.middleware.ts";
 import type { WebConfig } from "../config/config.ts";
 import { type Language, parseLanguage } from "../i18n/i18n.ts";
 import { formResponse, relayHeaders } from "../session/relay.ts";
-import { readPending, type SignInErrorKind } from "./relay.ts";
+import { parseNext, readPending, type SignInErrorKind } from "./relay.ts";
 import {
   changeAddress,
   passkeyRegistrationOptions,
@@ -69,6 +69,7 @@ export const sendCodeForm = createServerFn({ method: "POST" })
         lang: langOf(data),
         email: String(data.get("email") ?? "").trim(),
         pending: pending(),
+        next: parseNext(data.get("next")),
       },
     );
     return formResponse(result, cookies);
@@ -87,6 +88,7 @@ export const signInForm = createServerFn({ method: "POST" })
         // A ticked checkbox is sent as remember=on; an unticked one isn't sent.
         remember: data.get("remember") === "on",
         pending: pending(),
+        next: parseNext(data.get("next")),
       },
     );
     return formResponse(result, cookies);
@@ -101,6 +103,7 @@ export const changeAddressForm = createServerFn({ method: "POST" })
       deps(context, (c) => cookies.push(c)),
       {
         lang: langOf(data),
+        next: parseNext(data.get("next")),
       },
     );
     return formResponse(result, cookies);

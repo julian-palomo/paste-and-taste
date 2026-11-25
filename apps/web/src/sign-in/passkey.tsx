@@ -6,6 +6,7 @@ import {
   createPasskey as createPasskeyFlow,
   signInWithPasskey as signInWithPasskeyFlow,
 } from "./passkey-flow.ts";
+import { afterSignIn } from "./relay.ts";
 import {
   passkeyRegistrationOptionsFn,
   passkeySignInFn,
@@ -70,7 +71,15 @@ const createPasskey = () =>
     register: (responseJson) => registerPasskeyFn({ data: { responseJson } }),
   });
 
-export function PasskeySignIn({ lang, messages }: { lang: Language; messages: Messages }) {
+export function PasskeySignIn({
+  lang,
+  messages,
+  next,
+}: {
+  lang: Language;
+  messages: Messages;
+  next: string | undefined;
+}) {
   const supported = useSupported();
   if (!supported) return null;
 
@@ -78,7 +87,11 @@ export function PasskeySignIn({ lang, messages }: { lang: Language; messages: Me
     event.preventDefault();
     const rememberMe = new FormData(event.currentTarget).get("remember") === "on";
     const result = await signInWithPasskey(rememberMe);
-    window.location.assign(`/${lang}/sign-in${result.ok ? "" : `?error=${result.error}`}`);
+    window.location.assign(
+      result.ok
+        ? afterSignIn(lang, next, "passkey")
+        : `/${lang}/sign-in?${new URLSearchParams({ error: result.error, ...(next ? { next } : {}) })}`,
+    );
   }
 
   return (

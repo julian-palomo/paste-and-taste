@@ -25,6 +25,7 @@ function render(
     pending?: { email: string; sentAt?: number };
     error?: SignInErrorKind;
     step?: "passkey" | "passkey-added";
+    next?: string;
   } = {},
 ) {
   return renderToString(
@@ -35,6 +36,7 @@ function render(
       pending={props.pending}
       error={props.error}
       step={props.step}
+      next={props.next}
       actions={actions}
       passkeySignIn={null}
       passkeyRegister={null}
@@ -200,6 +202,19 @@ describe.each(["en", "es"] as const)("in %s", (lang) => {
         `<form[^>]*action="${actions.sendCode}"[^>]*><input type="hidden" name="lang" value="${lang}"/><input type="hidden" name="email" value="ana@example.com"/>`,
       ),
     );
+  });
+
+  it("sends next back with every form of the steps", () => {
+    for (const html of [
+      render(lang, { next: "/es/recipes" }),
+      render(lang, { pending: sent, next: "/es/recipes" }),
+    ]) {
+      const forms = html.match(/<form[^>]*>/g) ?? [];
+      const nextFields =
+        html.match(/<input type="hidden" name="next" value="\/es\/recipes"\/>/g) ?? [];
+      expect(forms.length).toBeGreaterThan(0);
+      expect(nextFields).toHaveLength(forms.length);
+    }
   });
 
   describe("signed in", () => {

@@ -1,4 +1,5 @@
 import { ApiError, ApiUnreachableError } from "@paste-and-taste/api-client";
+import type { Language } from "../i18n/i18n.ts";
 
 // The address being signed in with, between the address step and the code
 // step, in a cookie of the web app's own: never in the page's address, which
@@ -89,3 +90,24 @@ export const passkeyError = (error: unknown) =>
 // Creating one: a refused registration, or a session that ended before it.
 export const registrationError = (error: unknown) =>
   byStatus(error, { 400: "passkey-not-created", 401: "passkey-not-created", 429: "too-many" });
+
+// The page a visitor asked for before signing in, from ?next= or a form's
+// hidden field: only a path of this site under a language, so a link can't
+// use the sign-in to send someone elsewhere. "//host" and a backslash, which
+// browsers read as another site, are refused.
+export function parseNext(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  if (!/^\/(en|es)(\/[^\s\\]*)?$/.test(value) || value.includes("//")) return undefined;
+  return value;
+}
+
+// Where a sign-in goes: back to the page asked for, else the passkey offer
+// after a code, or the signed-in page after a passkey.
+export function afterSignIn(
+  lang: Language,
+  next: string | undefined,
+  by: "code" | "passkey",
+): string {
+  if (next) return next;
+  return by === "code" ? `/${lang}/sign-in?step=passkey` : `/${lang}/sign-in`;
+}

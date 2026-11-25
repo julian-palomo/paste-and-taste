@@ -2,6 +2,7 @@ import { type ApiClient, ApiError, ApiUnreachableError } from "@paste-and-taste/
 import type { Language } from "../i18n/i18n.ts";
 import { type FormResult, relayed } from "../session/relay.ts";
 import {
+  afterSignIn,
   clearPendingCookie,
   codeError,
   type Pending,
@@ -53,19 +54,35 @@ type PasskeyResult<T> = ({ ok: true } & T) | { ok: false; error: SignInErrorKind
 // How long after a code the address step refuses to send another.
 const RESEND_WAIT_MS = 60_000;
 
-const page = (lang: Language, query = "") => `/${lang}/sign-in${query}`;
-const withError = (lang: Language, kind: SignInErrorKind) => page(lang, `?error=${kind}`);
+// The sign-in page's address, with what it needs in its query: a step, an
+// error, and the page to go back to after signing in.
+function page(
+  lang: Language,
+  query: { step?: string; error?: SignInErrorKind; next?: string | undefined } = {},
+): string {
+  const params = new URLSearchParams();
+  for (const [name, value] of Object.entries(query)) if (value) params.set(name, value);
+  const search = params.toString();
+  return `/${lang}/sign-in${search ? `?${search}` : ""}`;
+}
+const withError = (lang: Language, error: SignInErrorKind, next?: string) =>
+  page(lang, { error, next });
 
 const call = ({ headers, appendSetCookie }: SignInDeps) => relayed(headers, appendSetCookie);
 
 export async function sendCode(
   deps: SignInDeps,
-  input: { lang: Language; email: string; pending?: Pending | undefined },
+  input: {
+    lang: Language;
+    email: string;
+    pending?: Pending | undefined;
+    next?: string | undefined;
+  },
 ): Promise<FormResult> {
   if (!deps.shown) return notFound;
-  const { lang, email, pending } = input;
+  const { lang, email, pending, next } = input;
   if (pending?.sentAt !== undefined && deps.now() - pending.sentAt < RESEND_WAIT_MS) {
-    return { redirect: withError(lang, "too-soon") };
+    return { redirect: withError(lang, "too-soon", next) };
   }
   try {
     // The email goes out in the page's language.
@@ -73,36 +90,45 @@ export async function sendCode(
   } catch (error) {
     // The typed address stays, so the field shows it again.
     deps.appendSetCookie(pendingCookie({ email }, secure(deps)));
-    return { redirect: withError(lang, codeError(error)) };
+    return { redirect: withError(lang, codeError(error), next) };
   }
   deps.appendSetCookie(pendingCookie({ email, sentAt: deps.now() }, secure(deps)));
-  return { redirect: page(lang) };
+  return { redirect: page(lang, { next }) };
 }
 
 export async function signIn(
   deps: SignInDeps,
-  input: { lang: Language; code: string; remember: boolean; pending?: Pending | undefined },
+  input: {
+    lang: Language;
+    code: string;
+    remember: boolean;
+    pending?: Pending | undefined;
+    next?: string | undefined;
+  },
 ): Promise<FormResult> {
   if (!deps.shown) return notFound;
-  const { lang, code, remember, pending } = input;
+  const { lang, code, remember, pending, next } = input;
   // The pending cookie lasts 15 minutes; past that, the address is gone.
-  if (pending?.sentAt === undefined) return { redirect: withError(lang, "start-again") };
+  if (pending?.sentAt === undefined) return { redirect: withError(lang, "start-again", next) };
   try {
     await deps.client.post("/login/sign-in", {
       ...call(deps),
       body: { email: pending.email, code, rememberMe: remember },
     });
   } catch (error) {
-    return { redirect: withError(lang, signInError(error)) };
+    return { redirect: withError(lang, signInError(error), next) };
   }
   deps.appendSetCookie(clearPendingCookie(secure(deps)));
-  return { redirect: page(lang, "?step=passkey") };
+  return { redirect: afterSignIn(lang, next, "code") };
 }
 
-export function changeAddress(deps: SignInDeps, { lang }: { lang: Language }): FormResult {
+export function changeAddress(
+  deps: SignInDeps,
+  { lang, next }: { lang: Language; next?: string | undefined },
+): FormResult {
   if (!deps.shown) return notFound;
   deps.appendSetCookie(clearPendingCookie(secure(deps)));
-  return { redirect: page(lang) };
+  return { redirect: page(lang, { next }) };
 }
 
 export async function signOut(deps: SignInDeps, { lang }: { lang: Language }): Promise<FormResult> {
