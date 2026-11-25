@@ -150,6 +150,10 @@ describe("post", () => {
       client.post("/login/code", { body: { mail: "ana@example.com" } });
       // @ts-expect-error /health has no POST.
       client.post("/health");
+      // @ts-expect-error /login/code needs its body.
+      client.post("/login/code");
+      // @ts-expect-error /login/code needs its body in the options too.
+      client.post("/login/code", {});
       // @ts-expect-error /login/sign-out takes no body.
       client.post("/login/sign-out", { body: { email: "ana@example.com" } });
     };
