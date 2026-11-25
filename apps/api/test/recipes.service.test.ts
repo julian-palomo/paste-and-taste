@@ -32,6 +32,11 @@ function memoryRepository(): RecipesRepository {
       rows.set(id, { copyOwnerId, recipe });
       return recipe;
     },
+    async remove(copyOwnerId, id) {
+      const row = rows.get(id);
+      if (!row || row.copyOwnerId !== copyOwnerId) return false;
+      return rows.delete(id);
+    },
   };
 }
 

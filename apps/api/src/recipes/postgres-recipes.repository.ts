@@ -59,5 +59,16 @@ export function createPostgresRecipesRepository(withDatabase: WithDatabase): Rec
           .returning(columns);
         return row ?? null;
       }),
+
+    // The row is removed at once, not marked: nothing about a deleted recipe
+    // is kept (docs/adr/2026-11-25-deleting-a-recipe.md).
+    remove: (copyOwnerId, id) =>
+      withDatabase(async (db) => {
+        const rows = await db
+          .delete(recipe)
+          .where(and(eq(recipe.id, id), eq(recipe.copyOwnerId, copyOwnerId)))
+          .returning({ id: recipe.id });
+        return rows.length > 0;
+      }),
   };
 }

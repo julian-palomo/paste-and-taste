@@ -208,6 +208,43 @@ describe("a user's recipes", () => {
 
     expect(response.status).toBe(400);
   });
+
+  it("deletes a recipe: 204 with no body, then it can't be opened or listed", async () => {
+    const { app, recorder } = setup();
+    const { cookie } = await signedIn(app, recorder);
+    const kept = (await (
+      await app.request("/recipes", json(tortilla, { cookie }))
+    ).json()) as Recipe;
+    const gone = (await (
+      await app.request("/recipes", json({ ...tortilla, title: "Gazpacho" }, { cookie }))
+    ).json()) as Recipe;
+
+    const deleted = await app.request(`/recipes/${gone.id}`, {
+      method: "DELETE",
+      headers: { cookie },
+    });
+
+    expect(deleted.status).toBe(204);
+    expect(await deleted.text()).toBe("");
+    const opened = await app.request(`/recipes/${gone.id}`, { headers: { cookie } });
+    expect(opened.status).toBe(404);
+    const listed = (await (await app.request("/recipes", { headers: { cookie } })).json()) as {
+      recipes: { id: string }[];
+    };
+    expect(listed.recipes.map((r) => r.id)).toEqual([kept.id]);
+  });
+
+  it("answers 400 to a delete whose id isn't a UUID", async () => {
+    const { app, recorder } = setup();
+    const { cookie } = await signedIn(app, recorder);
+
+    const response = await app.request("/recipes/not-a-uuid", {
+      method: "DELETE",
+      headers: { cookie },
+    });
+
+    expect(response.status).toBe(400);
+  });
 });
 
 describe("another user's recipe", () => {
@@ -235,6 +272,29 @@ describe("another user's recipe", () => {
     expect(answers[0]).toEqual(answers[1]);
     expect(await after.json()).toEqual(anas);
   });
+
+  it("answers the same 404 as a recipe that doesn't exist on DELETE, and isn't deleted", async () => {
+    const { app, recorder } = setup();
+    const ana = await signedIn(app, recorder);
+    const bea = await signedIn(app, recorder);
+    const anas = (await (
+      await app.request("/recipes", json(tortilla, { cookie: ana.cookie }))
+    ).json()) as Recipe;
+
+    const answers = [];
+    for (const id of [anas.id, randomUUID()]) {
+      const deleted = await app.request(`/recipes/${id}`, {
+        method: "DELETE",
+        headers: { cookie: bea.cookie },
+      });
+      answers.push([deleted.status, await deleted.json()]);
+    }
+    const after = await app.request(`/recipes/${anas.id}`, { headers: { cookie: ana.cookie } });
+
+    expect(answers[0]?.[0]).toBe(404);
+    expect(answers[0]).toEqual(answers[1]);
+    expect(await after.json()).toEqual(anas);
+  });
 });
 
 describe("the session", () => {
@@ -248,6 +308,8 @@ describe("the session", () => {
       [`/recipes/${id}`, { ...json(tortilla), method: "PUT" }],
       ["/recipes", json({ ...tortilla, steps: [] })],
       ["/recipes/not-a-uuid", { ...json({}), method: "PUT" }],
+      [`/recipes/${id}`, { method: "DELETE" }],
+      ["/recipes/not-a-uuid", { method: "DELETE" }],
     ];
 
     for (const [path, init] of requests) {
@@ -298,6 +360,7 @@ describe("where recipes exist", () => {
         ["POST", "/recipes"],
         ["GET", `/recipes/${id}`],
         ["PUT", `/recipes/${id}`],
+        ["DELETE", `/recipes/${id}`],
       ]) {
         const response = await app.request(path ?? "", { method: method ?? "GET" });
         expect(response.status, `${method} ${path}`).toBe(404);
