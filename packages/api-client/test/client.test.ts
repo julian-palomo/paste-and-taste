@@ -293,3 +293,51 @@ describe("onSetCookie", () => {
     expect(seen).toEqual([]);
   });
 });
+
+// A recipe as the API answers it, for the recording fetch to hand back.
+const recipe = {
+  id: "1b2c",
+  title: "Gazpacho",
+  language: "es",
+  servings: null,
+  time: null,
+  ingredients: [{ name: "tomate", quantity: "1", unit: "kg" }],
+  steps: ["Triturar y enfriar."],
+  source: null,
+  createdAt: "2026-11-25T10:00:00.000Z",
+  updatedAt: "2026-11-25T10:00:00.000Z",
+};
+
+describe("path parameters", () => {
+  it("are checked against the API's types", () => {
+    // Never run: typecheck fails if any of these stops being an error. Each
+    // wrong call sits beside the valid one it differs from in one thing.
+    const typesOnly = () => {
+      client.get("/recipes/{id}", { params: { id: "1b2c" } });
+      // @ts-expect-error /recipes/{id} needs its id.
+      client.get("/recipes/{id}");
+      // @ts-expect-error The id is a string.
+      client.get("/recipes/{id}", { params: { id: 1 } });
+      client.get("/health");
+      // @ts-expect-error /health has no parameters.
+      client.get("/health", { params: { id: "1b2c" } });
+    };
+    expect(typesOnly).toBeTypeOf("function");
+  });
+
+  it("are filled into the path get calls", async () => {
+    const { client: recorded, requests } = recording(() => json(recipe));
+
+    await recorded.get("/recipes/{id}", { params: { id: "1b2c" } });
+
+    expect(new URL(requests[0]?.url ?? "").pathname).toBe("/recipes/1b2c");
+  });
+
+  it("are encoded, so a / in a value stays in it", async () => {
+    const { client: recorded, requests } = recording(() => json(recipe));
+
+    await recorded.get("/recipes/{id}", { params: { id: "a/b" } });
+
+    expect(new URL(requests[0]?.url ?? "").pathname).toBe("/recipes/a%2Fb");
+  });
+});
