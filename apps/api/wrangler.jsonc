@@ -26,13 +26,13 @@
       "vars": {
         "APP_ENV": "preview"
       },
-      "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "00000000000000000000000000000000" }]
+      "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "daeae46a631b44e699cce29f60621d58" }]
     },
     "production": {
       "vars": {
         "APP_ENV": "production"
       },
-      "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "00000000000000000000000000000000" }]
+      "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "9589777ba1cb4228a700495546ad29b3" }]
     }
   }
 }
