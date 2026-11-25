@@ -63,6 +63,7 @@ is here, written down at the time instead of remembered afterwards.
 | 2026-11-25 | [A recipe's ingredients and steps as jsonb in its own row](2026-11-25-ingredients-and-steps-as-jsonb.md) |
 | 2026-11-25 | [Resend sends the sign-in code, from the app's own subdomain](2026-11-25-resend-for-the-sign-in-code.md) |
 | 2026-11-25 | [The login's expired rows are deleted once a day, by a Cron Trigger](2026-11-25-how-long-login-rows-live.md) |
+| 2026-11-25 | [Production's home is the building page, and the health moves to its own address](2026-11-25-production-home-is-the-building-page.md) |
 | 2026-11-25 | [A deleted recipe is removed at once, and the delete answers 204](2026-11-25-deleting-a-recipe.md) |
 
 ## Not decided yet

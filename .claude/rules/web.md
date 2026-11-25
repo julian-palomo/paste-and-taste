@@ -80,6 +80,15 @@ their own words. The page answers only in development, where the API mounts
 `/login` (`signInShown`), and so does every sign-in server function: each is an
 address of its own, so each checks it, and a form answers 404 elsewhere.
 
+**The home depends on the environment.** `homeOf` (`src/home/home-of.ts`)
+picks it: the API's health in development and preview, the building page in
+production, which reads no health and has no form, input or script of its own.
+The health also has its own page in every environment, `/<lang>/health`, and
+that is what the deploy's smoke reads (`scripts/check-web.ts`), whatever the
+home shows; the smoke also checks that each home answers 200 with its `lang`
+and, where indexing is blocked, `noindex`
+(`docs/adr/2026-11-25-production-home-is-the-building-page.md`).
+
 **Shared pieces live in `src/pieces/`**: the button, the text field, the
 checkbox and the card, one file each. A piece is plain React with no router
 and no server function, takes its texts as props, and is styled only from the

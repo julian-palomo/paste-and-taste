@@ -1,9 +1,11 @@
-// Checks a running web app from outside: /en and /es must answer the rendered
-// page with the API's health, and / must redirect to one of them. It reads the
-// rendered markup only, never the data Start embeds in the page for the
-// browser, which holds the same values whether or not they were rendered.
-// scripts/smoke.ts runs this file with Node directly, which strips the types:
-// its imports carry `.ts` and it uses only erasable syntax.
+// Checks a running web app from outside: each language's health page,
+// /en/health and /es/health, must answer the rendered page with the API's
+// health, which proves the web app reached its API; each language's home,
+// /en and /es, must answer 200, whatever it shows; and / must redirect to one
+// of them. It reads the rendered markup only, never the data Start embeds in
+// the page for the browser, which holds the same values whether or not they
+// were rendered. scripts/smoke.ts runs this file with Node directly, which
+// strips the types: its imports carry `.ts` and it uses only erasable syntax.
 
 type Fetch = (url: string, init?: RequestInit) => Promise<Response>;
 
@@ -23,17 +25,35 @@ export async function checkWeb(
   const base = baseUrl.replace(/\/+$/, "");
   const failures: string[] = [];
 
-  for (const lang of LANGUAGES) {
-    const path = `/${lang}`;
+  // A page that must answer 200 with its language and, where indexing is
+  // blocked, noindex. Its HTML, or undefined when it didn't answer 200.
+  async function readPage(path: string, lang: string): Promise<string | undefined> {
     const response = await fetchFn(`${base}${path}`, { redirect: "manual" });
     const html = await response.text();
     if (response.status !== 200) {
       failures.push(`${path} answered ${response.status}; expected 200`);
-      continue;
+      return undefined;
     }
     if (!html.includes(`<html lang="${lang}"`)) {
       failures.push(`${path} has no <html lang="${lang}">`);
     }
+    if (
+      NOINDEX_ENVIRONMENTS.includes(environment) &&
+      !(response.headers.get("x-robots-tag") ?? "").includes("noindex")
+    ) {
+      failures.push(`${path} has no X-Robots-Tag: noindex`);
+    }
+    return html;
+  }
+
+  for (const lang of LANGUAGES) {
+    // The home: the health in development and preview, the building page in
+    // production. Only that it answers is checked here.
+    await readPage(`/${lang}`, lang);
+
+    const path = `/${lang}/health`;
+    const html = await readPage(path, lang);
+    if (html === undefined) continue;
     const values = [...html.matchAll(/<dd>([^<]*)<\/dd>/g)].map((match) => match[1]);
     if (values[0] !== "ok") {
       const alert = /<p role="alert">([^<]*)<\/p>/.exec(html)?.[1];
@@ -45,12 +65,6 @@ export async function checkWeb(
         `${path} shows the environment ${JSON.stringify(values[1])}; ` +
           `expected ${JSON.stringify(environment)}`,
       );
-    }
-    if (
-      NOINDEX_ENVIRONMENTS.includes(environment) &&
-      !(response.headers.get("x-robots-tag") ?? "").includes("noindex")
-    ) {
-      failures.push(`${path} has no X-Robots-Tag: noindex`);
     }
   }
 
