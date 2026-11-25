@@ -7,6 +7,7 @@
     "extract-check": "node src/extract-check.ts",
     "marks": "node src/marks.ts",
     "measure": "node src/measure.ts",
+    "media-worker:bundle": "wrangler deploy --dry-run --config wrangler.media.jsonc",
     "recipe": "node src/recipe.ts",
     "typecheck": "tsc --noEmit",
     "worker:bundle": "wrangler deploy --dry-run"

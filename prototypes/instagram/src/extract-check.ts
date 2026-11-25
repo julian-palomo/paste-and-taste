@@ -1,13 +1,18 @@
 // Usage: pnpm -C prototypes/instagram extract-check <absolute path to the sample>
 //          --out <absolute folder outside the repo> [--budget 5]
+//          [--post <number> --media-worker <scratch Worker address>]
 // For each post with a video address: the embed view, a HEAD and a 1 KB range
 // request on the video address, and the download, one request at a time with
 // a pause between; then Whisper on Workers AI with the MP4 as it is, with no
 // audio extracted. It prints statuses, whether headers came, sizes, times and
 // costs, never the transcript. The video lives in a temporary folder removed
 // after each post; Whisper's cost goes to --out/ledger.json, within --budget.
+// With --post and --media-worker it only reads that post and downloads its
+// video, then POSTs it to the scratch Worker that tries Media Transformations'
+// binding; RUN_TOKEN must hold the Worker's token.
 
 import { appendFileSync, mkdirSync } from "node:fs";
+import { readFile } from "node:fs/promises";
 import { isAbsolute, join } from "node:path";
 import { parseArgs } from "node:util";
 import { type Transcript, transcribe, transcribeEstimateUsd } from "./candidates/speech.ts";
@@ -25,7 +30,10 @@ import type { Post } from "./types.ts";
 const PAUSE_MS = 5000;
 
 const USAGE =
-  "Usage: pnpm -C prototypes/instagram extract-check <absolute path to the sample> --out <absolute folder outside the repo> [--budget 5]";
+  "Usage: pnpm -C prototypes/instagram extract-check <absolute path to the sample> --out <absolute folder outside the repo> [--budget 5] [--post <number> --media-worker <address>]";
+
+/** The scratch Worker asks for at most this much audio: the documented default stops at 60 s. */
+const MAX_MEDIA_SECONDS = 60;
 
 function fail(message: string): never {
   console.error(message);
@@ -37,6 +45,8 @@ const { values, positionals } = parseArgs({
   options: {
     out: { type: "string" },
     budget: { type: "string", default: "5" },
+    post: { type: "string" },
+    "media-worker": { type: "string" },
   },
 });
 const [samplePath, ...extra] = positionals;
@@ -44,6 +54,16 @@ if (!samplePath || !isAbsolute(samplePath) || extra.length > 0) fail(USAGE);
 if (!values.out || !isAbsolute(values.out) || insideRepo(values.out)) fail(USAGE);
 const budget = Number(values.budget);
 if (!(budget > 0)) fail("--budget must be a positive number of USD");
+const mediaWorker = values["media-worker"];
+const onePost = values.post === undefined ? null : Number(values.post);
+if ((mediaWorker === undefined) !== (onePost === null)) {
+  fail("--post and --media-worker go together");
+}
+if (onePost !== null && !(Number.isInteger(onePost) && onePost > 0))
+  fail("--post must be a line number");
+const token = process.env.RUN_TOKEN;
+if (mediaWorker !== undefined && !token)
+  fail("--media-worker needs RUN_TOKEN set to the Worker's token");
 
 let posts: Post[];
 try {
@@ -92,6 +112,49 @@ type Row = {
   seconds: number;
   whisper: Transcript | null;
 };
+
+/** Sends one post's video to the scratch Worker and prints what the binding gave back. */
+async function tryMediaWorker(address: string, number: number): Promise<void> {
+  const post = posts.find((candidate) => candidate.number === number);
+  const link = post ? parsePostLink(post.url) : null;
+  if (!link) fail(`post ${number} is not in the sample`);
+  const read = await readPost(link);
+  if (!read.ok || !read.content.video) fail(`post ${number} gave no video address`);
+  const video = read.content.video;
+  await pause();
+  await withTempDir(async (dir) => {
+    const path = join(dir, "video.mp4");
+    await download(video, path);
+    const seconds = await durationSeconds(path);
+    if (seconds > MAX_MEDIA_SECONDS) {
+      fail(
+        `post ${number} is ${Math.round(seconds)} s; pick one of ${MAX_MEDIA_SECONDS} s or less`,
+      );
+    }
+    const started = Date.now();
+    const response = await fetch(new URL("/extract", address), {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${token}`,
+        "content-type": "video/mp4",
+        "x-video-seconds": String(seconds),
+      },
+      body: await readFile(path),
+    });
+    const ms = Date.now() - started;
+    print(`post ${String(number).padStart(2, "0")}  ${Math.round(seconds)} s`);
+    print(`Worker answered ${response.status} in ${(ms / 1000).toFixed(1)} s`);
+    // The answer holds types, sizes, times and errors, never media.
+    print(await response.text());
+  });
+}
+
+if (mediaWorker !== undefined && onePost !== null) {
+  print(`Date: ${new Date().toISOString()}`);
+  print("Place: this machine, through the scratch Worker on Cloudflare's network");
+  await tryMediaWorker(mediaWorker, onePost);
+  process.exit(0);
+}
 
 const rows: Row[] = [];
 const spentBefore = ledger.totalUsd;

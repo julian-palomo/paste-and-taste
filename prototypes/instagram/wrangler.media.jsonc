@@ -1,0 +1,13 @@
+// The scratch Worker that tries Media Transformations' binding. No account ID,
+// token or secret here: the owner deploys it for one run, sets RUN_TOKEN as a
+// secret, and deletes it afterwards.
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "paste-and-taste-media-spike",
+  "main": "src/media-worker.ts",
+  "compatibility_date": "2026-11-15",
+  "workers_dev": true,
+  "media": {
+    "binding": "MEDIA"
+  }
+}

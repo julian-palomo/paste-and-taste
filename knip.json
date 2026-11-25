@@ -1,0 +1,7 @@
+{
+  "workspaces": {
+    "prototypes/instagram": {
+      "entry": ["src/media-worker.ts"]
+    }
+  }
+}
