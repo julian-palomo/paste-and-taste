@@ -10,8 +10,9 @@ Each part says what is **decided** (the owner chose it), what is **proposed**
 (drawn or written by the design session, shown to the owner and not objected
 to, or not yet shown) and what is **open**. The web app's tokens
 (`apps/web/src/styles/tokens.css`) hold the colours of section 3, light and
-dark, the two typefaces and the pill shape; the drawings, the motion and the
-screens come with their issues.
+dark, the two typefaces and the pill shape, and the sizes and motion of the
+first interface pieces (sections 5 and 7); the drawings, the rest of the
+motion and the screens come with their issues.
 
 ## 1. Character
 
@@ -111,7 +112,8 @@ asks for dark (`prefers-color-scheme`).
   and **Nunito Sans** for text (400, 600, 700). Nunito, with its rounded
   stroke ends, was the first choice for titles and read as childish.
 - As drawn on the mock-ups, at phone width: page title 34px, section title
-  20px, text 17px, secondary text 15px, navigation labels 13px.
+  20px, text 17px, secondary text 15px, navigation labels 13px. The web app's
+  tokens hold the text and secondary sizes, which the interface pieces use.
 - **Decided:** both are served by the app itself, from the Latin files of the
   Fontsource variable packages, and drawn only if they are ready for the
   first paint, so the text never changes once shown
@@ -121,11 +123,19 @@ asks for dark (`prefers-color-scheme`).
 
 - **Decided:** buttons, inputs, tags and filters are pills.
 - **Proposed:** cards with a 28px radius, rows with 22px, controls 54px tall,
-  and no shadows beyond a 2px line under a card.
-- **Proposed:** every touch target is at least 44px. WCAG 2.2's minimum is
-  24px; Apple's and Google's guides ask for about 44 and 48, to be checked
-  against them when the control heights are set. On the built page today the
-  pill button is 40px high.
+  and no shadows beyond a 2px line under a card. The web app's button, text
+  field and card are built with these values; rows are not built yet.
+- **Decided** on 25 November 2026: every touch target is at least 48px.
+  WCAG 2.2's minimum is 24px. Apple gives iOS a default control size of
+  44x44 pt ([Human Interface Guidelines, Accessibility](https://developer.apple.com/design/human-interface-guidelines/accessibility)),
+  and Google asks for at least 48dp ([Android Accessibility Help, "Touch target size"](https://support.google.com/accessibility/android/answer/7101858));
+  48 meets both. Measured in Chrome at 390px, a button and a text field are
+  54px high and a checkbox's row, its touch target, 48px. The error page's
+  retry link doesn't use the pieces yet.
+- **Proposed:** a checkbox is a rounded square with a 6px radius, not a
+  pill, since a round box reads as a radio button.
+- **Proposed:** a disabled control is told by its shape, not only its colour:
+  its fill goes and a dashed outline takes its place.
 
 ## 6. Drawings
 
@@ -192,6 +202,9 @@ The rule (proposed, and the owner liked what it produced):
   beat. The ones shown to the owner: hanging utensils swing when the page
   loads, a drawing hops under the pointer, rating spoons arrive one by one, a
   checkbox bounces and draws its tick, a heart beats when a recipe is saved.
+- Built so far: the checkbox's bounce (0.32 seconds, with a slight overshoot)
+  and the drawing of its tick (0.2 seconds); with reduced motion the tick
+  appears drawn, without moving.
 - Entrances are staggered. Big animations are only for waits and for entering
   a page.
 - With `prefers-reduced-motion: reduce` nothing decorative moves.

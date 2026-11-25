@@ -24,8 +24,10 @@ languages ([the record](docs/adr/2026-11-23-tailwind-and-css-motion.md)). The ap
 written down in [`DESIGN.md`](DESIGN.md), with its reference drawings in
 [`docs/design/`](docs/design); the tokens have its colours, light and dark,
 and its two typefaces, served by the app
-([the record](docs/adr/2026-11-24-fonts-from-the-app-and-dark-mode-from-the-device.md)), and no screen
-is built yet. The same pipeline deploys it after the API, to a
+([the record](docs/adr/2026-11-24-fonts-from-the-app-and-dark-mode-from-the-device.md)). The first
+pieces the screens will be built from, a button, a text field, a checkbox
+and a card, are built, with a page that shows them in development and
+preview; no screen is built yet. The same pipeline deploys it after the API, to a
 preview and a production Worker, each checked after its deploy; its server
 reaches that environment's API through a Service binding
 ([the record](docs/adr/2026-11-23-how-the-web-app-deploys.md)). Neither is

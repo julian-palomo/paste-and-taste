@@ -13,20 +13,35 @@ class FakeBinding {
 
 describe("parseConfig", () => {
   it("reads the API's address", () => {
-    expect(parseConfig({ API_URL: "http://localhost:8787", INDEXING: "allowed" })).toEqual({
+    expect(
+      parseConfig({
+        API_URL: "http://localhost:8787",
+        INDEXING: "allowed",
+        APP_ENV: "development",
+      }),
+    ).toEqual({
       api: { baseUrl: "http://localhost:8787" },
       indexing: "allowed",
+      environment: "development",
     });
-    expect(parseConfig({ API_URL: "https://api.example.com", INDEXING: "allowed" })).toEqual({
+    expect(
+      parseConfig({
+        API_URL: "https://api.example.com",
+        INDEXING: "allowed",
+        APP_ENV: "development",
+      }),
+    ).toEqual({
       api: { baseUrl: "https://api.example.com" },
       indexing: "allowed",
+      environment: "development",
     });
   });
 
   it("reaches the API through its binding, called on the binding", async () => {
-    const config = parseConfig({ API: new FakeBinding(), INDEXING: "blocked" });
+    const config = parseConfig({ API: new FakeBinding(), INDEXING: "blocked", APP_ENV: "preview" });
 
     expect(config.indexing).toBe("blocked");
+    expect(config.environment).toBe("preview");
     expect(config.api.fetch).toBeTypeOf("function");
     const response = await config.api.fetch?.(new Request(`${config.api.baseUrl}/health`));
     expect(await response?.text()).toBe("from the binding: /health");
@@ -58,9 +73,23 @@ describe("parseConfig", () => {
   });
 
   it.each([
-    ["missing", { API_URL: "http://localhost:8787" }],
-    ["unknown", { API_URL: "http://localhost:8787", INDEXING: "maybe" }],
+    ["missing", { API_URL: "http://localhost:8787", APP_ENV: "development" }],
+    ["unknown", { API_URL: "http://localhost:8787", INDEXING: "maybe", APP_ENV: "development" }],
   ])("rejects an INDEXING that is %s, naming the variable", (_, variables) => {
     expect(() => parseConfig(variables)).toThrow(/INDEXING/);
+  });
+
+  it.each(["development", "preview", "production"])("reads the environment %s", (environment) => {
+    expect(
+      parseConfig({ API_URL: "http://localhost:8787", INDEXING: "allowed", APP_ENV: environment })
+        .environment,
+    ).toBe(environment);
+  });
+
+  it.each([
+    ["missing", { API_URL: "http://localhost:8787", INDEXING: "allowed" }],
+    ["unknown", { API_URL: "http://localhost:8787", INDEXING: "allowed", APP_ENV: "staging" }],
+  ])("rejects an APP_ENV that is %s, naming the variable", (_, variables) => {
+    expect(() => parseConfig(variables)).toThrow(/APP_ENV/);
   });
 });

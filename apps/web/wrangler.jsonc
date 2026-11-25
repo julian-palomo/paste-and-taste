@@ -13,7 +13,8 @@
   // `pnpm -C apps/api dev`'s address, over HTTP.
   "vars": {
     "API_URL": "http://localhost:8787",
-    "INDEXING": "allowed"
+    "INDEXING": "allowed",
+    "APP_ENV": "development"
   },
   // An environment is chosen at build time, with CLOUDFLARE_ENV, and doesn't
   // inherit vars or services: each one sets every value again. Deployed, the
@@ -23,7 +24,8 @@
   "env": {
     "preview": {
       "vars": {
-        "INDEXING": "blocked"
+        "INDEXING": "blocked",
+        "APP_ENV": "preview"
       },
       "services": [{ "binding": "API", "service": "paste-and-taste-api-preview" }]
     },
@@ -31,7 +33,8 @@
       // Blocked until the app has a domain of its own: see
       // docs/adr/2026-11-23-how-the-web-app-deploys.md.
       "vars": {
-        "INDEXING": "blocked"
+        "INDEXING": "blocked",
+        "APP_ENV": "production"
       },
       "services": [{ "binding": "API", "service": "paste-and-taste-api-production" }]
     }

@@ -65,9 +65,12 @@ needs, and a phase gets its issues when it is next.
    the API, to preview and production. Since #50 it has the base the first
    screen is built on: Tailwind CSS from one tokens file, a layout every page
    shares, and its own error and not-found pages. Since #54 the tokens hold the
-   look's colours, light and dark, and its two typefaces. #73 is the API's
-   half: a user's recipes in Postgres, listed, opened, added and edited
-   through the API, in development, with the first service and repository
+   look's colours, light and dark, and its two typefaces. Since #74 it has the
+   first pieces its screens are built from, a button, a text field, a
+   checkbox and a card, and a page that shows them in development and
+   preview. #73 is the API's half: a user's recipes in Postgres, listed,
+   opened, added and edited through the API, in development, with the first
+   service and repository
    ([the record](adr/2026-11-25-ingredients-and-steps-as-jsonb.md)). The
    screen that lists, opens and edits a recipe is next.
 5. **The real import.** Workflows in the background and the limit per user.
