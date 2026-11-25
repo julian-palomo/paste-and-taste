@@ -62,6 +62,7 @@ is here, written down at the time instead of remembered afterwards.
 | 2026-11-25 | [The deployed Workers' logs are kept in Workers Logs, with a line per request only in preview](2026-11-25-logs-in-workers-logs.md) |
 | 2026-11-25 | [A recipe's ingredients and steps as jsonb in its own row](2026-11-25-ingredients-and-steps-as-jsonb.md) |
 | 2026-11-25 | [Resend sends the sign-in code, from the app's own subdomain](2026-11-25-resend-for-the-sign-in-code.md) |
+| 2026-11-25 | [The login's expired rows are deleted once a day, by a Cron Trigger](2026-11-25-how-long-login-rows-live.md) |
 
 ## Not decided yet
 
