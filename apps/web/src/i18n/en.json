@@ -78,5 +78,10 @@
   "signInErrorStartAgain": "Too much time has passed. Write your email and we'll send you a new code.",
   "signInErrorPasskeyFailed": "The passkey couldn't be used. Try again, or sign in with a code.",
   "signInErrorPasskeyNotCreated": "The passkey couldn't be created. Try again, or do it later.",
-  "signInErrorCodeNotSent": "We couldn't send the code. Try again in a moment."
+  "signInErrorCodeNotSent": "We couldn't send the code. Try again in a moment.",
+  "buildingTitle": "Paste & Taste: being built",
+  "buildingDescription": "Keep the recipes you find on Instagram, YouTube or any web page in your recipe book.",
+  "buildingHeading": "We're building Paste & Taste",
+  "buildingAbout": "An app that keeps the recipes you find on Instagram, YouTube or any web page in your recipe book, ready to edit and cook from.",
+  "buildingNotOpen": "It isn't open yet. Come back later."
 }

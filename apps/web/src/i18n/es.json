@@ -78,5 +78,10 @@
   "signInErrorStartAgain": "Ha pasado demasiado tiempo. Escribe tu correo y te enviamos un código nuevo.",
   "signInErrorPasskeyFailed": "No se ha podido usar la llave de acceso. Vuelve a probar o entra con un código.",
   "signInErrorPasskeyNotCreated": "No se ha podido crear la llave de acceso. Vuelve a probar o hazlo más tarde.",
-  "signInErrorCodeNotSent": "No hemos podido enviar el código. Vuelve a probar en un momento."
+  "signInErrorCodeNotSent": "No hemos podido enviar el código. Vuelve a probar en un momento.",
+  "buildingTitle": "Paste & Taste: en construcción",
+  "buildingDescription": "Guarda en tu recetario las recetas que encuentras en Instagram, YouTube o cualquier web.",
+  "buildingHeading": "Estamos construyendo Paste & Taste",
+  "buildingAbout": "Una app para guardar en tu recetario las recetas que encuentras en Instagram, YouTube o cualquier web, y tenerlas a mano para editarlas y cocinar con ellas.",
+  "buildingNotOpen": "Todavía no está abierta. Vuelve más adelante."
 }
