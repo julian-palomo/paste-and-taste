@@ -1,0 +1,10 @@
+{
+  "extends": "@paste-and-taste/tsconfig/base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "types": ["node"],
+    "erasableSyntaxOnly": true
+  },
+  "include": ["src"]
+}

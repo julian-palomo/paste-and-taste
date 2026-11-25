@@ -1,0 +1,18 @@
+// The spike's Worker. No account ID, token, secret or Hyperdrive id here: the
+// owner copies this file to wrangler.deploy.jsonc, which git ignores, puts the
+// two Hyperdrive ids in the copy, and deploys from it. The placeholder ids
+// only let `wrangler dev` and the dry-run bundle start.
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "paste-and-taste-login-spike",
+  "main": "src/worker.ts",
+  // From 2026-08-04 Node.js compatibility is on by default, so no flag.
+  "compatibility_date": "2026-11-15",
+  "workers_dev": true,
+  // Every invocation logged, so the Query Builder reads each request's CPU time.
+  "observability": { "enabled": true, "head_sampling_rate": 1 },
+  "hyperdrive": [
+    { "binding": "HYPERDRIVE_NEON", "id": "00000000000000000000000000000000" },
+    { "binding": "HYPERDRIVE_PLANETSCALE", "id": "00000000000000000000000000000000" }
+  ]
+}

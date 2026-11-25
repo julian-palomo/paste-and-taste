@@ -1,0 +1,28 @@
+{
+  "name": "@paste-and-taste/login-prototype",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "generate": "drizzle-kit generate",
+    "measure": "node src/measure.ts",
+    "migrate": "drizzle-kit migrate",
+    "typecheck": "tsc --noEmit",
+    "worker:bundle": "wrangler deploy --dry-run"
+  },
+  "dependencies": {
+    "@better-auth/drizzle-adapter": "catalog:",
+    "@better-auth/passkey": "catalog:",
+    "better-auth": "catalog:",
+    "drizzle-orm": "catalog:",
+    "pg": "catalog:"
+  },
+  "devDependencies": {
+    "@paste-and-taste/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
+    "@types/pg": "catalog:",
+    "drizzle-kit": "catalog:",
+    "typescript": "catalog:",
+    "wrangler": "catalog:"
+  }
+}

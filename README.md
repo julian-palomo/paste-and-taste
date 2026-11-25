@@ -43,6 +43,18 @@ recipe; the figures are in
 How a post is read and the AI provider are proposed in
 [`docs/adr/`](docs/adr/README.md) and not decided.
 
+The login prototype, throwaway code in
+[`prototypes/login`](prototypes/login), measured login with Better Auth on a
+Worker on the free plan, with its users in Postgres reached through
+Hyperdrive, on Neon and on PlanetScale; the figures are in
+[`docs/research/login-on-workers.md`](docs/research/login-on-workers.md), and
+the database host is proposed in
+[`docs/adr/`](docs/adr/2026-11-25-database-host-and-drizzle.md) and not
+decided. It also measured login without a password, by a code sent by email
+and by passkey; those figures are in
+[`docs/research/passwordless-login.md`](docs/research/passwordless-login.md),
+and how users sign in is not decided either.
+
 [`docs/product.md`](docs/product.md) says what the app must do, and
 [`docs/roadmap.md`](docs/roadmap.md) in what order it is being built.
 
