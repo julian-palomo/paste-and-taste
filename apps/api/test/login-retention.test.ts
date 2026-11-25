@@ -1,10 +1,12 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Client } from "pg";
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { createScheduledWork, noDatabase } from "../src/app.ts";
 import type { Database } from "../src/database/database.ts";
 import { requestLimit, session, user, verification } from "../src/database/schema.ts";
 import { deleteExpiredLoginRows } from "../src/login/expired-rows.repository.ts";
 import { countRequest } from "../src/login/request-limit.repository.ts";
+import { LOGIN_SETTINGS } from "./login-helpers.ts";
 import { startTestPostgres, type TestPostgres } from "./postgres.ts";
 
 const MINUTE = 60 * 1000;
@@ -38,6 +40,7 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await client.end();
+  vi.restoreAllMocks();
 });
 
 async function addSession(id: string, expiresAt: Date) {
@@ -112,4 +115,41 @@ describe("deleting the login's expired rows", () => {
     expect((await ids()).limits).toEqual(["code:email:ana@example.com"]);
     expect(await countRequest(db, "code:email:ana@example.com", 15 * MINUTE, NOW)).toBe(1);
   });
+});
+
+// What the Worker's scheduled handler runs: worker.ts calls it in one line.
+describe("the daily scheduled run", () => {
+  it("deletes the expired rows where the login runs, logging counts only", async () => {
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    await addSession("expired", ago(1000));
+    await addCode("expired", ago(1000));
+    await addLimit("code:email:ana@example.com", ago(HOUR));
+    await addLimit("code:ip:203.0.113.7", ago(HOUR));
+
+    await createScheduledWork(
+      { APP_ENV: "development", ...LOGIN_SETTINGS },
+      { connectionString: () => postgres.connectionString },
+    )(NOW);
+
+    expect(await ids()).toEqual({ sessions: [], codes: [], limits: [] });
+    const logged = log.mock.calls.map((call) => call.map(String).join(" ")).join("\n");
+    expect(logged).toContain("request limits 2, codes 1, sessions 1");
+    for (const secret of ["ana@example.com", "203.0.113.7", "482913", "token-expired"]) {
+      expect(logged).not.toContain(secret);
+    }
+  });
+
+  it.each(["preview", "production"] as const)(
+    "touches no database in %s, where the login isn't mounted",
+    async (env) => {
+      const log = vi.spyOn(console, "log").mockImplementation(() => {});
+      const error = vi.spyOn(console, "error").mockImplementation(() => {});
+
+      // noDatabase throws if anything connects.
+      await createScheduledWork({ APP_ENV: env }, noDatabase)(NOW);
+
+      expect(log).not.toHaveBeenCalled();
+      expect(error).not.toHaveBeenCalled();
+    },
+  );
 });

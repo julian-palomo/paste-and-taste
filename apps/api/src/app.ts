@@ -1,9 +1,11 @@
 import { OpenAPIHono } from "@hono/zod-openapi";
-import { parseConfig } from "./config/config.schema.ts";
+import { type AppConfig, parseConfig } from "./config/config.schema.ts";
 import { type DatabaseSource, type WithDatabase, withDatabase } from "./database/database.ts";
+import { loggableError } from "./errors/loggable-error.ts";
 import { notFound, onError } from "./errors/problem-details.ts";
 import { healthRoutes } from "./health/health.routes.ts";
 import { type CodeSender, chooseCodeSender } from "./login/code-sender.ts";
+import { deleteExpiredLoginRows } from "./login/expired-rows.repository.ts";
 import { loginRoutes } from "./login/login.routes.ts";
 import { createRequestLimiter } from "./login/request-limiter.ts";
 import { createSessionReader } from "./login/session-reader.ts";
@@ -37,9 +39,8 @@ export function createApp(
   const app = new OpenAPIHono();
   app.route("/health", healthRoutes({ config }));
   app.route("/wake", wakeRoutes({ withDatabase: withThisDatabase }));
-  // Login runs only in development until the issue that deploys it; in
-  // preview and production /login/* and /recipes/* are the usual 404.
-  if (config.APP_ENV === "development") {
+  // In preview and production /login/* and /recipes/* are the usual 404.
+  if (loginIsMounted(config)) {
     const withAuth = createWithAuth({
       withDatabase: withThisDatabase,
       settings: {
@@ -69,4 +70,36 @@ export function createApp(
   app.notFound(notFound);
   app.onError(onError);
   return app;
+}
+
+// Login runs only in development until the issue that deploys it. The routes
+// and the scheduled run both ask here, so they can't drift apart.
+function loginIsMounted(config: AppConfig): boolean {
+  return config.APP_ENV === "development";
+}
+
+// What the Worker's daily Cron Trigger runs: deletes the login's expired rows
+// (docs/adr/2026-11-25-how-long-login-rows-live.md). Where the login isn't
+// mounted it returns at once, without opening a database client, so the cron
+// never wakes a database whose tables may not exist.
+export function createScheduledWork(
+  variables: unknown,
+  database: DatabaseSource,
+): (now?: Date) => Promise<void> {
+  const config = parseConfig(variables);
+  if (!loginIsMounted(config)) return async () => {};
+
+  return async (now = new Date()) => {
+    try {
+      const deleted = await withDatabase(database, (db) => deleteExpiredLoginRows(db, now));
+      // Counts only: never a key, an address, a code or a token.
+      console.log(
+        `Deleted expired login rows: request limits ${deleted.requestLimits}, codes ${deleted.codes}, sessions ${deleted.sessions}`,
+      );
+    } catch (error) {
+      console.error(`Deleting expired login rows failed: ${loggableError(error)}`);
+      // Rethrown, so Cloudflare records the run as failed.
+      throw error;
+    }
+  };
 }
