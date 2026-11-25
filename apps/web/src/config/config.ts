@@ -6,7 +6,13 @@ export type WebConfig = {
   api: { baseUrl: string; fetch?: (request: Request) => Promise<Response> };
   // "blocked" asks search engines not to index any page.
   indexing: "allowed" | "blocked";
+  // Where this Worker runs. Preview and production both block indexing, so
+  // this, not `indexing`, is what tells them apart.
+  environment: Environment;
 };
+
+const environments = ["development", "preview", "production"] as const;
+type Environment = (typeof environments)[number];
 
 class ConfigError extends Error {
   override name = "ConfigError";
@@ -21,11 +27,15 @@ type Binding = { fetch: (request: Request) => Promise<Response> };
 // `unknown`, not a Record: the Workers env is the interface Cloudflare.Env,
 // which TypeScript won't assign to an index-signature type.
 export function parseConfig(variables: unknown): WebConfig {
-  const { API, API_URL, INDEXING } =
+  const { API, API_URL, INDEXING, APP_ENV } =
     typeof variables === "object" && variables !== null
-      ? (variables as { API?: unknown; API_URL?: unknown; INDEXING?: unknown })
+      ? (variables as { API?: unknown; API_URL?: unknown; INDEXING?: unknown; APP_ENV?: unknown })
       : {};
-  return { api: parseApi(API, API_URL), indexing: parseIndexing(INDEXING) };
+  return {
+    api: parseApi(API, API_URL),
+    indexing: parseIndexing(INDEXING),
+    environment: parseEnvironment(APP_ENV),
+  };
 }
 
 // The API is reached either through the Service binding API (deployed) or at
@@ -66,4 +76,10 @@ function isBinding(value: unknown): value is Binding {
 function parseIndexing(value: unknown): WebConfig["indexing"] {
   if (value === "allowed" || value === "blocked") return value;
   throw new ConfigError('INDEXING: must be "allowed" or "blocked".');
+}
+
+function parseEnvironment(value: unknown): Environment {
+  const environment = environments.find((name) => name === value);
+  if (environment) return environment;
+  throw new ConfigError('APP_ENV: must be "development", "preview" or "production".');
 }
