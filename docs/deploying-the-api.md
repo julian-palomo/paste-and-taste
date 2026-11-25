@@ -85,6 +85,14 @@ says Write.
 If `wrangler deploy` fails on a permission, its error names the one it
 lacks: add that row to the token and re-run the job.
 
+Both Workers' configs turn on Workers Logs (`observability`), and the token
+has no Workers Observability row. [Cloudflare's roles page](https://developers.cloudflare.com/workers/authorization/workers/)
+maps Workers Scripts Edit to a role that covers observability, so the token
+is expected to be enough; the first deploy with the setting shows it. If it
+fails naming that permission, add Workers Observability, at Edit, to the
+account policy and re-run the job. Preview deploys first, so production is
+untouched until then.
+
 The API has a Hyperdrive binding. [Cloudflare's roles page](https://developers.cloudflare.com/workers/authorization/workers/)
 says a Worker with bindings to KV, R2 or D1 deploys with no permission on
 those resources, and names no exception; whether that holds for Hyperdrive
@@ -276,6 +284,31 @@ The **Actions** tab, workflow **Deploy**. A run's graph has five boxes:
 Runs never overlap. While one runs, the next waits; a third push while one
 waits replaces the waiting run, which never started. A run in progress is
 never cancelled.
+
+## Reading the logs
+
+Each deployed Worker keeps what it logs in Workers Logs, set by the
+`observability` block in its `wrangler.jsonc`
+([why](adr/2026-11-25-logs-in-workers-logs.md)). In the Cloudflare dashboard:
+**Workers & Pages**, select the Worker, then **Observability**
+([Cloudflare's page](https://developers.cloudflare.com/workers/observability/logs/workers-logs/#view-logs-from-the-dashboard)).
+
+- **What is kept.** Production keeps only the lines our code logs. In the
+  API: an unexpected error, with the request's method and path, and a
+  database that timed out or couldn't be reached. In the web app: a page that
+  failed to load, and a failed wake. Preview also keeps a line per request,
+  with the request and the response, which is where a slow or failed request
+  in a run can be read. Our code never logs an email address, a sign-in code,
+  a cookie or a session token.
+- **How long, and how much.** Until 30 November 2026, on Workers Free,
+  200,000 lines a day, each kept 3 days. From 1 December 2026 the account's
+  Free allowance is 0.5 GB a day of logs and traces together, each kept seven
+  days. Once the day's allowance is used, nothing more is kept until 00:00 UTC
+  ([Cloudflare's pricing](https://developers.cloudflare.com/observability/pricing/)).
+  Both can change: check the pages before relying on them.
+
+Logs aren't read live here: for that, `wrangler tail` still works, run by the
+owner.
 
 ## When the smoke fails
 

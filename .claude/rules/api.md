@@ -89,6 +89,14 @@ set, such as a renewed session's cookie, go out with the error too.
 A module never sets `onError` or `notFound`: Hono calls `notFound` only on the
 root app, and a sub-app's `onError` would bypass the conversion.
 
+**Logs.** Deployed, everything the API logs is kept in Workers Logs
+(`docs/adr/2026-11-25-logs-in-workers-logs.md`), so nothing our code logs
+holds an email address, a sign-in code, a cookie or a session token, and an
+unexpected error is logged only through `loggableError`
+(`src/errors/loggable-error.ts`). The one exception is the development code
+sender, `src/login/code-sender.ts`, which prints the code to the local
+terminal where login runs, never to a deployed Worker.
+
 **Only the entry knows about Workers.** `src/worker.ts` is the only file that
 imports from `cloudflare:*`. Everything else runs on Node, which is what lets
 the tests build the real application without the Workers runtime. A binding

@@ -74,6 +74,10 @@ binding's `fetch` detached from it. A call catches `ApiError` and `ApiUnreachabl
 them into states the view shows, with text from the translation files. Never
 an error's own message, and never a stack trace.
 
+**Logs.** Deployed, everything the web app's server logs is kept in Workers
+Logs (`docs/adr/2026-11-25-logs-in-workers-logs.md`), so nothing our code logs
+holds an email address, a sign-in code, a cookie or a session token.
+
 **A page load wakes the database.** `src/server.ts` wraps Start's handler in
 `withWake` (`src/wake/wake.ts`): a `GET` that asks for HTML and isn't under
 `/_serverFn` sends the API's `GET /wake` beside the page, kept alive with the

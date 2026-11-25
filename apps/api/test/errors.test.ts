@@ -57,7 +57,22 @@ it("answers an unexpected error with a 500 problem that hides it, and logs it", 
   });
   expect(text).not.toContain(INTERNAL_MESSAGE);
   expect(text).not.toMatch(/\bat \S+:\d+/);
-  expect(log).toHaveBeenCalledWith(expect.objectContaining({ message: INTERNAL_MESSAGE }));
+  expect(log).toHaveBeenCalledWith(expect.stringContaining(INTERNAL_MESSAGE));
+});
+
+it("logs an unexpected error with the request's method and path, and nothing else from it", async () => {
+  const log = vi.spyOn(console, "error").mockImplementation(() => {});
+
+  await app.request("/broken?email=someone%40example.com", {
+    headers: { cookie: "session_token=secret-session-value" },
+  });
+
+  expect(log).toHaveBeenCalledOnce();
+  const line = String(log.mock.calls[0]?.[0]);
+  expect(line).toContain("GET /broken");
+  expect(line).toContain(INTERNAL_MESSAGE);
+  expect(line).not.toContain("secret-session-value");
+  expect(line).not.toContain("someone");
 });
 
 it("answers a named error with its own problem", async () => {
