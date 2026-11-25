@@ -6,6 +6,7 @@ import { healthRoutes } from "./health/health.routes.ts";
 import { type CodeSender, consoleCodeSender } from "./login/code-sender.ts";
 import { loginRoutes } from "./login/login.routes.ts";
 import { createRequestLimiter } from "./login/request-limiter.ts";
+import { createWithAuth } from "./login/with-auth.ts";
 import { wakeRoutes } from "./wake/wake.routes.ts";
 
 // The only path other workspaces import (package.json, "./app"), so what
@@ -35,19 +36,16 @@ export function createApp(
   // Login runs only in development until the issue that deploys it; in
   // preview and production /login/* is the usual 404.
   if (config.APP_ENV === "development") {
-    app.route(
-      "/login",
-      loginRoutes({
-        withDatabase: withThisDatabase,
-        codeSender: options.codeSender ?? consoleCodeSender,
-        requestLimiter: createRequestLimiter(),
-        settings: {
-          secret: config.BETTER_AUTH_SECRET,
-          passkeyRpId: config.PASSKEY_RP_ID,
-          passkeyOrigin: config.PASSKEY_ORIGIN,
-        },
-      }),
-    );
+    const withAuth = createWithAuth({
+      withDatabase: withThisDatabase,
+      codeSender: options.codeSender ?? consoleCodeSender,
+      settings: {
+        secret: config.BETTER_AUTH_SECRET,
+        passkeyRpId: config.PASSKEY_RP_ID,
+        passkeyOrigin: config.PASSKEY_ORIGIN,
+      },
+    });
+    app.route("/login", loginRoutes({ withAuth, requestLimiter: createRequestLimiter() }));
   }
 
   app.notFound(notFound);

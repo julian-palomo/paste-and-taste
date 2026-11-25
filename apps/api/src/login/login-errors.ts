@@ -59,12 +59,6 @@ export class PasskeyNotRegisteredError extends AppError {
   }
 }
 
-export class InvalidRequestError extends AppError {
-  readonly type = "about:blank";
-  readonly title = "Bad Request";
-  readonly status = 400;
-}
-
 // Names the variables that are missing, never their values.
 export class LoginNotConfiguredError extends AppError {
   readonly type = "about:blank";
