@@ -264,6 +264,31 @@ per address every 15 minutes and 10 per IP every hour, and any other login
 request to 60 per IP every hour; past a limit the API answers 429
 ([the record](adr/2026-11-25-login-behind-the-apis-own-routes.md)).
 
+**Expired rows are deleted once a day**, at 03:17 UTC, by a Cron Trigger on
+the API's Worker: limit windows that ended, codes and sessions that expired
+([the record](adr/2026-11-25-how-long-login-rows-live.md)).
+
+- **Where the cron runs:** preview and production inherit the trigger from
+  `apps/api/wrangler.jsonc`, but there the run returns at once, without
+  opening a database client, until the login is mounted.
+- **Locally:** `pnpm -C apps/api dev` never fires it on its own. To run it
+  once, while the dev server runs:
+
+  ```bash
+  curl "http://localhost:8787/cdn-cgi/local/scheduled"
+  ```
+
+  This deletes the expired rows of the development database. The dev
+  server's terminal then shows
+  `Deleted expired login rows: request limits <n>, codes <n>, sessions <n>`.
+- **Changing the schedule:** a change takes up to 15 minutes to reach
+  Cloudflare's network after its deploy
+  ([Cron Triggers](https://developers.cloudflare.com/workers/configuration/cron-triggers/)).
+- **The account's limit:** each environment is one of the account's 5 Cron
+  Triggers on Workers Free, shared with every other Worker in the account. With
+  no room left, `wrangler deploy` fails at the preview API step and changes
+  nothing.
+
 ### 6. Sending the sign-in code
 
 The code goes by email through Resend, from `Paste & Taste
@@ -354,6 +379,11 @@ Each deployed Worker keeps what it logs in Workers Logs, set by the
   with the request and the response, which is where a slow or failed request
   in a run can be read. Our code never logs an email address, a sign-in code,
   a cookie or a session token.
+- **The daily cron.** Where the login runs, its one line is
+  `Deleted expired login rows: request limits <n>, codes <n>, sessions <n>`,
+  or `Deleting expired login rows failed:` with the error. Until then it logs
+  nothing. Preview still shows one line per run, written by Cloudflare like
+  the line per request: that is the run happening, not the deletion.
 - **How long, and how much.** Until 30 November 2026, on Workers Free,
   200,000 lines a day, each kept 3 days. From 1 December 2026 the account's
   Free allowance is 0.5 GB a day of logs and traces together, each kept seven

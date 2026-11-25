@@ -5,7 +5,17 @@
 // become a 500 on every request.
 // The Hyperdrive binding is read here and nowhere else, inside the function,
 // so each request reads it when it opens its database client.
+// The daily Cron Trigger (wrangler.jsonc) calls `scheduled`, built the same
+// way and at the same time, so it runs the same checks.
 import { env } from "cloudflare:workers";
-import { createApp } from "./app.ts";
+import { createApp, createScheduledWork } from "./app.ts";
 
-export default createApp(env, { connectionString: () => env.HYPERDRIVE.connectionString });
+const database = { connectionString: () => env.HYPERDRIVE.connectionString };
+const app = createApp(env, database);
+const runScheduled = createScheduledWork(env, database);
+
+export default {
+  // Hono's fetch is an arrow function, so it keeps its app when taken off it.
+  fetch: app.fetch,
+  scheduled: () => runScheduled(),
+} satisfies ExportedHandler<Env>;

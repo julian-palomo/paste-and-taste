@@ -35,6 +35,12 @@
     "head_sampling_rate": 1,
     "logs": { "invocation_logs": false }
   },
+  // Deletes the login's expired rows once a day, at 03:17 UTC
+  // (docs/adr/2026-11-25-how-long-login-rows-live.md). Environments inherit
+  // it, so preview and production run it too: there it returns at once until
+  // the login is mounted, and never opens a database client. Each environment
+  // is one of the account's 5 Cron Triggers on Workers Free.
+  "triggers": { "crons": ["17 3 * * *"] },
   // An environment doesn't inherit vars: each one sets every variable again.
   // Each also names its own Hyperdrive id, so none can reach another's database.
   "env": {
