@@ -52,7 +52,10 @@ is here, written down at the time instead of remembered afterwards.
 | 2026-11-24 | [The conversation hangs from the recipe](2026-11-24-the-conversation-hangs-from-the-recipe.md) |
 | 2026-11-24 | [Recipes are organised with tags, not folders](2026-11-24-tags-not-folders.md) |
 | 2026-11-24 | [The AI provider and the SDK for the import](2026-11-24-the-ai-provider-and-sdk.md) (Proposed) |
-| 2026-11-25 | [Postgres on Neon through Hyperdrive, with Drizzle](2026-11-25-database-host-and-drizzle.md) (Proposed) |
+| 2026-11-24 | [Staying signed in: an unchecked box, and no cookie banner](2026-11-24-staying-signed-in.md) |
+| 2026-11-25 | [Postgres on Neon through Hyperdrive, with Drizzle](2026-11-25-database-host-and-drizzle.md) |
+| 2026-11-25 | [Login without a password: a code by email and an optional passkey](2026-11-25-login-without-a-password.md) |
+| 2026-11-25 | [Workers Free until the real login is deployed, then Workers Paid](2026-11-25-workers-free-until-login-ships.md) |
 
 ## Not decided yet
 
@@ -62,13 +65,6 @@ Each of these gets its ADR when it is decided, not before.
   video and the carousel images. The prototype measured the routes; its
   [record](2026-11-16-how-an-instagram-post-is-read.md) is Proposed and
   recommends the public embed view, and the owner decides.
-- The database host and the ORM. A spike measured Neon's free plan and
-  PlanetScale's smallest node; its
-  [record](2026-11-25-database-host-and-drizzle.md) is Proposed and recommends
-  Neon, with Drizzle, the owner's choice, and the owner decides.
-- How users sign in. [Better Auth](2026-11-15-better-auth.md) stays; the same
-  spike found that hashing a password doesn't fit the Workers Free plan, and
-  measured login without a password.
 - The AI provider and the SDK that calls it. The prototype measured three
   candidates; its [record](2026-11-24-the-ai-provider-and-sdk.md) is Proposed
   and recommends Gemini reading the video, with Google's SDK, and the owner

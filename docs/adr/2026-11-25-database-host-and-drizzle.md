@@ -1,6 +1,6 @@
 # Postgres on Neon through Hyperdrive, with Drizzle
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-25
 
 ## Context
@@ -31,16 +31,18 @@ short:
 
 ## Decision
 
-Proposed: the app's Postgres is on **Neon**, on its Free plan while the users
-are the owner's friends, reached through **Hyperdrive** with **Drizzle** and
-`pg`, a client per request. The web app and the native app send a cheap
-request that touches the database when they open, so Neon is awake by the
-time the user does something.
+The app's Postgres is on **Neon**, on its Free plan while the users are the
+owner's friends, reached through **Hyperdrive** with **Drizzle** and `pg`, a
+client per request. The web app and the native app send a cheap request that
+touches the database when the app or any of its pages opens, if no such
+request has been sent yet, so Neon is awake by the time the user does
+something.
 
-Drizzle is the owner's choice. The host is recommended because the two answer
-equally fast once awake, the wake request covers most of the difference on the
-first request, and it costs nothing until the app needs more. The owner
-decides it.
+Drizzle is the owner's choice of 23 Nov 2026. The host was proposed because the
+two answer equally fast once awake, the wake request covers most of the
+difference on the first request, and it costs nothing until the app needs
+more. The owner chose it on 25 Nov 2026, adding that the wake goes out from
+any page, not only the first.
 
 ## Alternatives considered
 
@@ -78,9 +80,9 @@ decides it.
 - **Where the Hyperdrive id lives is open**: Cloudflare's pages don't say
   whether it is sensitive, and the deploy token may need a Hyperdrive
   permission that was only read about, not tried.
-- **This does not settle how users sign in.** A request that hashes a
+- **How users sign in has its own record.** A request that hashes a
   password took a median of 88 to 158 ms of CPU, against the 10 ms the Workers
-  Free plan allows; the
-  ways out are in the report, and login without a password was measured in
-  [`passwordless-login.md`](../research/passwordless-login.md). That decision
-  and the Workers plan are the owner's, each with its own record.
+  Free plan allows, so login has no password
+  ([the record](2026-11-25-login-without-a-password.md)), and the Workers plan
+  has its own record too
+  ([the record](2026-11-25-workers-free-until-login-ships.md)).
