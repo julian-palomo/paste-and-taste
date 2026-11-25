@@ -10,7 +10,7 @@ and its record in [`docs/adr/`](../../docs/adr/README.md).
 
 It also measures login without a password
 ([#58](https://github.com/julian-palomo/paste-and-taste/issues/58)): a code
-sent by email, and a passkey for the next times. Its figures go in
+sent by email, and a passkey for the next times. Its figures are in
 [`docs/research/passwordless-login.md`](../../docs/research/passwordless-login.md).
 
 It is exempt from "test first" (`AGENTS.md`, section 2).
@@ -132,7 +132,8 @@ names. Why each choice, the costs and the sources are in the plan on issue
    unset DB_HOST DB_NAME DB_USER DB_PASSWORD
    ```
 
-   Note each printed `id`.
+   Note each printed `id`. If wrangler offers to add the binding to a config
+   file, answer no: the ids go only in the copy step 4 makes.
 4. **The deploy config.**
    `cp prototypes/login/wrangler.jsonc prototypes/login/wrangler.deploy.jsonc`,
    and put the two ids in the copy. Git ignores it.
@@ -147,11 +148,13 @@ names. Why each choice, the costs and the sources are in the plan on issue
    ```
 
 7. **Day 1, in the same terminal:** `pnpm -C prototypes/login measure <address> cpu`,
-   then `warm`, then `hung`. Then, for each `cpu` batch's window, in
-   **Workers & Pages** > `paste-and-taste-login-spike` > **Observability** >
-   Query Builder: P50 and Max of `$workers.cpuTimeMs`, grouped by
-   `$workers.event.request.path`; and the count of "Exceeded CPU Time Limits"
-   under **Metrics > Errors > Invocation Statuses**.
+   then `warm`, then `hung`. Then, in **Workers & Pages** >
+   `paste-and-taste-login-spike` > **Observability** > Query Builder: the
+   count, the median and the max of `$workers.cpuTimeMs`, with
+   `$workers.outcome` in **Group By**, and the table under the charts. A
+   request Cloudflare cut has the outcome `exceededCpu`. The time range takes
+   whole minutes and there is no key for the request's path, so read each
+   `cpu` batch by its minutes: the batches start a minute or more apart.
 8. **Overnight**, plugged in with the lid open (`caffeinate -i` doesn't stop a
    MacBook sleeping when the lid closes):
    `caffeinate -i pnpm -C prototypes/login measure <address> cold`.
@@ -164,7 +167,8 @@ names. Why each choice, the costs and the sources are in the plan on issue
     echoes the command line, and it holds the Worker's address.
 11. **Delete, the same day**, and say the date:
     - `pnpm -C prototypes/login exec wrangler delete --config wrangler.deploy.jsonc` (its secrets go with it);
-    - `pnpm -C prototypes/login exec wrangler hyperdrive delete <id>`, for each id;
+    - `pnpm -C prototypes/login exec wrangler hyperdrive delete <id>`, for each
+      id; `grep '"id"' prototypes/login/wrangler.deploy.jsonc` prints them;
     - PlanetScale: the database's **Settings**, at the bottom > **Delete
       database**, type its name > **Delete database**;
     - Neon: the project > **Settings** > **General** > **Delete project**;
@@ -204,10 +208,11 @@ folder, nothing pasted but what step 6 names.
 
 5. **Measure:** `pnpm -C prototypes/login measure <address> passwordless`,
    about 7 minutes.
-6. **Read the CPU**, as for `cpu`: in the Query Builder, P50 and Max of
-   `$workers.cpuTimeMs` for each batch's UTC window, and the Errors count in
-   Metrics. Hand back the script's lines (without the first) and those
-   readings.
+6. **Read the CPU**, as for `cpu`: in the Query Builder, the count, the
+   median and the max of `$workers.cpuTimeMs` grouped by `$workers.outcome`,
+   over the run's minutes. These batches start about 40 seconds apart, so one
+   can't be read on its own. Hand back the script's lines (without the first)
+   and that table.
 7. **Delete everything**, as step 11 above says.
 
 `pnpm -C prototypes/login worker:bundle` bundles the Worker without writing
