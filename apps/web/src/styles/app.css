@@ -25,7 +25,7 @@
 
   /* The outline follows the element's own corners, so a pill button gets a
      pill ring; never give the ring a radius, which would reshape the element. */
-  :where(a, button):focus-visible {
+  :where(a, button, input):focus-visible {
     outline: 2px solid var(--color-focus);
     outline-offset: 2px;
   }

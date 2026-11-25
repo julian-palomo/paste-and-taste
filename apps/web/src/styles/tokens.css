@@ -1,13 +1,13 @@
 /*
- * The one file that holds every colour, font, radius, duration and easing the
- * web app uses, each named by its role. Components write Tailwind utilities
- * from these names (bg-surface, text-text-muted, duration-quick), never a raw
- * value, so the look changes here without touching a component. The values
- * are the ones DESIGN.md gives.
+ * The one file that holds every colour, font, text size, radius, control
+ * size, duration, easing and animation the web app uses, each named by its
+ * role. Components write Tailwind utilities from these names (bg-surface,
+ * text-text-muted, duration-quick), never a raw value, so the look changes
+ * here without touching a component. The values are the ones DESIGN.md gives.
  *
  * `static` writes every variable into the CSS, used or not. The `initial`
- * lines remove Tailwind's own palette, fonts, radii and easings, so a utility
- * like bg-red-500 doesn't exist here.
+ * lines remove Tailwind's own palette, fonts, radii, easings and animations,
+ * so a utility like bg-red-500 or animate-spin doesn't exist here.
  */
 @theme static {
   --color-*: initial;
@@ -33,16 +33,64 @@
   --font-display: "Outfit", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
+  /* Tailwind's own type scale stays (h1 reads --text-2xl); these are the two
+     sizes DESIGN.md gives at phone width that it lacks. */
+  --text-body: 1.0625rem;
+  --text-body--line-height: 1.5;
+  --text-small: 0.9375rem;
+  --text-small--line-height: 1.4;
+
   --radius-*: initial;
   /* Buttons, inputs, tags and filters are pills; Tailwind's rounded-full is this value. */
   --radius-control: calc(infinity * 1px);
+  --radius-card: 1.75rem;
+  /* A rounded square: a round checkbox reads as a radio button. */
+  --radius-checkbox: 0.375rem;
 
-  /* Tailwind's duration-* utilities read --transition-duration-*. */
+  /* h-control and min-h-touch. A control is 54px tall; anything tapped is at
+     least 48px, Google's minimum, which also covers Apple's 44pt. */
+  --spacing-control: 3.375rem;
+  --spacing-touch: 3rem;
+
+  /* Tailwind's duration-* utilities read --transition-duration-*. Every one
+     must be zeroed in the reduced-motion block below. */
   --transition-duration-quick: 120ms;
   --transition-duration-base: 200ms;
+  /* A movement that answers what the person does: a bounce, a hop. */
+  --transition-duration-reaction: 320ms;
 
   --ease-*: initial;
   --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  /* Goes a little past the end and comes back: the overshoot of a bounce. */
+  --ease-overshoot: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /*
+   * Each animation reads its duration from a token, so reduced motion stops
+   * it, and fills `both`: at 0s an animation shows its last frame only with a
+   * fill mode, and the element's own style is that last frame anyway.
+   */
+  --animate-*: initial;
+  --animate-bounce: bounce var(--transition-duration-reaction) var(--ease-overshoot) both;
+  /* For a path with pathLength="1" and stroke-dasharray="1". */
+  --animate-draw: draw var(--transition-duration-base) var(--ease-standard) both;
+
+  @keyframes bounce {
+    from {
+      scale: 0.8;
+    }
+    to {
+      scale: 1;
+    }
+  }
+
+  @keyframes draw {
+    from {
+      stroke-dashoffset: 1;
+    }
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
 
   /* What a bare transition-colors takes when no duration-* or ease-* is given. */
   --default-transition-duration: var(--transition-duration-quick);
@@ -83,6 +131,7 @@
   :root {
     --transition-duration-quick: 0s;
     --transition-duration-base: 0s;
+    --transition-duration-reaction: 0s;
     --default-transition-duration: 0s;
   }
 }
