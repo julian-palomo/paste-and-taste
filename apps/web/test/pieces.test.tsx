@@ -63,6 +63,27 @@ describe("TextField", () => {
     expect(described.map((id) => textOf(html, id))).toEqual(["The six digits."]);
   });
 
+  it("takes the focus when asked, in the server's HTML, so it holds with no JavaScript", () => {
+    const html = renderToString(
+      <TextField label="Code" name="code" type="text" error="Wrong code." autoFocus />,
+    );
+
+    expect(attribute(inputTag(html), "autofocus")).toBe("");
+  });
+
+  it("is not focused unless asked", () => {
+    const html = renderToString(<TextField label="Code" name="code" type="text" />);
+
+    expect(attribute(inputTag(html), "autofocus")).toBeUndefined();
+  });
+
+  it("limits its length when asked", () => {
+    const html = renderToString(<TextField label="Code" name="code" type="text" maxLength={6} />);
+
+    // /i: React writes the JSX spelling, maxLength; HTML attribute names ignore case.
+    expect(inputTag(html)).toMatch(/\smaxlength="6"/i);
+  });
+
   it("has a visible label tied to the field, and no placeholder", () => {
     const html = renderToString(<TextField label="Code" name="code" type="text" />);
     const input = inputTag(html);
