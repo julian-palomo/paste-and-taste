@@ -15,7 +15,7 @@ try {
   for (const failure of failures) console.error(`FAIL ${failure}`);
   if (failures.length > 0) process.exit(1);
   const target = expectedEnvironment ? `${baseUrl} (${expectedEnvironment})` : baseUrl;
-  console.log(`OK ${target}: /health and an unknown route answer as specified`);
+  console.log(`OK ${target}: /health, /wake and an unknown route answer as specified`);
 } catch (error) {
   console.error(`FAIL could not reach ${baseUrl}:`, error);
   process.exit(1);
