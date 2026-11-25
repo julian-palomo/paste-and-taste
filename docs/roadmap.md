@@ -14,7 +14,7 @@ needs, and a phase gets its issues when it is next.
 | 1   | The API's base                | Done        | [#35](https://github.com/julian-palomo/paste-and-taste/issues/35)      |
 | 2   | The Instagram prototype       | In progress | [#22](https://github.com/julian-palomo/paste-and-taste/issues/22)      |
 | 3   | Database and login            | In progress | [#42](https://github.com/julian-palomo/paste-and-taste/issues/42), [#58](https://github.com/julian-palomo/paste-and-taste/issues/58), [#66](https://github.com/julian-palomo/paste-and-taste/issues/66), [#69](https://github.com/julian-palomo/paste-and-taste/issues/69), [#80](https://github.com/julian-palomo/paste-and-taste/issues/80), [#77](https://github.com/julian-palomo/paste-and-taste/issues/77), [#90](https://github.com/julian-palomo/paste-and-taste/issues/90), [#93](https://github.com/julian-palomo/paste-and-taste/issues/93) |
-| 4   | The first recipe, end to end  | In progress | [#46](https://github.com/julian-palomo/paste-and-taste/issues/46), [#73](https://github.com/julian-palomo/paste-and-taste/issues/73), [#98](https://github.com/julian-palomo/paste-and-taste/issues/98) |
+| 4   | The first recipe, end to end  | In progress | [#46](https://github.com/julian-palomo/paste-and-taste/issues/46), [#73](https://github.com/julian-palomo/paste-and-taste/issues/73), [#98](https://github.com/julian-palomo/paste-and-taste/issues/98), [#85](https://github.com/julian-palomo/paste-and-taste/issues/85) |
 | 5   | The real import               | Not started |                                                                        |
 | 6   | The native app                | Not started |                                                                        |
 | 7   | What makes the product        | Not started |                                                                        |
@@ -78,9 +78,12 @@ needs, and a phase gets its issues when it is next.
    health has its own page, which the deploy's smoke reads. #73 is the API's half: a user's recipes in Postgres, listed,
    opened, added and edited through the API, in development, with the first
    service and repository
-   ([the record](adr/2026-11-25-ingredients-and-steps-as-jsonb.md)). The
-   screen that lists, opens and edits a recipe is next; since #83 the typed
-   client reaches every recipes route, a path's `{id}` and `put` included.
+   ([the record](adr/2026-11-25-ingredients-and-steps-as-jsonb.md)). Since #83
+   the typed client reaches every recipes route, a path's `{id}` and `put`
+   included. Since #85 the web app has the recipe pages, in development: the
+   list, a recipe, and one form to add one by hand or edit it, which works
+   with no JavaScript. Deleting a recipe, #95 and #96, is what phase 4 still
+   needs.
 5. **The real import.** Workflows in the background and the limit per user.
    Web pages first, the cheapest source to read, then Instagram, then YouTube.
 6. **The native app.** Android first, with sharing a post to the app. iPhone

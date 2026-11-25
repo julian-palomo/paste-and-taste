@@ -28,7 +28,8 @@ and its two typefaces, served by the app
 ([the record](docs/adr/2026-11-24-fonts-from-the-app-and-dark-mode-from-the-device.md)). The first
 pieces the screens will be built from, a button, a text field, a checkbox
 and a card, are built, with a page that shows them in development and
-preview; no screen is built yet. The same pipeline deploys it after the API, to a
+preview. The first screens, the sign-in and a user's recipes, exist in
+development only. The same pipeline deploys it after the API, to a
 preview and a production Worker, each checked after its deploy; its server
 reaches that environment's API through a Service binding
 ([the record](docs/adr/2026-11-23-how-the-web-app-deploys.md)). Neither is
@@ -59,8 +60,10 @@ Postgres on Neon through Hyperdrive and answers the wake request, which the
 web app's server sends on every page load. In development only, it has the
 login, a code by email (sent through Resend, or printed in its terminal
 without Resend's key) and an optional passkey, and a user's recipes, which it
-lists, opens, adds and edits. The web app has the sign-in page that goes with
-it, also in development only, at `/en/sign-in` and `/es/sign-in`.
+lists, opens, adds and edits. The web app has the pages that go with them,
+also in development only: the sign-in at `/en/sign-in` and `/es/sign-in`, and
+the recipes at `/en/recipes` and `/es/recipes`, where a user lists, opens,
+adds by hand and edits their recipes.
 
 [`docs/product.md`](docs/product.md) says what the app must do, and
 [`docs/roadmap.md`](docs/roadmap.md) in what order it is being built.
