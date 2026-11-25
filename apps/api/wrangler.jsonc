@@ -1,26 +1,38 @@
-// No account ID, token or secret here: whoever deploys supplies them.
+// No account ID, token or secret here: whoever deploys supplies them. The
+// Hyperdrive ids are not secrets: using one needs a token on the account.
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "paste-and-taste-api",
   // Wrangler bundles the TypeScript entry itself.
   "main": "src/worker.ts",
+  // From 2026-08-04 the date alone turns Node.js compatibility on, which `pg`
+  // needs, so no nodejs_compat flag. Never add no_nodejs_compat: `pg` would
+  // stop working.
   "compatibility_date": "2026-11-15",
-  // Deliberately no nodejs_compat: nothing in the Worker uses a Node API.
-  // A dependency that needs one adds the flag in its own change.
   "vars": {
     "APP_ENV": "development"
   },
+  // The zeros are a placeholder that lets `wrangler dev` and the dry-run build
+  // start. Locally, `wrangler dev` connects straight to the database named by
+  // CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE in apps/api/.env,
+  // which git ignores (docs/deploying-the-api.md). Every Hyperdrive
+  // configuration has its cache disabled: a cached answer to the wake request
+  // would not wake the database.
+  "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "00000000000000000000000000000000" }],
   // An environment doesn't inherit vars: each one sets every variable again.
+  // Each also names its own Hyperdrive id, so none can reach another's database.
   "env": {
     "preview": {
       "vars": {
         "APP_ENV": "preview"
-      }
+      },
+      "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "00000000000000000000000000000000" }]
     },
     "production": {
       "vars": {
         "APP_ENV": "production"
-      }
+      },
+      "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "00000000000000000000000000000000" }]
     }
   }
 }

@@ -11,6 +11,8 @@ catalog:
   "@better-auth/passkey": 1.7.27
   "@biomejs/biome": 2.6.7
   "@cfworker/json-schema": 4.1.6
+  "@electric-sql/pglite": 0.6.0
+  "@electric-sql/pglite-socket": 0.3.0
   # 1.69.1, not the latest: 1.70.x needs a newer wrangler than the one below,
   # which apps/api deploys with.
   "@cloudflare/vite-plugin": 1.69.1

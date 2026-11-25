@@ -1,6 +1,6 @@
 import { HTTPException } from "hono/http-exception";
 import { afterEach, expect, it, vi } from "vitest";
-import { createApp } from "../src/app.ts";
+import { createApp, noDatabase } from "../src/app.ts";
 import { AppError } from "../src/errors/app-error.ts";
 
 const INTERNAL_MESSAGE = "internal detail: db-node-7 refused the query";
@@ -13,7 +13,7 @@ class TeapotError extends AppError {
 
 // Routes that exist only in these tests, added to the real application:
 // nothing in it fails on purpose.
-const app = createApp({ APP_ENV: "development" });
+const app = createApp({ APP_ENV: "development" }, noDatabase);
 app.get("/broken", () => {
   throw new Error(INTERNAL_MESSAGE);
 });

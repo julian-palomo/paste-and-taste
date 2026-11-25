@@ -16,13 +16,18 @@
   },
   "dependencies": {
     "@hono/zod-openapi": "catalog:",
+    "drizzle-orm": "catalog:",
     "hono": "catalog:",
+    "pg": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@cfworker/json-schema": "catalog:",
+    "@electric-sql/pglite": "catalog:",
+    "@electric-sql/pglite-socket": "catalog:",
     "@paste-and-taste/tsconfig": "workspace:*",
     "@types/node": "catalog:",
+    "@types/pg": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:",
     "wrangler": "catalog:"

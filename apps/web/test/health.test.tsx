@@ -1,4 +1,4 @@
-import { createApp } from "@paste-and-taste/api/app";
+import { createApp, noDatabase } from "@paste-and-taste/api/app";
 import { createApiClient } from "@paste-and-taste/api-client";
 import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
@@ -7,7 +7,7 @@ import { readHealth } from "../src/health/read-health.ts";
 import { type Language, messagesFor } from "../src/i18n/i18n.ts";
 
 // The real API, called in process.
-const api = createApp({ APP_ENV: "development" });
+const api = createApp({ APP_ENV: "development" }, noDatabase);
 const realApi = async (request: Request) => api.fetch(request);
 
 // What the API's address answers when the API is up but failing.
