@@ -17,9 +17,12 @@ green:
    `preview` and reach its database through `/wake`.
 3. **Deploy web to preview**: the web app built for preview
    (`CLOUDFLARE_ENV=preview pnpm build`), `wrangler deploy --env preview`, then
-   its check against the preview web Worker: `/en` and `/es` must show the
-   status `ok` and `preview`, with `X-Robots-Tag: noindex`, and `/` must
-   answer 302. Its server reaches the preview API through a Service binding.
+   its check against the preview web Worker: the health pages, `/en/health`
+   and `/es/health`, must show the status `ok` and `preview`; the homes, `/en`
+   and `/es`, must answer 200; each with `X-Robots-Tag: noindex`; and `/` must
+   answer 302. Production's home is the building page, not the health
+   ([the record](adr/2026-11-25-production-home-is-the-building-page.md)), so
+   the check reads the health on its own page in every environment. Its server reaches the preview API through a Service binding.
 4. **Deploy to production**: the API, the same as step 2, with `--env
    production`, and the Worker must answer that it is `production`.
 5. **Deploy web to production**: the same as step 3, for production.
@@ -353,7 +356,7 @@ The **Actions** tab, workflow **Deploy**. A run's graph has five boxes:
   its check. The last line of each API job is
   `OK <address> (<environment>): /health, /wake and an unknown route answer as specified`,
   and of each web job
-  `OK <address> (<environment>): /en, /es and / answer as specified`.
+  `OK <address> (<environment>): /en, /es, their health pages and / answer as specified`.
 - **Red in `Checks`:** nothing was deployed. Every deploy job shows as
   skipped. Fix it with a pull request, like any red CI.
 - **Red at `wrangler deploy`:** that environment wasn't changed. Usually the
@@ -432,7 +435,7 @@ concluding anything.
 
 Its `FAIL` lines say which address answered what.
 
-- **`/en doesn't show the status ok; it says "…"`** quotes the page's own
+- **`/en/health doesn't show the status ok; it says "…"`** quotes the page's own
   message. "The API cannot be reached" or "answered with an error" means the
   web Worker is up but its binding to the API isn't answering as it should:
   check that the API's job for that environment is green, and the `services`
@@ -444,6 +447,8 @@ Its `FAIL` lines say which address answered what.
   GitHub environment first. The first web deploy creates its Worker, and a new
   workers.dev address can take a moment to answer: re-run the job before
   concluding anything.
+- **`/en answered 500; expected 200`**, or any other status, on a home: the
+  web Worker failed to render it; the job's log has the error.
 - **`has no X-Robots-Tag: noindex`**: `INDEXING` in that environment's block of
   `apps/web/wrangler.jsonc` doesn't match the check's list.
 

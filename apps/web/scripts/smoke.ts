@@ -14,7 +14,9 @@ try {
   const failures = await checkWeb(baseUrl, (url, init) => fetch(url, init), environment);
   for (const failure of failures) console.error(`FAIL ${failure}`);
   if (failures.length > 0) process.exit(1);
-  console.log(`OK ${baseUrl} (${environment}): /en, /es and / answer as specified`);
+  console.log(
+    `OK ${baseUrl} (${environment}): /en, /es, their health pages and / answer as specified`,
+  );
 } catch (error) {
   console.error(`FAIL could not reach ${baseUrl}:`, error);
   process.exit(1);

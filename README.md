@@ -15,9 +15,10 @@ the web app uses and the mobile app will use. A merge to `main` deploys it from 
 Actions, to preview and then production, each with a smoke test, once every
 check has passed ([the record](docs/adr/2026-11-15-how-the-api-deploys.md),
 [the owner's page](docs/deploying-the-api.md)). The web app's skeleton is in
-[`apps/web`](apps/web): TanStack Start on Cloudflare Workers, with one page
-rendered on the server, at `/en` and `/es`, that shows the API's health
-through that client. It is styled with Tailwind CSS from one file of
+[`apps/web`](apps/web): TanStack Start on Cloudflare Workers, with pages
+rendered on the server at `/en` and `/es`. In production the home says the
+app is being built; in development and preview it shows the API's health
+through that client, which `/en/health` and `/es/health` show everywhere. It is styled with Tailwind CSS from one file of
 tokens, every page shares a layout with a link to the other
 language, and unknown addresses and errors get their own pages in both
 languages ([the record](docs/adr/2026-11-23-tailwind-and-css-motion.md)). The app's look is chosen and
