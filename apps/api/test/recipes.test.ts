@@ -163,6 +163,31 @@ describe("a user's recipes", () => {
     }
   });
 
+  it("answers 400 to a recipe with no ingredients", async () => {
+    const { app, recorder } = setup();
+    const { cookie } = await signedIn(app, recorder);
+
+    const response = await app.request(
+      "/recipes",
+      json({ ...tortilla, ingredients: [] }, { cookie }),
+    );
+
+    expect(response.status).toBe(400);
+    expect(response.headers.get("content-type")).toMatch(/^application\/problem\+json/);
+  });
+
+  it("answers 400 to a language that isn't a BCP 47 tag", async () => {
+    const { app, recorder } = setup();
+    const { cookie } = await signedIn(app, recorder);
+
+    const response = await app.request(
+      "/recipes",
+      json({ ...tortilla, language: "not a language" }, { cookie }),
+    );
+
+    expect(response.status).toBe(400);
+  });
+
   it("refuses a source that isn't an http or https link", async () => {
     const { app, recorder } = setup();
     const { cookie } = await signedIn(app, recorder);
