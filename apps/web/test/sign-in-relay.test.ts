@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   clearPendingCookie,
   codeError,
+  parseErrorKind,
   passkeyError,
   pendingCookie,
   readPending,
@@ -122,5 +123,24 @@ describe("signInShown", () => {
     ["production", false],
   ] as const)("in %s is %s", (environment, shown) => {
     expect(signInShown(environment)).toBe(shown);
+  });
+});
+
+describe("parseErrorKind", () => {
+  it.each([
+    "invalid-email",
+    "too-many-codes",
+    "wrong-code",
+    "too-many",
+    "unreachable",
+    "too-soon",
+    "start-again",
+    "passkey-failed",
+  ])("reads %s from the page's address", (kind) => {
+    expect(parseErrorKind(kind)).toBe(kind);
+  });
+
+  it.each([undefined, "", "other", 401, ["wrong-code"]])("reads %o as none", (value) => {
+    expect(parseErrorKind(value)).toBeUndefined();
   });
 });

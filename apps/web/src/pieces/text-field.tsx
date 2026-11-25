@@ -23,11 +23,11 @@ export function TextField({
   label: string;
   name: string;
   type: "text" | "email";
-  hint?: string;
-  error?: string;
+  hint?: string | undefined;
+  error?: string | undefined;
   autoComplete?: string;
   inputMode?: "text" | "email" | "numeric";
-  defaultValue?: string;
+  defaultValue?: string | undefined;
   required?: boolean;
   disabled?: boolean;
   autoFocus?: boolean;

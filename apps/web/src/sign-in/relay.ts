@@ -54,15 +54,23 @@ export function readPending(cookieHeader: string | undefined): Pending | undefin
 
 // What the page says when a step fails, each with its text in the
 // translation files. too-soon and start-again are the web app's own.
-export type SignInErrorKind =
-  | "invalid-email"
-  | "too-many-codes"
-  | "wrong-code"
-  | "too-many"
-  | "unreachable"
-  | "too-soon"
-  | "start-again"
-  | "passkey-failed";
+const ERROR_KINDS = [
+  "invalid-email",
+  "too-many-codes",
+  "wrong-code",
+  "too-many",
+  "unreachable",
+  "too-soon",
+  "start-again",
+  "passkey-failed",
+] as const;
+export type SignInErrorKind = (typeof ERROR_KINDS)[number];
+
+// The ?error= of the page's address, which anyone can type: anything that
+// isn't a known kind reads as none.
+export function parseErrorKind(value: unknown): SignInErrorKind | undefined {
+  return ERROR_KINDS.find((kind) => kind === value);
+}
 
 // One mapping per kind of route, because the same status means different
 // things: a 401 is a wrong code on /login/sign-in and a refused passkey on
