@@ -53,7 +53,8 @@ server function in `<feature>.functions.ts`, the code that reads the API, and
 a view that is plain React with no router, so tests render it with
 `renderToString`. `src/health/` is the model.
 
-**The API is called only inside a server function**, through
+**The API is called only from the web app's server**, inside a server
+function or by the wake below, through
 `createApiClient` from `@paste-and-taste/api-client` with `WebConfig.api`:
 never a hand-written `fetch`, never a copied type, and never from the browser
 (the API sends no CORS headers). `WebConfig.api` is the Service binding `API`
@@ -61,6 +62,16 @@ when deployed and `API_URL` over HTTP under `vite dev`; never call the
 binding's `fetch` detached from it. A call catches `ApiError` and `ApiUnreachableError` and turns
 them into states the view shows, with text from the translation files. Never
 an error's own message, and never a stack trace.
+
+**A page load wakes the database.** `src/server.ts` wraps Start's handler in
+`withWake` (`src/wake/wake.ts`): a `GET` that asks for HTML and isn't under
+`/_serverFn` sends the API's `GET /wake` beside the page, kept alive with the
+Workers runtime's `waitUntil`, which `src/server.ts` imports from
+`cloudflare:workers` and passes in. The page never awaits it, and a failed wake
+is only logged on the server. Nothing is stored in the browser for it, and
+nothing is remembered between requests: each page load sends one, the redirect
+at `/` included. Server functions, the favicon and anything not asking for HTML
+send none.
 
 **Styles are Tailwind utilities from the tokens.** Every colour, font,
 radius, duration and easing is a token in `src/styles/tokens.css`, named by
