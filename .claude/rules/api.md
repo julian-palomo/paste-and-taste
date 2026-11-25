@@ -10,9 +10,18 @@ Hono checks none of this; this rule and the reviews do. The record is
 
 **The composition root.** `createApp` in `src/app.ts` builds the whole
 application. It is the only code that reads the raw variables (through
-`parseConfig`) or creates a dependency: the config today, a database client
-or a service later. It passes each module what that module needs. Tests build
-the application through the same function, with the variables they choose.
+`parseConfig`) or creates a dependency: the config, the database, a service.
+It passes each module what that module needs. Tests build the application
+through the same function, with the variables and the database they choose.
+
+**A resource that lives for one request**, such as a database client, is never
+created at module scope or in `createApp`: a client shared between requests
+leaves the next ones hung on Workers. `createApp` takes the database as a
+`DatabaseSource`, which `src/worker.ts` builds from the Hyperdrive binding,
+and hands a module `withDatabase`, which opens a client, runs the work under
+one deadline and closes the client before it returns
+(`src/database/database.ts`). Tests pass a real Postgres from
+`test/postgres.ts`, or `noDatabase` when the routes they call don't touch it.
 
 **A module** is one feature in one folder, `src/<feature>/`. It exports
 `<feature>Routes(deps)`, which takes its dependencies as one typed argument and
@@ -43,7 +52,7 @@ code and shapes the response. Rules about the domain don't live in a handler.
 **Services and repositories.** When a feature has logic, it goes in a service;
 when it has data, a repository. Both live in the feature's folder, are created
 in `createApp` and passed to the module. A layer with nothing in it is not
-added: health has neither.
+added: health and wake have neither.
 
 **Errors.** Raise an error by throwing a named subclass of `AppError`
 (`src/errors/app-error.ts`), never by building an error response by hand.

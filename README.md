@@ -51,7 +51,9 @@ Hyperdrive, on Neon and on PlanetScale; the figures are in
 also measured login without a password, by a code sent by email and by
 passkey; those figures are in
 [`docs/research/passwordless-login.md`](docs/research/passwordless-login.md).
-The database and the login are decided from them, below, and not built yet.
+The database and the login are decided from them, below. The API reaches its
+Postgres on Neon through Hyperdrive and answers the wake request; the login
+is not built yet.
 
 [`docs/product.md`](docs/product.md) says what the app must do, and
 [`docs/roadmap.md`](docs/roadmap.md) in what order it is being built.
@@ -86,10 +88,10 @@ pnpm test                         # tests in every workspace
 pnpm knip                         # unused files, exports and dependencies
 pnpm contract:check               # the OpenAPI document and the client's types are up to date
 bash .claude/hooks/tests/run.sh   # tests for the Claude Code hooks
-pnpm -C apps/api dev              # the API on the local Workers runtime, localhost:8787
+pnpm -C apps/api dev              # the API on the local Workers runtime, localhost:8787, against the database in apps/api/.env
 pnpm -C apps/web dev              # the web app, localhost:5173, calling the API above
 pnpm -C apps/web smoke <address> <environment>  # checks a running web app: /en, /es and the redirect of /
-pnpm -C apps/api smoke <address> [environment]  # checks a running API: /health, with the environment it names, and an unknown route
+pnpm -C apps/api smoke <address> [environment]  # checks a running API: /health, with the environment it names, /wake and an unknown route
 ```
 
 ## Licence
