@@ -84,6 +84,8 @@ added: health and wake have neither.
 **Errors.** Raise an error by throwing a named subclass of `AppError`
 (`src/errors/app-error.ts`), never by building an error response by hand.
 `src/errors/problem-details.ts` is the one place an error becomes a response.
+It builds it through the request's context, so headers a middleware already
+set, such as a renewed session's cookie, go out with the error too.
 A module never sets `onError` or `notFound`: Hono calls `notFound` only on the
 root app, and a sub-app's `onError` would bypass the conversion.
 
