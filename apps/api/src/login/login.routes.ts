@@ -1,33 +1,19 @@
 import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import type { Context } from "hono";
-import type { Database, WithDatabase } from "../database/database.ts";
+import { InvalidRequestError } from "../errors/invalid-request-error.ts";
 import { ProblemDetails, problemResponses } from "../errors/problem-details.ts";
-import { createAuth } from "./auth.ts";
 import { toAppError } from "./auth-errors.ts";
-import type { CodeSender } from "./code-sender.ts";
 import {
   InvalidCodeError,
-  InvalidRequestError,
-  LoginNotConfiguredError,
   NotSignedInError,
   PasskeyNotRegisteredError,
   PasskeyRefusedError,
 } from "./login-errors.ts";
 import { REMEMBER_ME_HEADER } from "./remember-me.ts";
 import { LIMITS, type RequestLimiter } from "./request-limiter.ts";
+import type { Auth, WithAuth } from "./with-auth.ts";
 
-type LoginSettings = {
-  secret?: string | undefined;
-  passkeyRpId?: string | undefined;
-  passkeyOrigin?: string | undefined;
-};
-
-type LoginDeps = {
-  withDatabase: WithDatabase;
-  codeSender: CodeSender;
-  requestLimiter: RequestLimiter;
-  settings: LoginSettings;
-};
+type LoginDeps = { withAuth: WithAuth; requestLimiter: RequestLimiter };
 
 const User = z.object({ id: z.string(), email: z.string(), name: z.string() }).openapi("User");
 const SignedIn = z.object({ user: User }).openapi("SignedIn");
@@ -186,7 +172,7 @@ const passkeySignIn = createRoute({
 // The device's answer as Better Auth's sign-in types it. The route passes it
 // through untyped (WebAuthnJson), and Better Auth checks its shape itself.
 type PasskeyAnswer = NonNullable<
-  Parameters<ReturnType<typeof createAuth>["api"]["verifyPasskeyAuthentication"]>[0]
+  Parameters<Auth["api"]["verifyPasskeyAuthentication"]>[0]
 >["body"]["response"];
 
 const PASSKEY_SIGN_IN_ERRORS = {
@@ -236,33 +222,7 @@ function toUser(user: { id: string; email: string; name: string }) {
   return { id: user.id, email: user.email, name: user.name };
 }
 
-export function loginRoutes({
-  withDatabase,
-  codeSender,
-  requestLimiter,
-  settings,
-}: LoginDeps): OpenAPIHono {
-  // One Better Auth instance and one database client for this request, both
-  // gone when it ends.
-  function withAuth<T>(
-    c: Context,
-    work: (auth: ReturnType<typeof createAuth>, db: Database) => Promise<T>,
-  ): Promise<T> {
-    const { secret, passkeyRpId, passkeyOrigin } = settings;
-    if (!secret || !passkeyRpId || !passkeyOrigin) {
-      const missing = [
-        secret ? "" : "BETTER_AUTH_SECRET",
-        passkeyRpId ? "" : "PASSKEY_RP_ID",
-        passkeyOrigin ? "" : "PASSKEY_ORIGIN",
-      ].filter(Boolean);
-      throw new LoginNotConfiguredError(missing);
-    }
-    const baseURL = new URL(c.req.url).origin;
-    return withDatabase((db) =>
-      work(createAuth(db, { secret, baseURL, passkeyRpId, passkeyOrigin, codeSender }), db),
-    );
-  }
-
+export function loginRoutes({ withAuth, requestLimiter }: LoginDeps): OpenAPIHono {
   const app = new OpenAPIHono({
     defaultHook: (result) => {
       if (!result.success) throw new InvalidRequestError("The request body is not valid.");
@@ -270,7 +230,7 @@ export function loginRoutes({
   });
 
   app.openapi(askForCode, (c) =>
-    withAuth(c, async (auth, db) => {
+    withAuth(c.req.raw, async (auth, db) => {
       const email = c.req.valid("json").email.toLowerCase();
       await requestLimiter.check(db, LIMITS.codePerIp, clientIp(c));
       await requestLimiter.check(db, LIMITS.codePerAddress, email);
@@ -280,7 +240,7 @@ export function loginRoutes({
   );
 
   app.openapi(signIn, (c) =>
-    withAuth(c, async (auth, db) => {
+    withAuth(c.req.raw, async (auth, db) => {
       const { email, code, rememberMe } = c.req.valid("json");
       await requestLimiter.check(db, LIMITS.loginPerIp, clientIp(c));
       const headers = forwardedHeaders(c);
@@ -300,7 +260,7 @@ export function loginRoutes({
   );
 
   app.openapi(readSession, (c) =>
-    withAuth(c, async (auth) => {
+    withAuth(c.req.raw, async (auth) => {
       const result = await auth.api.getSession({
         headers: forwardedHeaders(c),
         returnHeaders: true,
@@ -312,7 +272,7 @@ export function loginRoutes({
   );
 
   app.openapi(signOut, (c) =>
-    withAuth(c, async (auth) => {
+    withAuth(c.req.raw, async (auth) => {
       const headers = forwardedHeaders(c);
       if (!(await auth.api.getSession({ headers }))) throw new NotSignedInError();
       const result = await auth.api.signOut({ headers, returnHeaders: true });
@@ -322,7 +282,7 @@ export function loginRoutes({
   );
 
   app.openapi(passkeyRegistrationOptions, (c) =>
-    withAuth(c, async (auth, db) => {
+    withAuth(c.req.raw, async (auth, db) => {
       await requestLimiter.check(db, LIMITS.loginPerIp, clientIp(c));
       const headers = forwardedHeaders(c);
       if (!(await auth.api.getSession({ headers }))) throw new NotSignedInError();
@@ -337,7 +297,7 @@ export function loginRoutes({
   );
 
   app.openapi(passkeyRegistration, (c) =>
-    withAuth(c, async (auth, db) => {
+    withAuth(c.req.raw, async (auth, db) => {
       await requestLimiter.check(db, LIMITS.loginPerIp, clientIp(c));
       const headers = forwardedHeaders(c);
       if (!(await auth.api.getSession({ headers }))) throw new NotSignedInError();
@@ -352,7 +312,7 @@ export function loginRoutes({
   );
 
   app.openapi(passkeySignInOptions, (c) =>
-    withAuth(c, async (auth, db) => {
+    withAuth(c.req.raw, async (auth, db) => {
       await requestLimiter.check(db, LIMITS.loginPerIp, clientIp(c));
       const result = await auth.api.generatePasskeyAuthenticationOptions({
         headers: forwardedHeaders(c),
@@ -364,7 +324,7 @@ export function loginRoutes({
   );
 
   app.openapi(passkeySignIn, (c) =>
-    withAuth(c, async (auth, db) => {
+    withAuth(c.req.raw, async (auth, db) => {
       const { response, rememberMe } = c.req.valid("json");
       await requestLimiter.check(db, LIMITS.loginPerIp, clientIp(c));
       const headers = forwardedHeaders(c);

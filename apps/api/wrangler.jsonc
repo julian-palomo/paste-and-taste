@@ -24,10 +24,27 @@
   // configuration has its cache disabled: a cached answer to the wake request
   // would not wake the database.
   "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "00000000000000000000000000000000" }],
+  // Workers Logs keeps what the Worker logs, for the dashboard. Environments
+  // inherit this block, unlike vars, so production takes it as it is: our own
+  // log lines only, with no line per request, since a request's log may hold
+  // the visitor's IP and rough location. Preview, visited only by the owner
+  // and CI, replaces it with one that keeps a line per request too
+  // (docs/adr/2026-11-25-logs-in-workers-logs.md).
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+    "logs": { "invocation_logs": false }
+  },
   // An environment doesn't inherit vars: each one sets every variable again.
   // Each also names its own Hyperdrive id, so none can reach another's database.
   "env": {
     "preview": {
+      // Replaces the top-level block whole: a line per request as well.
+      "observability": {
+        "enabled": true,
+        "head_sampling_rate": 1,
+        "logs": { "invocation_logs": true }
+      },
       "vars": {
         "APP_ENV": "preview"
       },

@@ -14,7 +14,7 @@ needs, and a phase gets its issues when it is next.
 | 1   | The API's base                | Done        | [#35](https://github.com/julian-palomo/paste-and-taste/issues/35)      |
 | 2   | The Instagram prototype       | In progress | [#22](https://github.com/julian-palomo/paste-and-taste/issues/22)      |
 | 3   | Database and login            | In progress | [#42](https://github.com/julian-palomo/paste-and-taste/issues/42), [#58](https://github.com/julian-palomo/paste-and-taste/issues/58), [#66](https://github.com/julian-palomo/paste-and-taste/issues/66), [#69](https://github.com/julian-palomo/paste-and-taste/issues/69), [#80](https://github.com/julian-palomo/paste-and-taste/issues/80) |
-| 4   | The first recipe, end to end  | In progress | [#46](https://github.com/julian-palomo/paste-and-taste/issues/46)      |
+| 4   | The first recipe, end to end  | In progress | [#46](https://github.com/julian-palomo/paste-and-taste/issues/46), [#73](https://github.com/julian-palomo/paste-and-taste/issues/73) |
 | 5   | The real import               | Not started |                                                                        |
 | 6   | The native app                | Not started |                                                                        |
 | 7   | What makes the product        | Not started |                                                                        |
@@ -54,7 +54,8 @@ needs, and a phase gets its issues when it is next.
    and hand back the API's cookies, which the web app's server relays. Next
    comes the sign-in screen, and later sending real email and the login in
    preview and production.
-   The first table holds an owner and who may see each recipe
+   The first table, a user's recipes, holds each recipe's copy owner; who
+   else may see a recipe comes with sending and sharing, in their own issue
    ([the record](adr/2026-11-24-friends-groups-and-copies.md)).
 4. **The first recipe, end to end.** A table, its endpoints, and the web app
    in TanStack Start with one screen that lists a recipe, opens it and edits
@@ -69,7 +70,11 @@ needs, and a phase gets its issues when it is next.
    look's colours, light and dark, and its two typefaces. Since #74 it has the
    first pieces its screens are built from, a button, a text field, a
    checkbox and a card, and a page that shows them in development and
-   preview.
+   preview. #73 is the API's half: a user's recipes in Postgres, listed,
+   opened, added and edited through the API, in development, with the first
+   service and repository
+   ([the record](adr/2026-11-25-ingredients-and-steps-as-jsonb.md)). The
+   screen that lists, opens and edits a recipe is next.
 5. **The real import.** Workflows in the background and the limit per user.
    Web pages first, the cheapest source to read, then Instagram, then YouTube.
 6. **The native app.** Android first, with sharing a post to the app. iPhone

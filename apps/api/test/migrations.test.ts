@@ -12,7 +12,7 @@ afterAll(async () => {
   await postgres.stop();
 });
 
-it("applies the committed migrations: Better Auth's tables and the request limits", async () => {
+it("applies the committed migrations: Better Auth's tables, the request limits and the recipes", async () => {
   const client = new Client({ connectionString: postgres.connectionString });
   await client.connect();
   const { rows } = await client.query<{ table_name: string }>(
@@ -23,6 +23,7 @@ it("applies the committed migrations: Better Auth's tables and the request limit
   expect(rows.map((row) => row.table_name)).toEqual([
     "auth_account",
     "passkey",
+    "recipe",
     "request_limit",
     "session",
     "user",

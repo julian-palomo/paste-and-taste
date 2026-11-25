@@ -85,6 +85,14 @@ says Write.
 If `wrangler deploy` fails on a permission, its error names the one it
 lacks: add that row to the token and re-run the job.
 
+Both Workers' configs turn on Workers Logs (`observability`), and the token
+has no Workers Observability row. [Cloudflare's roles page](https://developers.cloudflare.com/workers/authorization/workers/)
+maps Workers Scripts Edit to a role that covers observability, so the token
+is expected to be enough; the first deploy with the setting shows it. If it
+fails naming that permission, add Workers Observability, at Edit, to the
+account policy and re-run the job. Preview deploys first, so production is
+untouched until then.
+
 The API has a Hyperdrive binding. [Cloudflare's roles page](https://developers.cloudflare.com/workers/authorization/workers/)
 says a Worker with bindings to KV, R2 or D1 deploys with no permission on
 those resources, and names no exception; whether that holds for Hyperdrive
@@ -193,25 +201,28 @@ awake, and nothing in the API refuses that yet. If more than half of the 100
 are spent by the middle of the month, something is keeping it awake: that is
 the sign to look at who calls `/wake`, or at the plan.
 
-### 5. The login, in development only
+### 5. The login and the recipes, in development only
 
-The API's login (`/login/*`) runs only when `APP_ENV` is `development`; in
-preview and production those routes answer 404 until the issue that deploys
-the login. It needs its tables in the development database, and Better
-Auth's secret in `apps/api/.env`. As above, every command runs in your own
+The API's login (`/login/*`) and a user's recipes (`/recipes/*`) run only
+when `APP_ENV` is `development`; in preview and production those routes
+answer 404 until the issue that deploys the login. They need their tables in
+the development database, and Better Auth's secret in `apps/api/.env`. As above, every command runs in your own
 terminal, and nothing it prints is pasted anywhere.
 
 1. **The migrations**, from `apps/api/drizzle/`, to the development
-   database:
+   database. The connection string is read from its line in `apps/api/.env`,
+   written in section 4, so it is never pasted or shown:
 
    ```bash
-   read -rs DATABASE_URL && export DATABASE_URL     # paste the development string, then Enter; nothing shows
+   export DATABASE_URL="$(sed -n 's/^CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE=//p' apps/api/.env)"
    pnpm -C apps/api db:migrate
    unset DATABASE_URL
    ```
 
-   An agent never runs this. Preview and production get the same migrations,
-   the same way, before the merge that deploys the login there.
+   Run it again after every merge that adds a migration; it applies only the
+   new ones. An agent never runs this. Preview and production get the same
+   migrations, with their own string pasted through `read -rs DATABASE_URL &&
+   export DATABASE_URL`, before the merge that deploys the login there.
 2. **The secret**, generated and **appended**, so the line from section 4
    stays:
 
@@ -234,6 +245,18 @@ terminal, and nothing it prints is pasted anywhere.
 
    The first answers `{"sent":true}`, the second and the third
    `{"user":{…}}` with that address.
+
+   With the same cookies, before removing them, a recipe can be added and
+   listed:
+
+   ```bash
+   curl -s -b /tmp/pt-cookies -X POST localhost:8787/recipes -H 'content-type: application/json' \
+     -d '{"title":"Gazpacho","language":"es","servings":null,"time":null,"ingredients":[{"name":"tomate","quantity":"1","unit":"kg"}],"steps":["Triturar y enfriar."],"source":null}'
+   curl -s -b /tmp/pt-cookies localhost:8787/recipes
+   ```
+
+   The first answers the recipe with its `id`, the second
+   `{"recipes":[…]}` with its summary.
 
 A code lasts 5 minutes and allows 3 tries. Asking for codes is limited to 3
 per address every 15 minutes and 10 per IP every hour, and any other login
@@ -261,6 +284,31 @@ The **Actions** tab, workflow **Deploy**. A run's graph has five boxes:
 Runs never overlap. While one runs, the next waits; a third push while one
 waits replaces the waiting run, which never started. A run in progress is
 never cancelled.
+
+## Reading the logs
+
+Each deployed Worker keeps what it logs in Workers Logs, set by the
+`observability` block in its `wrangler.jsonc`
+([why](adr/2026-11-25-logs-in-workers-logs.md)). In the Cloudflare dashboard:
+**Workers & Pages**, select the Worker, then **Observability**
+([Cloudflare's page](https://developers.cloudflare.com/workers/observability/logs/workers-logs/#view-logs-from-the-dashboard)).
+
+- **What is kept.** Production keeps only the lines our code logs. In the
+  API: an unexpected error, with the request's method and path, and a
+  database that timed out or couldn't be reached. In the web app: a page that
+  failed to load, and a failed wake. Preview also keeps a line per request,
+  with the request and the response, which is where a slow or failed request
+  in a run can be read. Our code never logs an email address, a sign-in code,
+  a cookie or a session token.
+- **How long, and how much.** Until 30 November 2026, on Workers Free,
+  200,000 lines a day, each kept 3 days. From 1 December 2026 the account's
+  Free allowance is 0.5 GB a day of logs and traces together, each kept seven
+  days. Once the day's allowance is used, nothing more is kept until 00:00 UTC
+  ([Cloudflare's pricing](https://developers.cloudflare.com/observability/pricing/)).
+  Both can change: check the pages before relying on them.
+
+Logs aren't read live here: for that, `wrangler tail` still works, run by the
+owner.
 
 ## When the smoke fails
 
