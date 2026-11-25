@@ -1,9 +1,9 @@
-import { createApp } from "@paste-and-taste/api/app";
+import { createApp, noDatabase } from "@paste-and-taste/api/app";
 import { expect, it } from "vitest";
 import { ApiError, ApiUnreachableError, createApiClient } from "../src/index.ts";
 
 // The real application, called in process: `fetch` hands each request to it.
-const app = createApp({ APP_ENV: "development" });
+const app = createApp({ APP_ENV: "development" }, noDatabase);
 const client = createApiClient({
   baseUrl: "http://api.test",
   fetch: async (request) => app.fetch(request),

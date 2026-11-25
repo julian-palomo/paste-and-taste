@@ -14,7 +14,7 @@ green:
    reusable workflow).
 2. **Deploy to preview**: the API. `wrangler deploy --env preview`, then the
    smoke script against the preview Worker, which must also answer that it is
-   `preview`.
+   `preview` and reach its database through `/wake`.
 3. **Deploy web to preview**: the web app built for preview
    (`CLOUDFLARE_ENV=preview pnpm build`), `wrangler deploy --env preview`, then
    its check against the preview web Worker: `/en` and `/es` must show the
@@ -85,6 +85,13 @@ says Write.
 If `wrangler deploy` fails on a permission, its error names the one it
 lacks: add that row to the token and re-run the job.
 
+The API has a Hyperdrive binding. [Cloudflare's roles page](https://developers.cloudflare.com/workers/authorization/workers/)
+says a Worker with bindings to KV, R2 or D1 deploys with no permission on
+those resources, and names no exception; whether that holds for Hyperdrive
+was not tried. If the first deploy with the binding fails naming a Hyperdrive
+permission, add "Hyperdrive Read" to the account policy and re-run the job.
+Preview deploys first, so production is untouched until then.
+
 The web app's Workers use the same token. A Service binding needs no
 permission of its own:
 [Cloudflare's roles page](https://developers.cloudflare.com/workers/authorization/workers/)
@@ -128,6 +135,64 @@ smoke script and the web's check print them, so they show in every run's log,
 which anyone can read on a public repo. The secrets never do: GitHub masks them, and only the
 `wrangler deploy` step receives them.
 
+### 4. The databases: Neon and Hyperdrive
+
+Each environment has its own database, in its own Neon project, so none
+shares another's data or its free compute: Neon's Free plan gives 100
+CU-hours a month per project, and past them suspends the compute until the
+next month ([Neon's plans](https://neon.com/docs/introduction/plans)). Do
+this before the merge that brings the API its Hyperdrive binding. Every
+command runs in your own terminal, never through an agent, and nothing it
+prints is pasted anywhere except the two ids.
+
+1. **Wrangler's account.** `pnpm -C apps/api exec wrangler whoami`, and
+   `pnpm -C apps/api exec wrangler login` if it shows no account. The deploy
+   token lives only in GitHub.
+2. **Three Neon projects.** In the Neon console, **New Project**, three times:
+   `paste-and-taste-development`, `paste-and-taste-preview` and
+   `paste-and-taste-production`, each in **AWS Europe (London)**. For each,
+   **Connect** with **Connection pooling** off, and copy the direct string:
+   Hyperdrive pools, and local development connects straight.
+3. **Hyperdrive for preview and production**, each with its cache disabled.
+   `read -rs` takes the paste without showing it or keeping it in the shell
+   history:
+
+   ```bash
+   read -rs DATABASE_URL && export DATABASE_URL     # paste the preview string, then Enter; nothing shows
+   pnpm -C apps/api exec wrangler hyperdrive create paste-and-taste-preview --connection-string="$DATABASE_URL" --caching-disabled
+   unset DATABASE_URL
+   ```
+
+   Then the same with the production string and the name
+   `paste-and-taste-production`. Each prints an `id`. If wrangler offers to
+   add the binding to the config file, answer no. Keep `--caching-disabled`:
+   Hyperdrive caches reads by default, and a cached answer to `/wake` would
+   not wake the database.
+4. **The ids in the repo.** Each id replaces the zeros in its block of
+   `apps/api/wrangler.jsonc`, `env.preview` and `env.production`, through a
+   pull request. They are not secrets: using one needs a token on the
+   account. The top-level block keeps its zeros: development has no
+   Hyperdrive.
+5. **Development, on your Mac.** The development string goes in
+   `apps/api/.env`, which git ignores:
+
+   ```bash
+   read -rs DATABASE_URL     # paste the development string, then Enter; nothing shows
+   printf 'CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE=%s\n' "$DATABASE_URL" > apps/api/.env
+   chmod 600 apps/api/.env
+   unset DATABASE_URL
+   ```
+
+   Then `pnpm -C apps/api dev`, and in a second terminal
+   `pnpm -C apps/api smoke http://localhost:8787`. Wrangler reads `.env` from
+   `apps/api` and connects straight to that database.
+
+**Watching the free plan.** Read production's CU-hours for the month in the
+Neon console now and then. One request every few minutes keeps a compute
+awake, and nothing in the API refuses that yet. If more than half of the 100
+are spent by the middle of the month, something is keeping it awake: that is
+the sign to look at who calls `/wake`, or at the plan.
+
 ## Reading a run
 
 The **Actions** tab, workflow **Deploy**. A run's graph has five boxes:
@@ -137,7 +202,7 @@ The **Actions** tab, workflow **Deploy**. A run's graph has five boxes:
 
 - **Green through the end:** all four Workers are deployed, and each answered
   its check. The last line of each API job is
-  `OK <address> (<environment>): /health and an unknown route answer as specified`,
+  `OK <address> (<environment>): /health, /wake and an unknown route answer as specified`,
   and of each web job
   `OK <address> (<environment>): /en, /es and / answer as specified`.
 - **Red in `Checks`:** nothing was deployed. Every deploy job shows as
@@ -168,6 +233,16 @@ If `/health` names the wrong environment, as in
 `/health answered environment "production"; expected "preview"`, the Worker at
 `API_URL` is up but belongs to the other environment, so this job's Worker
 wasn't checked. Fix `API_URL` in that GitHub environment and re-run the job.
+
+If `/wake` answers 503, the Worker is up but didn't reach its database:
+
+- **`The database could not be reached.`**: check that environment's
+  Hyperdrive id in `apps/api/wrangler.jsonc`, and that its Neon project and
+  Hyperdrive configuration exist.
+- **`The database did not answer within 5 seconds.`**: in the Neon console,
+  check whether the project's compute is suspended because the month's
+  CU-hours ran out. A database waking from sleep takes about a second, well
+  inside the limit.
 
 If the smoke can't reach the address at all, check `API_URL` in that
 environment first. The very first production deploy creates the Worker, and a
@@ -204,7 +279,17 @@ What a red web job stops:
 ## Trying the deployed path locally
 
 `pnpm -C apps/web dev` calls the API over HTTP at `API_URL`. To run the
-binding path, as deployed, on your machine (nothing is sent to Cloudflare):
+binding path, as deployed, on your machine (nothing is sent to Cloudflare),
+first copy your development string for the preview environment:
+`wrangler dev --env preview` reads `apps/api/.env.preview`, not `.env`. It
+holds the development database's string, never preview's, and git ignores
+it too:
+
+```bash
+cp apps/api/.env apps/api/.env.preview
+```
+
+Then:
 
 ```bash
 CLOUDFLARE_ENV=preview pnpm -C apps/web build

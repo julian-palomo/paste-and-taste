@@ -4,6 +4,7 @@ import { checkApi } from "../src/smoke/check-api.ts";
 const BASE = "https://api.example.test";
 
 const healthy = () => json(200, { status: "ok", environment: "preview" });
+const awake = () => json(200, { status: "awake" });
 const notFoundProblem = () =>
   json(
     404,
@@ -15,9 +16,15 @@ function json(status: number, body: unknown, contentType = "application/json; ch
   return new Response(JSON.stringify(body), { status, headers: { "Content-Type": contentType } });
 }
 
-// Answers /health with `health` and every other path with `other`.
-function fakeFetch(health: () => Response, other: () => Response) {
-  return async (url: string) => (new URL(url).pathname === "/health" ? health() : other());
+// Answers /health with `health`, /wake with `wake` and every other path with
+// `other`.
+function fakeFetch(health: () => Response, other: () => Response, wake: () => Response = awake) {
+  return async (url: string) => {
+    const path = new URL(url).pathname;
+    if (path === "/health") return health();
+    if (path === "/wake") return wake();
+    return other();
+  };
 }
 
 describe("checkApi", () => {
@@ -68,5 +75,22 @@ describe("checkApi", () => {
     expect(failures).toHaveLength(1);
     expect(failures[0]).toContain('"production"');
     expect(failures[0]).toContain('"preview"');
+  });
+
+  it("reports /wake answering with an error", async () => {
+    const down = () =>
+      json(
+        503,
+        { type: "about:blank", title: "Service Unavailable", status: 503, detail: "x" },
+        "application/problem+json",
+      );
+    const failures = await checkApi(BASE, fakeFetch(healthy, notFoundProblem, down));
+    expect(failures).toEqual([expect.stringContaining("/wake")]);
+  });
+
+  it("reports /wake answering with another body", async () => {
+    const wrongBody = () => json(200, { status: "ok" });
+    const failures = await checkApi(BASE, fakeFetch(healthy, notFoundProblem, wrongBody));
+    expect(failures).toEqual([expect.stringContaining("/wake")]);
   });
 });

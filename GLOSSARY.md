@@ -116,3 +116,10 @@ _Avoid_: chat, thread, channel.
 writes when sending or sharing a recipe is its conversation's first message.
 The app's buttons say "Comentar" in a group and "Responder" between friends.\
 _Avoid_: comment, note (as names for it).
+
+## Running the app
+
+**Wake request**: The cheap request an app sends when it or any of its pages
+opens, so the database, which sleeps when idle, is awake by the time the user
+acts. The API answers it at `/wake`. Never shown in the app.\
+_Avoid_: ping, warm-up, keep-alive.

@@ -1,14 +1,15 @@
-// Checks a running API from outside: /health and one unknown route must answer
-// as specified. scripts/smoke.ts runs this file with Node directly, which
-// strips the types: like every file in apps/api, its relative imports carry
-// `.ts` and it uses only erasable syntax (erasableSyntaxOnly checks that).
+// Checks a running API from outside: /health, /wake and one unknown route
+// must answer as specified. /wake proves the API reaches its database.
+// scripts/smoke.ts runs this file with Node directly, which strips the types:
+// like every file in apps/api, its relative imports carry `.ts` and it uses
+// only erasable syntax (erasableSyntaxOnly checks that).
 
 type Fetch = (url: string) => Promise<Response>;
 
 const UNKNOWN_ROUTE = "/smoke-check/no-such-route";
 const ENVIRONMENTS = ["development", "preview", "production"];
 
-// Returns what is wrong, one line per route; an empty list means both passed.
+// Returns what is wrong, one line per route; an empty list means all passed.
 // With an expected environment, /health must also name that one; without, any
 // of the three passes.
 export async function checkApi(
@@ -34,6 +35,14 @@ export async function checkApi(
           `expected ${JSON.stringify(expectedEnvironment)}`,
       );
     }
+  }
+
+  const wake = await fetchFn(`${base}/wake`);
+  const wakeBody = await readBody(wake);
+  if (wake.status !== 200 || !isAwake(wakeBody)) {
+    failures.push(
+      `/wake answered ${wake.status} ${JSON.stringify(wakeBody)}; expected 200 {"status":"awake"}`,
+    );
   }
 
   const unknown = await fetchFn(`${base}${UNKNOWN_ROUTE}`);
@@ -72,6 +81,11 @@ function isHealthy(body: unknown): boolean {
     ENVIRONMENTS.includes(environment) &&
     Object.keys(body).length === 2
   );
+}
+
+function isAwake(body: unknown): boolean {
+  if (typeof body !== "object" || body === null) return false;
+  return (body as Record<string, unknown>).status === "awake" && Object.keys(body).length === 1;
 }
 
 function isProblem(body: unknown, status: number): boolean {

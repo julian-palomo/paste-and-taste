@@ -51,6 +51,20 @@
           "status",
           "detail"
         ]
+      },
+      "WakeResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "awake"
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ]
       }
     },
     "parameters": {}
@@ -65,6 +79,42 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "An error, as Problem Details (RFC 9457).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/wake": {
+      "get": {
+        "responses": {
+          "200": {
+            "description": "The database answered. Never stored by a cache: a stored answer wakes nothing.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WakeResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The database could not be reached, or did not answer within 5 seconds.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }

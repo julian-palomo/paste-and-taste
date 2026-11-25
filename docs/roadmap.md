@@ -13,7 +13,7 @@ needs, and a phase gets its issues when it is next.
 | --- | ----------------------------- | ----------- | ---------------------------------------------------------------------- |
 | 1   | The API's base                | Done        | [#35](https://github.com/julian-palomo/paste-and-taste/issues/35)      |
 | 2   | The Instagram prototype       | In progress | [#22](https://github.com/julian-palomo/paste-and-taste/issues/22)      |
-| 3   | Database and login            | In progress | [#42](https://github.com/julian-palomo/paste-and-taste/issues/42), [#58](https://github.com/julian-palomo/paste-and-taste/issues/58) |
+| 3   | Database and login            | In progress | [#42](https://github.com/julian-palomo/paste-and-taste/issues/42), [#58](https://github.com/julian-palomo/paste-and-taste/issues/58), [#66](https://github.com/julian-palomo/paste-and-taste/issues/66) |
 | 4   | The first recipe, end to end  | In progress | [#46](https://github.com/julian-palomo/paste-and-taste/issues/46)      |
 | 5   | The real import               | Not started |                                                                        |
 | 6   | The native app                | Not started |                                                                        |
@@ -44,7 +44,10 @@ needs, and a phase gets its issues when it is next.
    ([the record](adr/2026-11-25-database-host-and-drizzle.md)) and login
    without a password ([the record](adr/2026-11-25-login-without-a-password.md)),
    with Workers moving to the paid plan when the login is deployed. The
-   phase's next issues are written from them.
+   phase's next issues are written from them. The first, #66, connects the
+   API to Postgres on Neon through Hyperdrive, with a wake route that every
+   deploy's smoke calls; next come the web app sending the wake request, then
+   login in the API, then its screen.
    The first table holds an owner and who may see each recipe
    ([the record](adr/2026-11-24-friends-groups-and-copies.md)).
 4. **The first recipe, end to end.** A table, its endpoints, and the web app

@@ -1,12 +1,24 @@
 import { readFileSync } from "node:fs";
 import { Validator } from "@cfworker/json-schema";
-import { describe, expect, it } from "vitest";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createApp } from "../src/app.ts";
+import { startTestPostgres, type TestPostgres } from "./postgres.ts";
 
 // The committed document, not one generated here: the contract is what
 // clients were built against.
 const document = JSON.parse(readFileSync(new URL("../openapi.json", import.meta.url), "utf8"));
-const app = createApp({ APP_ENV: "development" });
+// A real Postgres, so the routes that touch the database answer their success.
+let postgres: TestPostgres;
+beforeAll(async () => {
+  postgres = await startTestPostgres();
+});
+afterAll(async () => {
+  await postgres.stop();
+});
+const app = createApp(
+  { APP_ENV: "development" },
+  { connectionString: () => postgres.connectionString },
+);
 
 type Operation = { responses: Record<string, DocumentedResponse> };
 type DocumentedResponse = { content?: Record<string, { schema: object }> };
@@ -18,6 +30,7 @@ type DocumentedResponse = { content?: Record<string, { schema: object }> };
 // `init` has no method, the operation's is used.
 const successfulRequests: Record<string, { path: string; init?: RequestInit }> = {
   "get /health": { path: "/health" },
+  "get /wake": { path: "/wake" },
 };
 
 const operations = Object.entries(

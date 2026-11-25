@@ -2,14 +2,15 @@
 //        pnpm -C apps/api openapi:check    exits 1 if openapi.json is stale
 // Runs in Node, never in the Worker.
 import { readFileSync, writeFileSync } from "node:fs";
-import { createApp } from "../src/app.ts";
+import { createApp, noDatabase } from "../src/app.ts";
 import { openApiDocument } from "../src/openapi.ts";
 
 const FILE = new URL("../openapi.json", import.meta.url);
 const NAME = "apps/api/openapi.json";
 
-// The document doesn't depend on the variables; createApp needs valid ones.
-const document = openApiDocument(createApp({ APP_ENV: "development" }));
+// The document depends on neither the variables nor the database; createApp
+// needs valid variables, and the script never connects.
+const document = openApiDocument(createApp({ APP_ENV: "development" }, noDatabase));
 const text = `${JSON.stringify(document, null, 2)}\n`;
 
 if (process.argv.includes("--check")) {

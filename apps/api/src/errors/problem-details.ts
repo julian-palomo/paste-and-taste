@@ -8,7 +8,7 @@ import { AppError } from "./app-error.ts";
 // onError or notFound, since Hono calls notFound only on the root app.
 
 // Every error body, as the document describes it and clients read it.
-const ProblemDetails = z
+export const ProblemDetails = z
   .object({
     type: z.string(),
     title: z.string(),
@@ -28,9 +28,8 @@ export const problemResponses = {
 };
 
 // The 4xx and 5xx reason phrases of RFC 9110, section 15, plus 429 from
-// RFC 6585. Kept here, not taken from node:http: the Worker runs without
-// nodejs_compat, so a node:* import passes the tests on Node and breaks the
-// bundle.
+// RFC 6585. Kept here, not taken from node:http, so the module that turns
+// every error into a response depends on no Node API.
 const REASON_PHRASES: Record<number, string> = {
   400: "Bad Request",
   401: "Unauthorized",
