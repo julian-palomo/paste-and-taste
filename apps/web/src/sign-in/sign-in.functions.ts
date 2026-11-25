@@ -7,6 +7,7 @@ import { type Language, parseLanguage } from "../i18n/i18n.ts";
 import { readPending, relayHeaders, type SignInErrorKind } from "./relay.ts";
 import {
   changeAddress,
+  formResponse,
   passkeyRegistrationOptions,
   passkeySignIn,
   passkeySignInOptions,
@@ -23,24 +24,22 @@ import { signInShown } from "./sign-in-shown.ts";
 // work in sign-in.ts and hands the API's cookies back. Nothing here reads,
 // rewrites or logs a cookie.
 
-function deps(config: WebConfig, appendSetCookie: (cookie: string) => void): SignInDeps {
-  const { baseUrl, fetch } = config.api;
+// Every function gets signInShown with its deps, and calls nothing where it
+// is false: each is an address of its own, reachable without the page.
+function deps(
+  context: { config: WebConfig; origin: string },
+  appendSetCookie: (cookie: string) => void,
+): SignInDeps {
+  const { baseUrl, fetch } = context.config.api;
   return {
     client: createApiClient(fetch ? { baseUrl, fetch } : { baseUrl }),
     // Start types the names it knows; these three are ordinary headers.
     headers: relayHeaders((name) => getRequestHeader(name as "cookie")),
     appendSetCookie,
     now: Date.now,
+    shown: signInShown(context.config.environment),
+    origin: context.origin,
   };
-}
-
-// A form posted with no JavaScript gets this Response as it is: a 303 back to
-// the page, carrying every cookie to set. Built here rather than through
-// appendResponseHeader, so the cookies are on the redirect itself.
-function seeOther(redirect: string, cookies: string[]): Response {
-  const headers = new Headers({ Location: redirect });
-  for (const cookie of cookies) headers.append("Set-Cookie", cookie);
-  return new Response(null, { status: 303, headers });
 }
 
 // Each form sends its page's language; anything else goes back in English.
@@ -54,7 +53,7 @@ export const getSignInPage = createServerFn({ method: "GET" })
     // /login routes don't exist there, and the page answers 404.
     if (!signInShown(context.config.environment)) return { shown: false as const };
     const session = await readSession(
-      deps(context.config, (cookie) => appendResponseHeader("set-cookie", cookie)),
+      deps(context, (cookie) => appendResponseHeader("set-cookie", cookie)),
     );
     return { shown: true as const, origin: context.origin, session, pending: pending() };
   });
@@ -64,15 +63,15 @@ export const sendCodeForm = createServerFn({ method: "POST" })
   .validator((form: FormData) => form)
   .handler(async ({ data, context }) => {
     const cookies: string[] = [];
-    const { redirect } = await sendCode(
-      deps(context.config, (c) => cookies.push(c)),
+    const result = await sendCode(
+      deps(context, (c) => cookies.push(c)),
       {
         lang: langOf(data),
         email: String(data.get("email") ?? "").trim(),
         pending: pending(),
       },
     );
-    return seeOther(redirect, cookies);
+    return formResponse(result, cookies);
   });
 
 export const signInForm = createServerFn({ method: "POST" })
@@ -80,8 +79,8 @@ export const signInForm = createServerFn({ method: "POST" })
   .validator((form: FormData) => form)
   .handler(async ({ data, context }) => {
     const cookies: string[] = [];
-    const { redirect } = await signIn(
-      deps(context.config, (c) => cookies.push(c)),
+    const result = await signIn(
+      deps(context, (c) => cookies.push(c)),
       {
         lang: langOf(data),
         code: String(data.get("code") ?? "").trim(),
@@ -90,7 +89,7 @@ export const signInForm = createServerFn({ method: "POST" })
         pending: pending(),
       },
     );
-    return seeOther(redirect, cookies);
+    return formResponse(result, cookies);
   });
 
 export const changeAddressForm = createServerFn({ method: "POST" })
@@ -98,13 +97,13 @@ export const changeAddressForm = createServerFn({ method: "POST" })
   .validator((form: FormData) => form)
   .handler(({ data, context }) => {
     const cookies: string[] = [];
-    const { redirect } = changeAddress(
-      deps(context.config, (c) => cookies.push(c)),
+    const result = changeAddress(
+      deps(context, (c) => cookies.push(c)),
       {
         lang: langOf(data),
       },
     );
-    return seeOther(redirect, cookies);
+    return formResponse(result, cookies);
   });
 
 export const signOutForm = createServerFn({ method: "POST" })
@@ -112,13 +111,13 @@ export const signOutForm = createServerFn({ method: "POST" })
   .validator((form: FormData) => form)
   .handler(async ({ data, context }) => {
     const cookies: string[] = [];
-    const { redirect } = await signOut(
-      deps(context.config, (c) => cookies.push(c)),
+    const result = await signOut(
+      deps(context, (c) => cookies.push(c)),
       {
         lang: langOf(data),
       },
     );
-    return seeOther(redirect, cookies);
+    return formResponse(result, cookies);
   });
 
 // The passkey's four steps, called from the browser with JavaScript: WebAuthn
@@ -149,7 +148,7 @@ function parseAnswer(text: string): Record<string, unknown> | undefined {
 export const passkeyRegistrationOptionsFn = createServerFn({ method: "POST" })
   .middleware([withConfig])
   .handler(async ({ context }) =>
-    asText(await passkeyRegistrationOptions(deps(context.config, appendToResponse))),
+    asText(await passkeyRegistrationOptions(deps(context, appendToResponse))),
   );
 
 export const registerPasskeyFn = createServerFn({ method: "POST" })
@@ -158,13 +157,13 @@ export const registerPasskeyFn = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const response = parseAnswer(data.responseJson);
     if (!response) return { ok: false as const, error: "passkey-failed" as const };
-    return registerPasskey(deps(context.config, appendToResponse), { response });
+    return registerPasskey(deps(context, appendToResponse), { response });
   });
 
 export const passkeySignInOptionsFn = createServerFn({ method: "POST" })
   .middleware([withConfig])
   .handler(async ({ context }) =>
-    asText(await passkeySignInOptions(deps(context.config, appendToResponse))),
+    asText(await passkeySignInOptions(deps(context, appendToResponse))),
   );
 
 export const passkeySignInFn = createServerFn({ method: "POST" })
@@ -173,7 +172,7 @@ export const passkeySignInFn = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const response = parseAnswer(data.responseJson);
     if (!response) return { ok: false as const, error: "passkey-failed" as const };
-    return passkeySignIn(deps(context.config, appendToResponse), {
+    return passkeySignIn(deps(context, appendToResponse), {
       response,
       rememberMe: data.rememberMe,
     });

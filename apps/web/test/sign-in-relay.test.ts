@@ -39,7 +39,7 @@ describe("relayHeaders", () => {
 
 describe("the pending cookie", () => {
   it("is HttpOnly, SameSite=Lax, for the whole site, for 15 minutes", () => {
-    const cookie = pendingCookie({ email: "ana@example.com", sentAt: 1000 });
+    const cookie = pendingCookie({ email: "ana@example.com", sentAt: 1000 }, { secure: false });
 
     expect(cookie).toMatch(/^sign_in_pending=[^;]+;/);
     expect(cookie.split("; ")).toEqual(
@@ -48,13 +48,18 @@ describe("the pending cookie", () => {
   });
 
   it("reads back what was written, among other cookies", () => {
-    const value = pendingCookie({ email: "ana@example.com", sentAt: 1000 }).split(";")[0];
+    const value = pendingCookie(
+      { email: "ana@example.com", sentAt: 1000 },
+      { secure: false },
+    ).split(";")[0];
 
     expect(readPending(`session=abc; ${value}; other=1`)).toEqual({
       email: "ana@example.com",
       sentAt: 1000,
     });
-    expect(readPending(pendingCookie({ email: "ana@example.com" }).split(";")[0])).toEqual({
+    expect(
+      readPending(pendingCookie({ email: "ana@example.com" }, { secure: false }).split(";")[0]),
+    ).toEqual({
       email: "ana@example.com",
     });
   });
@@ -69,9 +74,19 @@ describe("the pending cookie", () => {
   });
 
   it("is deleted by an expired cookie of the same name and path", () => {
-    expect(clearPendingCookie.split("; ")).toEqual(
+    expect(clearPendingCookie({ secure: false }).split("; ")).toEqual(
       expect.arrayContaining(["sign_in_pending=", "Path=/", "Max-Age=0"]),
     );
+  });
+
+  it.each([
+    [true, true],
+    [false, false],
+  ])("with secure: %s, is Secure: %s, and so is its delete", (secure, has) => {
+    expect(
+      pendingCookie({ email: "ana@example.com" }, { secure }).split("; ").includes("Secure"),
+    ).toBe(has);
+    expect(clearPendingCookie({ secure }).split("; ").includes("Secure")).toBe(has);
   });
 });
 

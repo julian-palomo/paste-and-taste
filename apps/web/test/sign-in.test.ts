@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { clearPendingCookie, readPending } from "../src/sign-in/relay.ts";
 import {
   changeAddress,
+  formResponse,
   passkeyRegistrationOptions,
   passkeySignIn,
   passkeySignInOptions,
@@ -57,6 +58,8 @@ function api(answer: () => Response | Promise<Response>) {
     headers: browser,
     appendSetCookie: (cookie) => setCookies.push(cookie),
     now: () => NOW,
+    shown: true,
+    origin: "http://localhost:5173",
   };
   return { deps, requests, setCookies };
 }
@@ -207,7 +210,7 @@ describe("signIn", () => {
       pending: sent,
     });
 
-    expect(setCookies).toContain(clearPendingCookie);
+    expect(setCookies).toContain(clearPendingCookie({ secure: false }));
     expect(result).toEqual({ redirect: "/es/sign-in?step=passkey" });
   });
 
@@ -226,7 +229,7 @@ describe("signIn", () => {
     });
 
     expect(result).toEqual({ redirect: `/en/sign-in?error=${kind}` });
-    expect(setCookies).not.toContain(clearPendingCookie);
+    expect(setCookies).not.toContain(clearPendingCookie({ secure: false }));
   });
 
   it("with no address sent a code, starts again without calling the API", async () => {
@@ -246,7 +249,7 @@ describe("changeAddress", () => {
     const result = changeAddress(deps, { lang: "en" });
 
     expect(requests).toHaveLength(0);
-    expect(setCookies).toEqual([clearPendingCookie]);
+    expect(setCookies).toEqual([clearPendingCookie({ secure: false })]);
     expect(result).toEqual({ redirect: "/en/sign-in" });
   });
 });
@@ -322,5 +325,86 @@ describe("passkeys", () => {
       ok: false,
       error,
     });
+  });
+});
+
+describe("where the sign-in isn't shown", () => {
+  const notShown = () => {
+    const made = api(() => json({}));
+    return { ...made, deps: { ...made.deps, shown: false } };
+  };
+
+  it.each([
+    ["sendCode", (d: SignInDeps) => sendCode(d, { lang: "es", email: "ana@example.com" })],
+    [
+      "signIn",
+      (d: SignInDeps) => signIn(d, { lang: "es", code: "123456", remember: false, pending: sent }),
+    ],
+    ["changeAddress", async (d: SignInDeps) => changeAddress(d, { lang: "es" })],
+    ["signOut", (d: SignInDeps) => signOut(d, { lang: "es" })],
+  ])("%s calls nothing, sets nothing, and is not found", async (_, call) => {
+    const { deps, requests, setCookies } = notShown();
+
+    expect(await call(deps)).toEqual({ notFound: true });
+    expect(requests).toHaveLength(0);
+    expect(setCookies).toEqual([]);
+  });
+
+  it.each([
+    ["passkeyRegistrationOptions", (d: SignInDeps) => passkeyRegistrationOptions(d)],
+    ["registerPasskey", (d: SignInDeps) => registerPasskey(d, { response: { id: "k" } })],
+    ["passkeySignInOptions", (d: SignInDeps) => passkeySignInOptions(d)],
+    [
+      "passkeySignIn",
+      (d: SignInDeps) => passkeySignIn(d, { response: { id: "k" }, rememberMe: false }),
+    ],
+  ])("%s calls nothing and fails", async (_, call) => {
+    const { deps, requests } = notShown();
+
+    expect(await call(deps)).toMatchObject({ ok: false });
+    expect(requests).toHaveLength(0);
+  });
+
+  it("readSession calls nothing and is signed out", async () => {
+    const { deps, requests } = notShown();
+
+    expect(await readSession(deps)).toEqual({ kind: "signed-out" });
+    expect(requests).toHaveLength(0);
+  });
+});
+
+describe("formResponse", () => {
+  it("answers a redirect with 303, its address and every cookie in order", () => {
+    const response = formResponse({ redirect: "/es/sign-in" }, [first, second]);
+
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe("/es/sign-in");
+    expect(response.headers.getSetCookie()).toEqual([first, second]);
+  });
+
+  it("answers not found with 404 and no cookie", () => {
+    const response = formResponse({ notFound: true }, [first]);
+
+    expect(response.status).toBe(404);
+    expect(response.headers.getSetCookie()).toEqual([]);
+  });
+});
+
+describe("the pending cookie's Secure", () => {
+  it.each([
+    ["https://web.test", true],
+    ["http://localhost:5173", false],
+  ])("on %s, sendCode and signIn write it with Secure: %s", async (origin, secure) => {
+    const made = api(() => json({ sent: true, user }));
+    const deps = { ...made.deps, origin };
+
+    await sendCode(deps, { lang: "es", email: "ana@example.com" });
+    await signIn(deps, { lang: "es", code: "123456", remember: false, pending: sent });
+
+    const pendingCookies = made.setCookies.filter((c) => c.startsWith("sign_in_pending="));
+    expect(pendingCookies).toHaveLength(2);
+    for (const cookie of pendingCookies) {
+      expect(cookie.split("; ").includes("Secure")).toBe(secure);
+    }
   });
 });

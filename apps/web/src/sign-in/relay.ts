@@ -23,15 +23,22 @@ export function relayHeaders(get: (name: string) => string | undefined): Record<
 export type Pending = { email: string; sentAt?: number };
 
 const PENDING = "sign_in_pending";
-const PENDING_ATTRIBUTES = "Path=/; HttpOnly; SameSite=Lax";
 
-export function pendingCookie(pending: Pending): string {
+// Secure only where the page is served over HTTPS: on http://localhost, where
+// development runs, a browser may not keep a Secure cookie.
+type CookieOptions = { secure: boolean };
+const attributes = ({ secure }: CookieOptions) =>
+  `Path=/; HttpOnly; SameSite=Lax${secure ? "; Secure" : ""}`;
+
+export function pendingCookie(pending: Pending, options: CookieOptions): string {
   const value = encodeURIComponent(JSON.stringify(pending));
-  return `${PENDING}=${value}; ${PENDING_ATTRIBUTES}; Max-Age=900`;
+  return `${PENDING}=${value}; ${attributes(options)}; Max-Age=900`;
 }
 
-// Same name and path, already expired: the browser deletes the cookie.
-export const clearPendingCookie = `${PENDING}=; ${PENDING_ATTRIBUTES}; Max-Age=0`;
+// The same name and attributes as the cookie it deletes, already expired.
+export function clearPendingCookie(options: CookieOptions): string {
+  return `${PENDING}=; ${attributes(options)}; Max-Age=0`;
+}
 
 // A broken or foreign value reads as none: the cookie is the browser's to send.
 export function readPending(cookieHeader: string | undefined): Pending | undefined {
