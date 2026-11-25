@@ -53,6 +53,26 @@ server function in `<feature>.functions.ts`, the code that reads the API, and
 a view that is plain React with no router, so tests render it with
 `renderToString`. `src/health/` is the model.
 
+**The sign-in relays the login between the browser and the API.** The
+browser never calls the API, so a server function that calls a `/login`
+route sends the API the browser's `cookie`, `user-agent` and
+`cf-connecting-ip`, built by `relayHeaders` (`src/sign-in/relay.ts`), and
+hands each `Set-Cookie` the API answers with back to the browser unchanged.
+The IP is read as the `cf-connecting-ip` header, never with Start's
+`getRequestIP`, which finds nothing on Workers. Nothing reads, rewrites or
+logs a cookie. The address being signed in with sits between the steps in a
+cookie of the web app's own, `sign_in_pending` (`HttpOnly`, 15 minutes),
+never in the page's address. The code path works with no JavaScript: each
+step is a form posted to a server function's `url`, which answers with a 303
+back to the page, the cookies on it, and `?error=<kind>` when it failed; the
+field with the error is rendered with `autoFocus`, which React writes into
+the server's HTML. Start refuses a server function request that carries no
+`Sec-Fetch-Site`, `Origin` or `Referer` of the same origin, with 403, so a
+script trying a form has to send them as a browser does. The passkey needs
+JavaScript: WebAuthn runs in the browser with its own JSON helpers, and its
+options and answers cross the server functions as JSON text. The page answers
+only in development, where the API mounts `/login` (`signInShown`).
+
 **Shared pieces live in `src/pieces/`**: the button, the text field, the
 checkbox and the card, one file each. A piece is plain React with no router
 and no server function, takes its texts as props, and is styled only from the

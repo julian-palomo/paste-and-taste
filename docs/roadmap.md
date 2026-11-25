@@ -13,7 +13,7 @@ needs, and a phase gets its issues when it is next.
 | --- | ----------------------------- | ----------- | ---------------------------------------------------------------------- |
 | 1   | The API's base                | Done        | [#35](https://github.com/julian-palomo/paste-and-taste/issues/35)      |
 | 2   | The Instagram prototype       | In progress | [#22](https://github.com/julian-palomo/paste-and-taste/issues/22)      |
-| 3   | Database and login            | In progress | [#42](https://github.com/julian-palomo/paste-and-taste/issues/42), [#58](https://github.com/julian-palomo/paste-and-taste/issues/58), [#66](https://github.com/julian-palomo/paste-and-taste/issues/66), [#69](https://github.com/julian-palomo/paste-and-taste/issues/69), [#80](https://github.com/julian-palomo/paste-and-taste/issues/80) |
+| 3   | Database and login            | In progress | [#42](https://github.com/julian-palomo/paste-and-taste/issues/42), [#58](https://github.com/julian-palomo/paste-and-taste/issues/58), [#66](https://github.com/julian-palomo/paste-and-taste/issues/66), [#69](https://github.com/julian-palomo/paste-and-taste/issues/69), [#80](https://github.com/julian-palomo/paste-and-taste/issues/80), [#77](https://github.com/julian-palomo/paste-and-taste/issues/77) |
 | 4   | The first recipe, end to end  | In progress | [#46](https://github.com/julian-palomo/paste-and-taste/issues/46), [#73](https://github.com/julian-palomo/paste-and-taste/issues/73) |
 | 5   | The real import               | Not started |                                                                        |
 | 6   | The native app                | Not started |                                                                        |
@@ -51,9 +51,10 @@ needs, and a phase gets its issues when it is next.
    code by email, printed in the terminal there, and an optional passkey, with
    Better Auth behind the API's own routes and its tables under the app's
    migrations. #80 lets the typed client post, send the browser's headers
-   and hand back the API's cookies, which the web app's server relays. Next
-   comes the sign-in screen, and later sending real email and the login in
-   preview and production.
+   and hand back the API's cookies, which the web app's server relays. #77
+   adds the sign-in page to the web app, in development only: a code by
+   email, the "Mantener la sesión iniciada" box, and a passkey. Next come
+   sending real email and the login in preview and production.
    The first table, a user's recipes, holds each recipe's copy owner; who
    else may see a recipe comes with sending and sharing, in their own issue
    ([the record](adr/2026-11-24-friends-groups-and-copies.md)).

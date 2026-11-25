@@ -80,8 +80,9 @@ sign in. It lasts 5 minutes and allows 3 tries.\
 _Avoid_: OTP, token, PIN (in the app's words; OTP stays in Better Auth's own
 names).
 
-**Passkey**: A key a user's device keeps, offered after signing in with a
-code, to sign in the next times without one. Spanish word: open.\
+**Passkey** (llave de acceso): A key a user's device keeps, offered after
+signing in with a code, to sign in the next times without one. The Spanish
+word is the one Google's Spanish help uses.\
 _Avoid_: biometrics, fingerprint login.
 
 **Session** (sesión): A user signed in on one device, kept by a cookie. It
