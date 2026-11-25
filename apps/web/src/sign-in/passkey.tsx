@@ -2,7 +2,10 @@ import { type FormEvent, useEffect, useState } from "react";
 import type { Language, Messages } from "../i18n/i18n.ts";
 import { Button } from "../pieces/button.tsx";
 import { Checkbox } from "../pieces/checkbox.tsx";
-import type { SignInErrorKind } from "./relay.ts";
+import {
+  createPasskey as createPasskeyFlow,
+  signInWithPasskey as signInWithPasskeyFlow,
+} from "./passkey-flow.ts";
 import {
   passkeyRegistrationOptionsFn,
   passkeySignInFn,
@@ -17,8 +20,6 @@ import {
 // The result is always a full page load, so the page shows it from the
 // server: the signed-in state, or ?error=.
 
-type Result = { ok: true } | { ok: false; error: SignInErrorKind };
-
 function useSupported(): boolean {
   const [supported, setSupported] = useState(false);
   useEffect(() => {
@@ -31,45 +32,43 @@ function useSupported(): boolean {
   return supported;
 }
 
-// The browser's answer, as JSON text for the API. A refused or cancelled
-// ceremony rejects, which is a failed passkey like any other.
-async function ceremony(run: () => Promise<Credential | null>): Promise<string | undefined> {
-  try {
-    const credential = await run();
-    if (!(credential instanceof PublicKeyCredential)) return undefined;
-    return JSON.stringify(credential.toJSON());
-  } catch {
-    return undefined;
-  }
-}
+// The browser's part of each ceremony: the API's options turned into
+// WebAuthn's own, and the credential back as JSON text, or null when there is
+// none. passkey-flow.ts decides what a failure is.
+const asJson = (credential: Credential | null) =>
+  credential instanceof PublicKeyCredential ? JSON.stringify(credential.toJSON()) : null;
 
-async function signInWithPasskey(rememberMe: boolean): Promise<Result> {
-  const options = await passkeySignInOptionsFn();
-  if (!options.ok) return options;
-  const response = await ceremony(() =>
-    navigator.credentials.get({
+const getCredential = async (optionsJson: string) =>
+  asJson(
+    await navigator.credentials.get({
       publicKey: PublicKeyCredential.parseRequestOptionsFromJSON(
-        JSON.parse(options.optionsJson) as PublicKeyCredentialRequestOptionsJSON,
+        JSON.parse(optionsJson) as PublicKeyCredentialRequestOptionsJSON,
       ),
     }),
   );
-  if (!response) return { ok: false, error: "passkey-failed" };
-  return passkeySignInFn({ data: { responseJson: response, rememberMe } });
-}
 
-async function createPasskey(): Promise<Result> {
-  const options = await passkeyRegistrationOptionsFn();
-  if (!options.ok) return options;
-  const response = await ceremony(() =>
-    navigator.credentials.create({
+const createCredential = async (optionsJson: string) =>
+  asJson(
+    await navigator.credentials.create({
       publicKey: PublicKeyCredential.parseCreationOptionsFromJSON(
-        JSON.parse(options.optionsJson) as PublicKeyCredentialCreationOptionsJSON,
+        JSON.parse(optionsJson) as PublicKeyCredentialCreationOptionsJSON,
       ),
     }),
   );
-  if (!response) return { ok: false, error: "passkey-failed" };
-  return registerPasskeyFn({ data: { responseJson: response } });
-}
+
+const signInWithPasskey = (rememberMe: boolean) =>
+  signInWithPasskeyFlow({
+    getOptions: () => passkeySignInOptionsFn(),
+    get: getCredential,
+    signIn: (responseJson) => passkeySignInFn({ data: { responseJson, rememberMe } }),
+  });
+
+const createPasskey = () =>
+  createPasskeyFlow({
+    getOptions: () => passkeyRegistrationOptionsFn(),
+    create: createCredential,
+    register: (responseJson) => registerPasskeyFn({ data: { responseJson } }),
+  });
 
 export function PasskeySignIn({ lang, messages }: { lang: Language; messages: Messages }) {
   const supported = useSupported();

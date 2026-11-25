@@ -23,15 +23,22 @@ export function relayHeaders(get: (name: string) => string | undefined): Record<
 export type Pending = { email: string; sentAt?: number };
 
 const PENDING = "sign_in_pending";
-const PENDING_ATTRIBUTES = "Path=/; HttpOnly; SameSite=Lax";
 
-export function pendingCookie(pending: Pending): string {
+// Secure only where the page is served over HTTPS: on http://localhost, where
+// development runs, a browser may not keep a Secure cookie.
+type CookieOptions = { secure: boolean };
+const attributes = ({ secure }: CookieOptions) =>
+  `Path=/; HttpOnly; SameSite=Lax${secure ? "; Secure" : ""}`;
+
+export function pendingCookie(pending: Pending, options: CookieOptions): string {
   const value = encodeURIComponent(JSON.stringify(pending));
-  return `${PENDING}=${value}; ${PENDING_ATTRIBUTES}; Max-Age=900`;
+  return `${PENDING}=${value}; ${attributes(options)}; Max-Age=900`;
 }
 
-// Same name and path, already expired: the browser deletes the cookie.
-export const clearPendingCookie = `${PENDING}=; ${PENDING_ATTRIBUTES}; Max-Age=0`;
+// The same name and attributes as the cookie it deletes, already expired.
+export function clearPendingCookie(options: CookieOptions): string {
+  return `${PENDING}=; ${attributes(options)}; Max-Age=0`;
+}
 
 // A broken or foreign value reads as none: the cookie is the browser's to send.
 export function readPending(cookieHeader: string | undefined): Pending | undefined {
@@ -63,6 +70,7 @@ const ERROR_KINDS = [
   "too-soon",
   "start-again",
   "passkey-failed",
+  "passkey-not-created",
 ] as const;
 export type SignInErrorKind = (typeof ERROR_KINDS)[number];
 
@@ -88,5 +96,10 @@ export const codeError = (error: unknown) =>
 export const signInError = (error: unknown) =>
   byStatus(error, { 401: "wrong-code", 429: "too-many" });
 
+// Signing in with a passkey.
 export const passkeyError = (error: unknown) =>
   byStatus(error, { 400: "passkey-failed", 401: "passkey-failed", 429: "too-many" });
+
+// Creating one: a refused registration, or a session that ended before it.
+export const registrationError = (error: unknown) =>
+  byStatus(error, { 400: "passkey-not-created", 401: "passkey-not-created", 429: "too-many" });

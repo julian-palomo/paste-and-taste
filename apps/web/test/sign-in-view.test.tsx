@@ -62,6 +62,7 @@ const errorText = (lang: Language, kind: SignInErrorKind) => {
     "too-soon": m.signInErrorTooSoon,
     "start-again": m.signInErrorStartAgain,
     "passkey-failed": m.signInErrorPasskeyFailed,
+    "passkey-not-created": m.signInErrorPasskeyNotCreated,
   }[kind];
 };
 
@@ -152,6 +153,26 @@ describe.each(["en", "es"] as const)("in %s", (lang) => {
     const html = render(lang, { ...props, error: "passkey-failed" });
 
     expect(html).toContain(`<p role="alert">${escaped(m.signInErrorPasskeyFailed)}</p>`);
+  });
+
+  it("a passkey that couldn't be created says so in its own words, on the offer", () => {
+    const html = render(lang, { session: signedIn, step: "passkey", error: "passkey-not-created" });
+
+    expect(html).toContain(`<p role="alert">${escaped(m.signInErrorPasskeyNotCreated)}</p>`);
+    expect(html).not.toContain(escaped(m.signInErrorPasskeyFailed));
+  });
+
+  // Creating a passkey only happens from the offer; typed into another
+  // step's address, its error shows nothing and takes no focus.
+  it.each([
+    ["the address step", {}],
+    ["the code step", { pending: sent }],
+  ])("passkey-not-created shows nothing on %s", (_, props) => {
+    const html = render(lang, { ...props, error: "passkey-not-created" });
+
+    expect(html).not.toContain(escaped(m.signInErrorPasskeyNotCreated));
+    expect(html).not.toContain("autofocus");
+    expect(html).not.toContain('aria-invalid="true"');
   });
 
   describe("signed in", () => {

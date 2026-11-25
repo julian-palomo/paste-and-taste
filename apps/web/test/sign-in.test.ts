@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { clearPendingCookie, readPending } from "../src/sign-in/relay.ts";
 import {
   changeAddress,
+  formResponse,
   passkeyRegistrationOptions,
   passkeySignIn,
   passkeySignInOptions,
@@ -41,6 +42,8 @@ const withCookies = (response: Response) => {
 };
 
 const NOW = 1_700_000_000_000;
+// The browser's answer to a WebAuthn ceremony, as JSON text.
+const answer = '{"id":"k"}';
 
 // An API that answers `answer` to every call, and keeps each request.
 function api(answer: () => Response | Promise<Response>) {
@@ -57,6 +60,8 @@ function api(answer: () => Response | Promise<Response>) {
     headers: browser,
     appendSetCookie: (cookie) => setCookies.push(cookie),
     now: () => NOW,
+    shown: true,
+    origin: "http://localhost:5173",
   };
   return { deps, requests, setCookies };
 }
@@ -86,13 +91,13 @@ const calls = [
   [
     "registerPasskey",
     { registered: true },
-    (d: SignInDeps) => registerPasskey(d, { response: { id: "k" } }),
+    (d: SignInDeps) => registerPasskey(d, { responseJson: answer }),
   ],
   ["passkeySignInOptions", { challenge: "c" }, (d: SignInDeps) => passkeySignInOptions(d)],
   [
     "passkeySignIn",
     { user },
-    (d: SignInDeps) => passkeySignIn(d, { response: { id: "k" }, rememberMe: false }),
+    (d: SignInDeps) => passkeySignIn(d, { responseJson: answer, rememberMe: false }),
   ],
 ] as const;
 
@@ -207,7 +212,7 @@ describe("signIn", () => {
       pending: sent,
     });
 
-    expect(setCookies).toContain(clearPendingCookie);
+    expect(setCookies).toContain(clearPendingCookie({ secure: false }));
     expect(result).toEqual({ redirect: "/es/sign-in?step=passkey" });
   });
 
@@ -226,7 +231,7 @@ describe("signIn", () => {
     });
 
     expect(result).toEqual({ redirect: `/en/sign-in?error=${kind}` });
-    expect(setCookies).not.toContain(clearPendingCookie);
+    expect(setCookies).not.toContain(clearPendingCookie({ secure: false }));
   });
 
   it("with no address sent a code, starts again without calling the API", async () => {
@@ -246,7 +251,7 @@ describe("changeAddress", () => {
     const result = changeAddress(deps, { lang: "en" });
 
     expect(requests).toHaveLength(0);
-    expect(setCookies).toEqual([clearPendingCookie]);
+    expect(setCookies).toEqual([clearPendingCookie({ secure: false })]);
     expect(result).toEqual({ redirect: "/en/sign-in" });
   });
 });
@@ -305,22 +310,140 @@ describe("passkeys", () => {
   ])("signing in with the box ticked %s sends rememberMe: %s", async (rememberMe, sentValue) => {
     const { deps, requests } = api(() => json({ user }));
 
-    await passkeySignIn(deps, { response: { id: "k" }, rememberMe });
+    await passkeySignIn(deps, { responseJson: answer, rememberMe });
 
     expect(await requests[0]?.json()).toEqual({ response: { id: "k" }, rememberMe: sentValue });
   });
 
+  // Creating a passkey and signing in with one fail in words of their own.
   it.each([
-    ["a refused registration (400)", () => registerPasskey, 400, "passkey-failed"],
-    ["a refused sign-in (401)", () => passkeySignIn, 401, "passkey-failed"],
-    ["too many requests", () => passkeySignIn, 429, "too-many"],
-    ["an API that is down", () => passkeySignIn, 503, "unreachable"],
-  ])("%s is %s", async (_, fn, status, error) => {
+    ["a refused registration (400)", 400, "passkey-not-created"],
+    ["a registration with no session (401)", 401, "passkey-not-created"],
+    ["too many requests", 429, "too-many"],
+    ["an API that is down", 503, "unreachable"],
+  ])("registering: %s is %s", async (_, status, error) => {
     const { deps } = api(() => problem(status));
 
-    expect(await fn()(deps, { response: { id: "k" }, rememberMe: false })).toEqual({
+    expect(await registerPasskey(deps, { responseJson: answer })).toEqual({ ok: false, error });
+  });
+
+  it("asking for registration options with no session (401) is passkey-not-created", async () => {
+    const { deps } = api(() => problem(401));
+
+    expect(await passkeyRegistrationOptions(deps)).toEqual({
+      ok: false,
+      error: "passkey-not-created",
+    });
+  });
+
+  it.each([
+    ["a refused sign-in (401)", 401, "passkey-failed"],
+    ["too many requests", 429, "too-many"],
+    ["an API that is down", 503, "unreachable"],
+  ])("signing in: %s is %s", async (_, status, error) => {
+    const { deps } = api(() => problem(status));
+
+    expect(await passkeySignIn(deps, { responseJson: answer, rememberMe: false })).toEqual({
       ok: false,
       error,
     });
+  });
+
+  it.each(["not json", "[]", "null", '"text"'])(
+    "an answer that isn't a JSON object (%s) calls nothing and fails in each one's words",
+    async (responseJson) => {
+      const { deps, requests } = api(() => json({ registered: true }));
+
+      expect(await registerPasskey(deps, { responseJson })).toEqual({
+        ok: false,
+        error: "passkey-not-created",
+      });
+      expect(await passkeySignIn(deps, { responseJson, rememberMe: false })).toEqual({
+        ok: false,
+        error: "passkey-failed",
+      });
+      expect(requests).toHaveLength(0);
+    },
+  );
+});
+
+describe("where the sign-in isn't shown", () => {
+  const notShown = () => {
+    const made = api(() => json({}));
+    return { ...made, deps: { ...made.deps, shown: false } };
+  };
+
+  it.each([
+    ["sendCode", (d: SignInDeps) => sendCode(d, { lang: "es", email: "ana@example.com" })],
+    [
+      "signIn",
+      (d: SignInDeps) => signIn(d, { lang: "es", code: "123456", remember: false, pending: sent }),
+    ],
+    ["changeAddress", async (d: SignInDeps) => changeAddress(d, { lang: "es" })],
+    ["signOut", (d: SignInDeps) => signOut(d, { lang: "es" })],
+  ])("%s calls nothing, sets nothing, and is not found", async (_, call) => {
+    const { deps, requests, setCookies } = notShown();
+
+    expect(await call(deps)).toEqual({ notFound: true });
+    expect(requests).toHaveLength(0);
+    expect(setCookies).toEqual([]);
+  });
+
+  it.each([
+    ["passkeyRegistrationOptions", (d: SignInDeps) => passkeyRegistrationOptions(d)],
+    ["registerPasskey", (d: SignInDeps) => registerPasskey(d, { responseJson: answer })],
+    ["passkeySignInOptions", (d: SignInDeps) => passkeySignInOptions(d)],
+    [
+      "passkeySignIn",
+      (d: SignInDeps) => passkeySignIn(d, { responseJson: answer, rememberMe: false }),
+    ],
+  ])("%s calls nothing and fails", async (_, call) => {
+    const { deps, requests } = notShown();
+
+    expect(await call(deps)).toMatchObject({ ok: false });
+    expect(requests).toHaveLength(0);
+  });
+
+  it("readSession calls nothing and is signed out", async () => {
+    const { deps, requests } = notShown();
+
+    expect(await readSession(deps)).toEqual({ kind: "signed-out" });
+    expect(requests).toHaveLength(0);
+  });
+});
+
+describe("formResponse", () => {
+  it("answers a redirect with 303, its address and every cookie in order", () => {
+    const response = formResponse({ redirect: "/es/sign-in" }, [first, second]);
+
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe("/es/sign-in");
+    expect(response.headers.getSetCookie()).toEqual([first, second]);
+  });
+
+  it("answers not found with 404 and no cookie", () => {
+    const response = formResponse({ notFound: true }, [first]);
+
+    expect(response.status).toBe(404);
+    expect(response.headers.getSetCookie()).toEqual([]);
+  });
+});
+
+describe("the pending cookie's Secure", () => {
+  it.each([
+    ["https://web.test", true],
+    ["http://localhost:5173", false],
+  ])("on %s, sendCode and signIn write it with Secure: %s", async (origin, secure) => {
+    const made = api(() => json({ sent: true, user }));
+    const deps = { ...made.deps, origin };
+
+    await sendCode(deps, { lang: "es", email: "ana@example.com" });
+    await signIn(deps, { lang: "es", code: "123456", remember: false, pending: sent });
+
+    const pendingCookies = made.setCookies.filter((c) => c.startsWith("sign_in_pending="));
+    expect(pendingCookies).toHaveLength(2);
+    for (const cookie of pendingCookies) {
+      expect(cookie.split("; ").includes("Secure")).toBe(secure);
+    }
   });
 });
