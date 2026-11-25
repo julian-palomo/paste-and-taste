@@ -15,7 +15,8 @@ export const Route = createFileRoute("/$lang/")({
   },
   loader: () => getHealthPage(),
   onError: keepErrorOnServer,
-  head: ({ params, loaderData }) => (loaderData ? pageHead(params.lang, loaderData.origin) : {}),
+  head: ({ params, loaderData }) =>
+    loaderData ? pageHead(params.lang, loaderData.origin, "home") : {},
   component: HealthPage,
 });
 
