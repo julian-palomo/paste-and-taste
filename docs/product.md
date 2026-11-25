@@ -110,6 +110,14 @@ How people meet and pass recipes is recorded in
   the app offers a passkey for the next times; it is optional, and on a new
   device the code is the way in again. There is no password and no Google
   ([the record](adr/2026-11-25-login-without-a-password.md)).
+- When the app offers a passkey, a short message explains what it is, for
+  whoever distrusts it.
+- The sign-in screen shows the address the code was sent to, a button to send
+  it again after a wait, and a reminder to look in spam.
+- When the code doesn't arrive, a "No me llega el código" link on the sign-in
+  screen opens a short form, the feedback form with the reason "No puedo
+  entrar", protected against spam. There is no published email address for
+  it.
 - One email address, one account.
 - A user can change their email address.
 - A session lasts while the app is open. At sign-in, a "Mantener la sesión
@@ -164,10 +172,6 @@ How people meet and pass recipes is recorded in
   verified before the change, and the old one is told).
 - How long a session lasts when the user ticks "Mantener la sesión iniciada".
 - How a user who loses access to their email address gets back in.
-- What a user does when the code doesn't arrive (proposed: a "No me llega el
-  código" link on the sign-in screen that opens a short form, the feedback
-  form with a reason "No puedo entrar", protected against spam, rather than a
-  published email address).
 - What the native app does that the web app doesn't. The owner sees sharing a
   post from Instagram as the main one, and perhaps Facebook or TikTok later.
 - The final name. Paste & Taste is the working one.

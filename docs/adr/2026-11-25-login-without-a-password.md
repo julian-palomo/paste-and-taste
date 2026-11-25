@@ -49,8 +49,14 @@ on with them.
 
 ## Consequences
 
-- **The app sends email**, so it needs a service that sends it, with its cost.
-  Not chosen yet.
+- **The app sends email, and the code must arrive.** It needs a service that
+  sends it, with its cost; not chosen yet. The owner chose on 25 Nov 2026
+  what goes with it: the email is sent from the app's own domain with SPF,
+  DKIM and DMARC set up; codes are limited per address and per IP, so nobody
+  can send them to others' addresses at will; an alert says when sending
+  starts to fail or bounce; and a user whose code doesn't arrive has a form
+  on the sign-in screen, not a published address
+  ([`product.md`](../product.md)).
 - **An email address is the account**: losing access to it means losing the
   way in, so recovering an account needs its own answer.
 - **Passkeys belong to the app's address.** They are registered against the
