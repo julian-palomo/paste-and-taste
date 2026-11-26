@@ -55,6 +55,8 @@ export function createApp(
         withAuth,
         requestLimiter: createRequestLimiter(),
         codeSender: options.codeSender ?? chooseCodeSender(config),
+        // A missing value fails closed.
+        signUp: config.SIGN_UP ?? "invited",
       }),
     );
     // A user's recipes need a session, so they run where the login does.

@@ -114,6 +114,14 @@ export const requestLimit = pgTable("request_limit", {
   count: integer("count").notNull(),
 });
 
+// The addresses the owner let in before launch, while sign-up is by
+// invitation (docs/adr/2026-11-26-sign-up-by-invitation.md). Only the address,
+// in lower case: its row is deleted once that address signs in, when its
+// account lets it in instead.
+export const invitedAddress = pgTable("invited_address", {
+  email: text("email").primaryKey(),
+});
+
 // A recipe kept by one user, its copy owner. Ingredients and steps are jsonb:
 // always read and written whole, in order, so an edit is one UPDATE
 // (docs/adr/2026-11-25-ingredients-and-steps-as-jsonb.md).
