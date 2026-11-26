@@ -113,6 +113,25 @@ describe("checkRecipe", () => {
       "source-invalid",
     ],
     ["a source that isn't an address", { source: "tortilla" }, "source", "source-invalid"],
+    // Hosts zod's domain rule refuses, which the API applies (z.httpUrl).
+    [
+      "a source with an underscore in its host",
+      { source: "https://my_blog.example.com/x" },
+      "source",
+      "source-invalid",
+    ],
+    [
+      "a source whose host starts with a hyphen",
+      { source: "https://-a.example.com/" },
+      "source",
+      "source-invalid",
+    ],
+    [
+      "a source with an empty label",
+      { source: "https://a..example.com/" },
+      "source",
+      "source-invalid",
+    ],
     [
       "an ingredient with a quantity but no name",
       { "ingredient-quantity-2": "1", "ingredient-name-2": "" },
@@ -149,12 +168,13 @@ describe("checkRecipe", () => {
 });
 
 describe("the draft cookies", () => {
+  const ID = "7c0c1f9e-2d0a-4e5b-9f1a-0b2c3d4e5f60";
   const values: RecipeFormValues = readRecipeForm(form(filled));
   const header = (cookies: string[]) => cookies.map((c) => c.split(";")[0]).join("; ");
 
   it("are HttpOnly, SameSite=Lax, for the whole site, for 5 minutes, and Secure on HTTPS only", () => {
     for (const secure of [true, false]) {
-      const [cookie = ""] = draftCookies(values, { secure }) ?? [];
+      const [cookie = ""] = draftCookies(values, { secure }, "new") ?? [];
       const attributes = cookie.split("; ");
       expect(cookie).toMatch(/^recipe_draft_0=/);
       expect(attributes).toEqual(
@@ -165,9 +185,9 @@ describe("the draft cookies", () => {
   });
 
   it("give back what was typed, among other cookies", () => {
-    const cookies = draftCookies(values, { secure: false }) ?? [];
+    const cookies = draftCookies(values, { secure: false }, "new") ?? [];
 
-    expect(readDraft(`session=abc; ${header(cookies)}; other=1`)).toEqual(values);
+    expect(readDraft(`session=abc; ${header(cookies)}; other=1`, "new")).toEqual(values);
   });
 
   it("split a long recipe over several cookies of under 4000 bytes each", () => {
@@ -178,24 +198,40 @@ describe("the draft cookies", () => {
         text: "x".repeat(400),
       })),
     };
-    const cookies = draftCookies(long, { secure: true }) ?? [];
+    const cookies = draftCookies(long, { secure: true }, "new") ?? [];
 
     expect(cookies.length).toBeGreaterThan(1);
     for (const cookie of cookies)
       expect(new TextEncoder().encode(cookie).length).toBeLessThan(4000);
-    expect(readDraft(header(cookies))).toEqual(long);
+    expect(readDraft(header(cookies), "new")).toEqual(long);
   });
 
-  it("keep nothing when the recipe needs more than 4 cookies", () => {
+  // Three chunks keep the Cookie header well under the 16384 bytes of headers
+  // Node's HTTP server, which vite dev uses, accepts in all.
+  it("keep nothing when the recipe needs more than 3 cookies", () => {
     const huge = {
       ...values,
-      steps: Array.from({ length: 60 }, (_, i) => ({
+      steps: Array.from({ length: 30 }, (_, i) => ({
         order: String(i + 1),
         text: "x".repeat(400),
       })),
     };
 
-    expect(draftCookies(huge, { secure: false })).toBeUndefined();
+    expect(draftCookies(huge, { secure: false }, "new")).toBeUndefined();
+  });
+
+  // A draft belongs to the form it was typed in, so it never fills another
+  // recipe's form, where saving would overwrite that recipe.
+  it("give back what was typed only on the form it came from", () => {
+    const other = "11111111-2d0a-4e5b-9f1a-0b2c3d4e5f60";
+    const fromNew = header(draftCookies(values, { secure: false }, "new") ?? []);
+    const fromEdit = header(draftCookies(values, { secure: false }, ID) ?? []);
+
+    expect(readDraft(fromNew, "new")).toEqual(values);
+    expect(readDraft(fromNew, ID)).toBeUndefined();
+    expect(readDraft(fromEdit, ID)).toEqual(values);
+    expect(readDraft(fromEdit, "new")).toBeUndefined();
+    expect(readDraft(fromEdit, other)).toBeUndefined();
   });
 
   it.each([
@@ -204,17 +240,16 @@ describe("the draft cookies", () => {
     ["a broken draft", "recipe_draft_0=not-json"],
     ["a draft of another shape", `recipe_draft_0=${encodeURIComponent('{"title":1}')}`],
   ])("read %s as none", (_, cookieHeader) => {
-    expect(readDraft(cookieHeader)).toBeUndefined();
+    expect(readDraft(cookieHeader, "new")).toBeUndefined();
   });
 
-  it("are deleted, all four, by expired cookies of the same names and attributes", () => {
+  it("are deleted, all three, by expired cookies of the same names and attributes", () => {
     const cleared = clearDraftCookies({ secure: true });
 
     expect(cleared.map((c) => c.split("=")[0])).toEqual([
       "recipe_draft_0",
       "recipe_draft_1",
       "recipe_draft_2",
-      "recipe_draft_3",
     ]);
     for (const cookie of cleared) {
       expect(cookie.split("; ")).toEqual(expect.arrayContaining(["Max-Age=0", "Path=/", "Secure"]));

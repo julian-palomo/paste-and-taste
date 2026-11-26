@@ -148,6 +148,8 @@ export function RecipeFormView({
       >
         <input type="hidden" name="lang" value={lang} />
         {recipe && <input type="hidden" name="id" value={recipe.id} />}
+        {/* An edited recipe keeps its own language, which may not be the page's. */}
+        {recipe && <input type="hidden" name="language" value={recipe.language} />}
         <div className="flex flex-col gap-4">
           <TextField
             label={messages.recipeFormTitle}

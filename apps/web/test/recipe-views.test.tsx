@@ -149,6 +149,7 @@ describe.each(["en", "es"] as const)("in %s", (lang: Language) => {
       expect(fields.filter((n) => n?.startsWith("ingredient-name-"))).toHaveLength(8);
       expect(fields.filter((n) => n?.startsWith("step-text-"))).toHaveLength(5);
       expect(fields).not.toContain("id");
+      expect(fields).not.toContain("language");
       expect(html).toMatch(/<form[^>]*action="\/_serverFn\/save"[^>]*method="post"/);
       expect(html).not.toContain("autofocus");
     });
@@ -166,6 +167,8 @@ describe.each(["en", "es"] as const)("in %s", (lang: Language) => {
       expect(names(html).filter((n) => n?.startsWith("step-text-"))).toHaveLength(4);
       expect(html).toContain("Cuaja la tortilla.");
       expect(value("id")).toBe(ID);
+      // The recipe's own language goes back with it, not the page's.
+      expect(value("language")).toBe("es");
     });
 
     it("shows a refused field's text on it alone, with the focus, and keeps what was typed", () => {
@@ -192,6 +195,18 @@ describe.each(["en", "es"] as const)("in %s", (lang: Language) => {
         escaped(m.recipeErrorSourceInvalid),
       );
       expect(html).not.toContain(escaped(m.recipeDraftLost));
+    });
+
+    it("ties a step's error to its text area, which has the focus", () => {
+      const html = render({ error: { kind: "steps-missing", field: "step-text-0" } });
+      const focused = inputs(html).filter((tag) => /\sautofocus=""/.test(tag));
+
+      expect(focused).toHaveLength(1);
+      const [tag = ""] = focused;
+      expect(tag).toMatch(/^<textarea/);
+      expect(attribute(tag, "name")).toBe("step-text-0");
+      const described = attribute(tag, "aria-describedby")?.split(" ") ?? [];
+      expect(described.map((id) => textOf(html, id))).toContain(escaped(m.recipeErrorStepsMissing));
     });
 
     it("says what was typed couldn't be kept when an error comes with no draft", () => {

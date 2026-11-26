@@ -61,7 +61,8 @@ function inOrder<T extends { order: string }>(rows: T[]): T[] {
 }
 
 // The body of POST /recipes and PUT /recipes/{id}: empty rows left out, rows
-// in their order, empty fields null. The language is the page's.
+// in their order, empty fields null. The language is the page's for a new
+// recipe and the recipe's own for an edited one.
 export function toRecipeInput(values: RecipeFormValues, language: string) {
   return {
     title: values.title.trim(),
@@ -107,12 +108,16 @@ export function parseRecipeError(
 
 // The API checks the source with zod's z.httpUrl() (apps/api/src/recipes/
 // recipes.routes.ts), which is stricter than the document's format: uri: an
-// http or https address whose host is a domain with a top-level domain, so
-// not localhost and not an IP address. Keep the two in step.
+// http or https address whose host matches zod's domain rule, copied here
+// from zod 4's regexes.domain, so not localhost, not an IP address, no
+// underscore and no empty label. Keep the two in step: a source the web lets
+// through and the API refuses comes back only as "refused", on no field.
+const DOMAIN = /^(?=.{1,253}$)([a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,63}$/;
+
 function isHttpUrl(value: string): boolean {
   if (!URL.canParse(value)) return false;
   const { protocol, hostname } = new URL(value);
-  return (protocol === "http:" || protocol === "https:") && /\.[a-z]{2,}$/i.test(hostname);
+  return (protocol === "http:" || protocol === "https:") && DOMAIN.test(hostname);
 }
 
 // The API's rules for a recipe, checked in the form's order, so the first
@@ -151,10 +156,16 @@ export function recipeErrorSearch(search: Record<string, unknown>): {
 // The draft: what was typed, in cookies of the web app's own, for the page
 // that shows the form again after an error. RFC 6265, section 6.1, asks
 // browsers to keep at least 4096 bytes per cookie, name and attributes
-// included; each chunk stays under 4000. A form that needs more than 4 is not
-// kept. They never go to the API: relayHeaders leaves them out.
+// included; each chunk stays under 4000. A form that needs more than 3 is not
+// kept: 4 make a Cookie header of about 15.4 KB, and with a few other cookies
+// Node's HTTP server, which vite dev uses, answers every page 431 (it takes
+// 16384 bytes of headers in all) until the draft expires. They never go to
+// the API: relayHeaders leaves them out.
+//
+// A draft names the form it was typed in, "new" or the recipe's id, and is
+// read only there: on another recipe's form, saving would overwrite it.
 const DRAFT = "recipe_draft_";
-const DRAFT_CHUNKS = 4;
+const DRAFT_CHUNKS = 3;
 const CHUNK_LENGTH = 3800;
 
 type CookieOptions = { secure: boolean };
@@ -173,8 +184,9 @@ export function clearDraftCookies(options: CookieOptions): string[] {
 export function draftCookies(
   values: RecipeFormValues,
   options: CookieOptions,
+  form: string,
 ): string[] | undefined {
-  const encoded = encodeURIComponent(JSON.stringify(values));
+  const encoded = encodeURIComponent(JSON.stringify({ form, values }));
   const chunks = encoded.match(new RegExp(`.{1,${CHUNK_LENGTH}}`, "g")) ?? [];
   if (chunks.length > DRAFT_CHUNKS) return undefined;
   const cleared = clearDraftCookies(options);
@@ -213,7 +225,10 @@ function isFormValues(value: unknown): value is RecipeFormValues {
 }
 
 // A broken or foreign value reads as none: the cookies are the browser's to send.
-export function readDraft(cookieHeader: string | undefined): RecipeFormValues | undefined {
+export function readDraft(
+  cookieHeader: string | undefined,
+  form: string,
+): RecipeFormValues | undefined {
   if (!cookieHeader) return undefined;
   const parts = new Map(
     cookieHeader.split(";").map((part) => {
@@ -227,8 +242,10 @@ export function readDraft(cookieHeader: string | undefined): RecipeFormValues | 
   ).join("");
   if (!encoded) return undefined;
   try {
-    const value: unknown = JSON.parse(decodeURIComponent(encoded));
-    return isFormValues(value) ? value : undefined;
+    const draft: unknown = JSON.parse(decodeURIComponent(encoded));
+    if (typeof draft !== "object" || draft === null) return undefined;
+    const { form: from, values } = draft as Record<string, unknown>;
+    return from === form && isFormValues(values) ? values : undefined;
   } catch {
     return undefined;
   }

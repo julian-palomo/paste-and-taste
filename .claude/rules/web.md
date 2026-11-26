@@ -96,11 +96,18 @@ it is a path of this site (`parseNext`), and goes there after a code or a
 passkey (`afterSignIn`). The form works with no JavaScript: it posts to
 `saveRecipeForm`, which checks the API's own rules first (`checkRecipe`, since
 the API's 400 names no field), and on an error answers a 303 back with
-`?error=&field=` and what was typed in `recipe_draft_0` to `_3` (`HttpOnly`,
-5 minutes, `Secure` on HTTPS), which the form's loader reads and deletes.
-Ingredients and steps are rows: spare empty rows to add, a cleared row to
-remove, and an `Orden` number to reorder. A recipe's own content carries its
-`lang`, which may not be the interface's.
+`?error=&field=` and what was typed in `recipe_draft_0` to `_2` (`HttpOnly`,
+5 minutes, `Secure` on HTTPS; a fourth would push the `Cookie` header past
+what `vite dev` accepts). The draft names its form, `new` or the recipe's id,
+and only that form's loader reads and deletes it, once the page shows the
+form. The new recipe's page asks for the sign-in on load (`readSignedIn`), as
+the other three do; a 401 on save sends to the sign-in with the draft kept.
+An id that isn't a UUID is not found before the API is asked, so a 400 on an
+edit is a body the API refuses and goes back to the form as a new recipe's
+does. Ingredients and steps are rows: spare empty rows to add, a cleared row
+to remove, and an `Orden` number to reorder. A recipe keeps its own language:
+a new one takes the page's, an edited one sends back its own from a hidden
+field, and its content carries its `lang`, which may not be the interface's.
 
 **The home depends on the environment.** `homeOf` (`src/home/home-of.ts`)
 picks it: the API's health in development and preview, the building page in

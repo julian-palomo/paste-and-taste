@@ -10,7 +10,7 @@ import type { WebConfig } from "../config/config.ts";
 import { type Language, parseLanguage } from "../i18n/i18n.ts";
 import { formResponse, relayHeaders } from "../session/relay.ts";
 import { clearDraftCookies, readDraft, readRecipeForm } from "./recipe-form.ts";
-import { listRecipes, type RecipesDeps, readRecipe, saveRecipe } from "./recipes.ts";
+import { listRecipes, type RecipesDeps, readRecipe, readSignedIn, saveRecipe } from "./recipes.ts";
 import { recipesShown } from "./recipes-shown.ts";
 
 // The recipes' server functions: each wires the browser's request to the
@@ -52,8 +52,10 @@ export const getRecipe = createServerFn({ method: "GET" })
     return { state, origin: context.origin };
   });
 
-// The form's data: the recipe to edit, if any, and the draft of what was
-// typed before an error, which is read once and deleted.
+// The form's data: the session or the recipe to edit, and the draft of what
+// was typed on this same form before an error, which is read once and
+// deleted. Only when the page shows the form: a draft kept for after the
+// sign-in stays until the form is back.
 export const getRecipeForm = createServerFn({ method: "GET" })
   .middleware([withConfig])
   .validator((input: { id: string | null }) => input)
@@ -63,13 +65,21 @@ export const getRecipeForm = createServerFn({ method: "GET" })
       setResponseStatus(404);
       return { kind: "not-shown" as const };
     }
-    const draft = readDraft(getRequestHeader("cookie"));
-    if (draft) {
-      const secure = new URL(context.origin).protocol === "https:";
-      for (const cookie of clearDraftCookies({ secure })) toResponse(cookie);
+    const takeDraft = (form: string) => {
+      const draft = readDraft(getRequestHeader("cookie"), form);
+      if (draft) {
+        const secure = new URL(context.origin).protocol === "https:";
+        for (const cookie of clearDraftCookies({ secure })) toResponse(cookie);
+      }
+      return draft;
+    };
+    if (data.id === null) {
+      const state = await readSignedIn(recipeDeps);
+      const draft = state.kind === "ok" ? takeDraft("new") : undefined;
+      return { kind: "new" as const, state, draft, origin: context.origin };
     }
-    if (data.id === null) return { kind: "new" as const, draft, origin: context.origin };
     const state = await readRecipe(recipeDeps, data.id);
+    const draft = state.kind === "ok" ? takeDraft(data.id) : undefined;
     return { kind: "edit" as const, state, draft, origin: context.origin };
   });
 
@@ -82,11 +92,13 @@ export const saveRecipeForm = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const cookies: string[] = [];
     const id = data.get("id");
+    const language = data.get("language");
     const result = await saveRecipe(
       deps(context, (cookie) => cookies.push(cookie)),
       {
         lang: langOf(data),
         ...(typeof id === "string" && id ? { id } : {}),
+        ...(typeof language === "string" && language ? { language } : {}),
         values: readRecipeForm(data),
       },
     );

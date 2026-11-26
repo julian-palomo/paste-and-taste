@@ -65,6 +65,18 @@ export async function readRecipe(deps: RecipesDeps, id: string) {
   }
 }
 
+// Whether there is a session, for the new recipe's page, which reads nothing
+// else and asks for the sign-in on load as the other three do.
+export async function readSignedIn(deps: RecipesDeps) {
+  if (!deps.shown) return { kind: "not-shown" } as NotShown;
+  try {
+    await deps.client.get("/login/session", call(deps));
+    return { kind: "ok" as const };
+  } catch (error) {
+    return failed(error);
+  }
+}
+
 // The API's types, as the client gives them, never copied.
 export type RecipeSummary = Extract<
   Awaited<ReturnType<typeof listRecipes>>,
@@ -77,24 +89,43 @@ export function signInFor(lang: Language, path: string): string {
   return `/${lang}/sign-in?${new URLSearchParams({ next: path })}`;
 }
 
-// Saves the form: POST for a new recipe, PUT for an edited one, then the
-// recipe's page. On an error, back to the form with the error's field and
-// what was typed, kept in the draft cookies.
+// The API's z.uuid(), copied from zod 4's regexes.uuid(): an id it refuses
+// answers 400, which on an edit would read as a body it refuses. Keep the two
+// in step.
+const UUID =
+  /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/;
+
+// Saves the form: POST for a new recipe in the page's language, PUT for an
+// edited one in its own `language`, then the recipe's page. On an error, back
+// to the form with the error's field and what was typed, kept in the draft
+// cookies.
 export async function saveRecipe(
   deps: RecipesDeps,
-  { lang, id, values }: { lang: Language; id?: string; values: RecipeFormValues },
+  {
+    lang,
+    id,
+    language,
+    values,
+  }: { lang: Language; id?: string; language?: string; values: RecipeFormValues },
 ): Promise<FormResult> {
   if (!deps.shown) return { notFound: true };
+  // Not an id at all: its page is the not-found one, without asking the API.
+  if (id !== undefined && !UUID.test(id)) return { redirect: `/${lang}/recipes/${id}` };
   const formPage = id ? `/${lang}/recipes/${id}/edit` : `/${lang}/recipes/new`;
+  const keepDraft = () => {
+    for (const cookie of draftCookies(values, secure(deps), id ?? "new") ?? []) {
+      deps.appendSetCookie(cookie);
+    }
+  };
   const back = (kind: RecipeErrorKind, field: string): FormResult => {
-    for (const cookie of draftCookies(values, secure(deps)) ?? []) deps.appendSetCookie(cookie);
+    keepDraft();
     return { redirect: `${formPage}?${new URLSearchParams({ error: kind, field })}` };
   };
 
   const refused = checkRecipe(values);
   if (refused) return back(refused.kind, refused.field);
 
-  const body = toRecipeInput(values, lang);
+  const body = toRecipeInput(values, (id && language) || lang);
   try {
     const saved = id
       ? await deps.client.put("/recipes/{id}", { ...call(deps), params: { id }, body })
@@ -104,14 +135,15 @@ export async function saveRecipe(
   } catch (error) {
     if (error instanceof ApiError && error.status === 401) {
       // The draft stays: back on the form after signing in, it is still there.
-      for (const cookie of draftCookies(values, secure(deps)) ?? []) deps.appendSetCookie(cookie);
+      keepDraft();
       return { redirect: signInFor(lang, formPage) };
     }
     // An edited recipe that is gone or another user's: its page says not found.
-    if (id && error instanceof ApiError && (error.status === 404 || error.status === 400)) {
+    if (id && error instanceof ApiError && error.status === 404) {
       return { redirect: `/${lang}/recipes/${id}` };
     }
-    // A rule the web doesn't know: the API's 400 names no field.
+    // A rule the web doesn't know, on a new recipe or an edited one: the
+    // API's 400 names no field.
     if (error instanceof ApiError && error.status === 400) return back("refused", "title");
     return back(failed(error).kind === "unreachable" ? "unreachable" : "api-error", "title");
   }

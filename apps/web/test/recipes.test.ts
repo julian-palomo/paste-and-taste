@@ -1,7 +1,13 @@
 import { createApiClient } from "@paste-and-taste/api-client";
 import { describe, expect, it } from "vitest";
 import { readDraft, readRecipeForm } from "../src/recipes/recipe-form.ts";
-import { listRecipes, type RecipesDeps, readRecipe, saveRecipe } from "../src/recipes/recipes.ts";
+import {
+  listRecipes,
+  type RecipesDeps,
+  readRecipe,
+  readSignedIn,
+  saveRecipe,
+} from "../src/recipes/recipes.ts";
 import { recipesShown } from "../src/recipes/recipes-shown.ts";
 
 const browser = {
@@ -92,6 +98,11 @@ const calls = [
   ["listRecipes", () => json({ recipes: [] }), (d: RecipesDeps) => listRecipes(d)],
   ["readRecipe", () => json(recipe), (d: RecipesDeps) => readRecipe(d, ID)],
   [
+    "readSignedIn",
+    () => json({ user: { id: "u", email: "a@example.com", name: "" } }),
+    (d: RecipesDeps) => readSignedIn(d),
+  ],
+  [
     "saveRecipe, new",
     () => json(recipe, 201),
     (d: RecipesDeps) => saveRecipe(d, { lang: "es", values }),
@@ -163,6 +174,35 @@ describe("listRecipes", () => {
   });
 });
 
+// The new recipe's page asks for the sign-in on load, as the other three do.
+describe("readSignedIn", () => {
+  it("is ok with a session, asked of the API's session route", async () => {
+    const { deps, requests } = api(() =>
+      json({ user: { id: "u", email: "a@example.com", name: "" } }),
+    );
+
+    expect(await readSignedIn(deps)).toEqual({ kind: "ok" });
+    expect(new URL(requests[0]?.url ?? "").pathname).toBe("/login/session");
+  });
+
+  it.each([
+    [401, "signed-out"],
+    [503, "api-error"],
+  ])("on a %i, is %s", async (status, kind) => {
+    const { deps } = api(() => problem(status));
+
+    expect(await readSignedIn(deps)).toEqual({ kind });
+  });
+
+  it("is unreachable when the API can't be reached", async () => {
+    const { deps } = api(() => {
+      throw new TypeError("fetch failed");
+    });
+
+    expect(await readSignedIn(deps)).toEqual({ kind: "unreachable" });
+  });
+});
+
 describe("readRecipe", () => {
   it("is the recipe", async () => {
     const { deps, requests } = api(() => json(recipe));
@@ -199,14 +239,15 @@ describe("saveRecipe", () => {
     expect(setCookies.some((c) => c.startsWith("recipe_draft_0=;"))).toBe(true);
   });
 
-  it("puts an edited recipe and goes back to its page", async () => {
+  // A recipe stays in its own language, whatever the interface's.
+  it("puts an edited recipe in its own language and goes back to its page", async () => {
     const { deps, requests } = api(() => json(recipe));
 
-    const result = await saveRecipe(deps, { lang: "en", id: ID, values });
+    const result = await saveRecipe(deps, { lang: "en", id: ID, language: "it", values });
 
     expect(requests[0]?.method).toBe("PUT");
     expect(new URL(requests[0]?.url ?? "").pathname).toBe(`/recipes/${ID}`);
-    expect(await requests[0]?.json()).toEqual({ ...body, language: "en" });
+    expect(await requests[0]?.json()).toEqual({ ...body, language: "it" });
     expect(result).toEqual({ redirect: `/en/recipes/${ID}` });
   });
 
@@ -219,7 +260,7 @@ describe("saveRecipe", () => {
     expect(requests).toHaveLength(0);
     expect(result).toEqual({ redirect: "/es/recipes/new?error=title-missing&field=title" });
     const header = setCookies.map((c) => c.split(";")[0]).join("; ");
-    expect(readDraft(header)).toEqual(noTitle);
+    expect(readDraft(header, "new")).toEqual(noTitle);
   });
 
   it("sends a signed-out visitor to the sign-in, and back to the form after", async () => {
@@ -230,16 +271,53 @@ describe("saveRecipe", () => {
     });
   });
 
-  it.each([404, 400])(
-    "editing a recipe that is gone or another user's (%i) shows its page, not found",
-    async (status) => {
-      const { deps } = api(() => problem(status));
+  it("editing a recipe that is gone or another user's (404) shows its page, not found", async () => {
+    const { deps } = api(() => problem(404));
 
-      expect(await saveRecipe(deps, { lang: "es", id: ID, values })).toEqual({
-        redirect: `/es/recipes/${ID}`,
-      });
-    },
-  );
+    expect(await saveRecipe(deps, { lang: "es", id: ID, values })).toEqual({
+      redirect: `/es/recipes/${ID}`,
+    });
+  });
+
+  // An id that isn't a UUID is not found before asking, so a 400 on an edit
+  // can only be a body the API refuses: back to the form, as a new recipe's.
+  it("editing with an id that isn't one shows its page, not found, without calling the API", async () => {
+    const { deps, requests } = api(() => json(recipe));
+
+    expect(await saveRecipe(deps, { lang: "es", id: "not-an-id", values })).toEqual({
+      redirect: "/es/recipes/not-an-id",
+    });
+    expect(requests).toHaveLength(0);
+  });
+
+  it("an edit the API refuses (400) goes back to the form, with what was typed", async () => {
+    const { deps, setCookies } = api(() => problem(400));
+
+    expect(await saveRecipe(deps, { lang: "es", id: ID, values })).toEqual({
+      redirect: `/es/recipes/${ID}/edit?error=refused&field=title`,
+    });
+    const header = setCookies.map((c) => c.split(";")[0]).join("; ");
+    expect(readDraft(header, ID)).toEqual(values);
+  });
+
+  it("keeps what was typed when sending to the sign-in", async () => {
+    const { deps, setCookies } = api(() => problem(401));
+
+    await saveRecipe(deps, { lang: "es", id: ID, values });
+
+    const header = setCookies.map((c) => c.split(";")[0]).join("; ");
+    expect(readDraft(header, ID)).toEqual(values);
+  });
+
+  it("asks for Secure draft cookies when the page is served over HTTPS", async () => {
+    const made = api(() => problem(503));
+
+    await saveRecipe({ ...made.deps, origin: "https://web.test" }, { lang: "es", values });
+
+    const drafts = made.setCookies.filter((c) => c.startsWith("recipe_draft_0="));
+    expect(drafts).toHaveLength(1);
+    expect(drafts[0]?.split("; ")).toContain("Secure");
+  });
 
   it.each([
     [400, "refused"],
