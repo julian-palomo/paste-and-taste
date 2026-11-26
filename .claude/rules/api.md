@@ -101,7 +101,8 @@ unexpected error is logged only through `loggableError`
 (`src/errors/loggable-error.ts`). The one exception is the development code
 sender, `src/login/code-sender.ts`, which prints the code to the local
 terminal where login runs, never to a deployed Worker. The Resend sender logs
-a failure as Resend's status and error name only.
+a failure as Resend's status and error name only, and the daily ceiling on
+codes logs that it is reached, with its number and nothing else.
 
 **The sign-in code is sent by our route, not by Better Auth.** Better Auth
 calls its sender through a function that catches and only logs any error, so

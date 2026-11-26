@@ -56,7 +56,9 @@ needs, and a phase gets its issues when it is next.
    email, the "Mantener la sesión iniciada" box, and a passkey. #87 sends the
    code by email through Resend, from `mail.pasteandtaste.app`. #84 deletes
    the login's expired rows once a day, on a Cron Trigger. #88 puts both
-   Workers on `pasteandtaste.app`, the domain the login is deployed on. Next comes
+   Workers on `pasteandtaste.app`, the domain the login is deployed on. #105
+   closes sign-up to invited addresses until launch and caps the codes sent
+   in a day. Next comes
    the login in preview and production, with Workers Paid and a Resend
    webhook that alerts on failed and bounced emails.
    The first table, a user's recipes, holds each recipe's copy owner; who
@@ -86,7 +88,8 @@ needs, and a phase gets its issues when it is next.
    recipe, and one form to add one by hand or edit it, which works with no
    JavaScript. Since #96 a recipe can be deleted from its page, after a
    confirmation.
-5. **The real import.** Workflows in the background and the limit per user.
+5. **The real import.** Workflows in the background, the limit per user, and
+   a daily ceiling on imports for the whole app.
    Web pages first, the cheapest source to read, then Instagram, then YouTube.
 6. **The native app.** Android first, with sharing a post to the app. iPhone
    is tested early.

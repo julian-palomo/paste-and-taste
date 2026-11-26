@@ -318,7 +318,39 @@ terminal, and nothing it prints is pasted anywhere.
 A code lasts 5 minutes and allows 3 tries. Asking for codes is limited to 3
 per address every 15 minutes and 10 per IP every hour, and any other login
 request to 60 per IP every hour; past a limit the API answers 429
-([the record](adr/2026-11-25-login-behind-the-apis-own-routes.md)).
+([the record](adr/2026-11-25-login-behind-the-apis-own-routes.md)). The whole
+app sends at most 40 codes a day, past which every address gets 429 too.
+
+**Sign-up is by invitation until launch**
+([the record](adr/2026-11-26-sign-up-by-invitation.md)). `SIGN_UP` in
+`apps/api/wrangler.jsonc` is `invited` in preview and production and `open`
+in development. With `invited`, only an address with an account or on the
+invited list gets a code; any other gets the same answer and nothing is sent.
+
+- **Inviting an address**, or removing one, for the database `DATABASE_URL`
+  names. The command asks for the address and prints only `Invited.`,
+  `Removed.` or `Not on the list.` For the development database:
+
+  ```bash
+  export DATABASE_URL="$(sed -n 's/^CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE=//p' apps/api/.env)"
+  pnpm -C apps/api invite add
+  unset DATABASE_URL
+  ```
+
+  For preview or production, set `DATABASE_URL` with `read -rs DATABASE_URL &&
+  export DATABASE_URL` and paste that database's string, as for its
+  migrations. `invite remove` takes an address off the list; it doesn't close
+  an account. An agent never runs this.
+- **Trying it in development**, after the migrations above:
+  1. Append `SIGN_UP=invited` to `apps/api/.env`: `wrangler dev` reads it over
+     `wrangler.jsonc`'s `vars`. That is wrangler 4.162.0's behaviour, seen in
+     its code (`getVarsForDev`), not a documented rule.
+  2. Invite your own address with the command above, and start `pnpm -C
+     apps/api dev`.
+  3. Ask for a code for your address: it is printed or sent as usual.
+  4. Ask for one for an address that isn't on the list: the answer is the
+     same `{"sent":true}`, and nothing is printed or sent.
+  5. Remove the `SIGN_UP=invited` line from `apps/api/.env`.
 
 **Expired rows are deleted once a day**, at 03:17 UTC, by a Cron Trigger on
 the API's Worker: limit windows that ended, codes and sessions that expired
@@ -435,6 +467,9 @@ Each deployed Worker keeps what it logs in Workers Logs, set by the
   with the request and the response, which is where a slow or failed request
   in a run can be read. Our code never logs an email address, a sign-in code,
   a cookie or a session token.
+- **The daily ceiling on codes.** When the app reaches it, one line, once per
+  window: `The ceiling of 40 sign-in codes a day is reached; no more are sent
+  until its window ends.` It holds no address.
 - **The daily cron.** Where the login runs, its one line is
   `Deleted expired login rows: request limits <n>, codes <n>, sessions <n>`,
   or `Deleting expired login rows failed:` with the error. Until then it logs

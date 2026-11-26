@@ -66,6 +66,7 @@ is here, written down at the time instead of remembered afterwards.
 | 2026-11-25 | [Production's home is the building page, and the health moves to its own address](2026-11-25-production-home-is-the-building-page.md) |
 | 2026-11-25 | [A deleted recipe is removed at once, and the delete answers 204](2026-11-25-deleting-a-recipe.md) |
 | 2026-11-25 | [The Workers answer on pasteandtaste.app, and production stays unindexed until launch](2026-11-25-the-apps-own-domain.md) |
+| 2026-11-26 | [Sign-up by invitation until launch, and a daily ceiling on codes](2026-11-26-sign-up-by-invitation.md) |
 
 ## Not decided yet
 

@@ -95,6 +95,10 @@ _Avoid_: follower, contact, connection.
 
 **Friend request**: One user asking another to be friends.
 
+**Invited address**: An address the owner has let in before launch, while
+sign-up is by invitation. It can get a sign-in code before it has an account.\
+_Avoid_: allowlist, whitelist, and "invitation", which is a friend's.
+
 **Invitation link**: A link that brings someone without an account into the
 app, sent by WhatsApp or any other way.\
 _Avoid_: invite code.
