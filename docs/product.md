@@ -48,6 +48,8 @@ competition. Nobody becomes famous in it.
   at the top of their recipes.
 - A user can always edit a recipe. Text can also be added by voice, with a
   microphone.
+- A user can add a recipe by hand, writing its title, ingredients and steps,
+  besides importing one from a link.
 - A recipe has variants: another version of it, with ingredients changed or
   added, or the steps in another order.
 - The number of servings of a recipe can be changed.

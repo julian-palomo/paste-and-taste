@@ -1,14 +1,16 @@
 import { ApiError, ApiUnreachableError } from "@paste-and-taste/api-client";
 import { describe, expect, it } from "vitest";
+import { relayHeaders } from "../src/session/relay.ts";
 import {
+  afterSignIn,
   clearPendingCookie,
   codeError,
   parseErrorKind,
+  parseNext,
   passkeyError,
   pendingCookie,
   readPending,
   registrationError,
-  relayHeaders,
   signInError,
 } from "../src/sign-in/relay.ts";
 import { signInShown } from "../src/sign-in/sign-in-shown.ts";
@@ -31,6 +33,26 @@ describe("relayHeaders", () => {
       "cf-connecting-ip": "203.0.113.7",
       "user-agent": "Test browser",
     });
+  });
+
+  // The web app's own cookies hold the address being signed in with and a
+  // recipe's draft: they are the browser's business with the web app, never
+  // the API's.
+  it("passes the browser's cookies on without the web app's own", () => {
+    const cookie =
+      "better-auth.session_token=abc; sign_in_pending=%7B%7D; recipe_draft_0=x; recipe_draft_1=y; theme=dark";
+
+    expect(relayHeaders((name) => (name === "cookie" ? cookie : undefined))).toEqual({
+      cookie: "better-auth.session_token=abc; theme=dark",
+    });
+  });
+
+  it("sends no cookie header when only the web app's own cookies are there", () => {
+    expect(
+      relayHeaders((name) =>
+        name === "cookie" ? "sign_in_pending=x; recipe_draft_0=y" : undefined,
+      ),
+    ).toEqual({});
   });
 
   it("leaves out a header the browser didn't send", () => {
@@ -171,5 +193,44 @@ describe("parseErrorKind", () => {
 
   it.each([undefined, "", "other", 401, ["wrong-code"]])("reads %o as none", (value) => {
     expect(parseErrorKind(value)).toBeUndefined();
+  });
+});
+
+// Where a visitor goes after signing in: back to the page they asked for, but
+// only a page of this site, so a link can't send them elsewhere.
+describe("parseNext", () => {
+  it.each(["/es/recipes", "/en/recipes/7c0c1f9e-2d0a-4e5b-9f1a-0b2c3d4e5f60/edit", "/en"])(
+    "keeps %s",
+    (next) => {
+      expect(parseNext(next)).toBe(next);
+    },
+  );
+
+  it.each([
+    undefined,
+    "",
+    "recipes",
+    "//evil.test/es/recipes",
+    "https://evil.test/es/recipes",
+    "/fr/recipes",
+    "/es//evil.test",
+    "/es\\evil.test",
+    "/es/recipes\n",
+    "/en/a\u0000b",
+    "/en/a\u007fb",
+    42,
+  ])("drops %o", (next) => {
+    expect(parseNext(next)).toBeUndefined();
+  });
+});
+
+describe("afterSignIn", () => {
+  it.each([
+    ["code", undefined, "/es/sign-in?step=passkey"],
+    ["passkey", undefined, "/es/sign-in"],
+    ["code", "/es/recipes", "/es/recipes"],
+    ["passkey", "/es/recipes", "/es/recipes"],
+  ] as const)("after a %s sign-in with next %s, goes to %s", (by, next, destination) => {
+    expect(afterSignIn("es", next, by)).toBe(destination);
   });
 });

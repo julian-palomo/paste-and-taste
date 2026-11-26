@@ -1,9 +1,9 @@
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { pageHead } from "../../head.ts";
 import { messagesFor, parseLanguage } from "../../i18n/i18n.ts";
 import { keepErrorOnServer } from "../../layout/keep-error-on-server.ts";
 import { PasskeyRegister, PasskeySignIn } from "../../sign-in/passkey.tsx";
-import { parseErrorKind } from "../../sign-in/relay.ts";
+import { parseErrorKind, parseNext } from "../../sign-in/relay.ts";
 import {
   changeAddressForm,
   getSignInPage,
@@ -25,13 +25,17 @@ export const Route = createFileRoute("/$lang/sign-in")({
       return { lang: language };
     },
   },
-  validateSearch: ({ error, step }: Record<string, unknown>) => ({
+  validateSearch: ({ error, step, next }: Record<string, unknown>) => ({
+    next: parseNext(next),
     error: parseErrorKind(error),
     step: (["passkey", "passkey-added"] as const).find((known) => known === step),
   }),
-  loader: async () => {
+  loaderDeps: ({ search }) => ({ next: search.next }),
+  loader: async ({ deps }) => {
     const page = await getSignInPage();
     if (!page.shown) throw notFound();
+    // Already signed in, and sent here from a page: straight back to it.
+    if (page.session.kind === "signed-in" && deps.next) throw redirect({ href: deps.next });
     return page;
   },
   onError: keepErrorOnServer,
@@ -43,7 +47,7 @@ export const Route = createFileRoute("/$lang/sign-in")({
 function SignInPage() {
   const { lang } = Route.useParams();
   const { session, pending } = Route.useLoaderData();
-  const { error, step } = Route.useSearch();
+  const { error, step, next } = Route.useSearch();
   const messages = messagesFor(lang);
   return (
     <SignInView
@@ -53,13 +57,14 @@ function SignInPage() {
       pending={pending}
       error={error}
       step={step}
+      next={next}
       actions={{
         sendCode: sendCodeForm.url,
         signIn: signInForm.url,
         changeAddress: changeAddressForm.url,
         signOut: signOutForm.url,
       }}
-      passkeySignIn={<PasskeySignIn lang={lang} messages={messages} />}
+      passkeySignIn={<PasskeySignIn lang={lang} messages={messages} next={next} />}
       passkeyRegister={<PasskeyRegister lang={lang} messages={messages} />}
     />
   );

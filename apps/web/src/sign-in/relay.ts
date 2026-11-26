@@ -1,20 +1,5 @@
 import { ApiError, ApiUnreachableError } from "@paste-and-taste/api-client";
-
-// What the web app's server passes on to the API about the browser. Only
-// these three, so a browser can't set anything else on the API's request.
-// The IP is read as the cf-connecting-ip header, never with Start's
-// getRequestIP, which reads x-forwarded-for or the socket's address and finds
-// nothing on Workers.
-const RELAYED = ["cookie", "cf-connecting-ip", "user-agent"] as const;
-
-export function relayHeaders(get: (name: string) => string | undefined): Record<string, string> {
-  const headers: Record<string, string> = {};
-  for (const name of RELAYED) {
-    const value = get(name);
-    if (value) headers[name] = value;
-  }
-  return headers;
-}
+import type { Language } from "../i18n/i18n.ts";
 
 // The address being signed in with, between the address step and the code
 // step, in a cookie of the web app's own: never in the page's address, which
@@ -105,3 +90,25 @@ export const passkeyError = (error: unknown) =>
 // Creating one: a refused registration, or a session that ended before it.
 export const registrationError = (error: unknown) =>
   byStatus(error, { 400: "passkey-not-created", 401: "passkey-not-created", 429: "too-many" });
+
+// The page a visitor asked for before signing in, from ?next= or a form's
+// hidden field: only a path of this site under a language, so a link can't
+// use the sign-in to send someone elsewhere. "//host" and a backslash, which
+// browsers read as another site, are refused.
+export function parseNext(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  if (!/^\/(en|es)(\/[^\s\\]*)?$/.test(value) || value.includes("//")) return undefined;
+  if (/\p{Cc}/u.test(value)) return undefined;
+  return value;
+}
+
+// Where a sign-in goes: back to the page asked for, else the passkey offer
+// after a code, or the signed-in page after a passkey.
+export function afterSignIn(
+  lang: Language,
+  next: string | undefined,
+  by: "code" | "passkey",
+): string {
+  if (next) return next;
+  return by === "code" ? `/${lang}/sign-in?step=passkey` : `/${lang}/sign-in`;
+}
