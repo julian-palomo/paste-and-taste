@@ -132,7 +132,7 @@ export interface paths {
                         "application/json": components["schemas"]["CodeSent"];
                     };
                 };
-                /** @description Too many codes for this address or from this IP. */
+                /** @description Too many codes for this address or from this IP, or the app's daily ceiling on codes is reached. */
                 429: {
                     headers: {
                         [name: string]: unknown;

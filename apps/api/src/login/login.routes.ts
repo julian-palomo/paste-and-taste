@@ -12,7 +12,7 @@ import {
   PasskeyRefusedError,
 } from "./login-errors.ts";
 import { REMEMBER_ME_HEADER } from "./remember-me.ts";
-import { LIMITS, type RequestLimiter } from "./request-limiter.ts";
+import { LIMITS, type LimitRule, type RequestLimiter } from "./request-limiter.ts";
 import { mayGetCode, type SignUp } from "./sign-up.ts";
 import type { Auth, WithAuth } from "./with-auth.ts";
 
@@ -21,6 +21,8 @@ type LoginDeps = {
   requestLimiter: RequestLimiter;
   codeSender: CodeSender;
   signUp: SignUp;
+  // LIMITS.codesPerDay, or a smaller ceiling a test sets.
+  codesPerDay: LimitRule;
 };
 
 const User = z.object({ id: z.string(), email: z.string(), name: z.string() }).openapi("User");
@@ -67,7 +69,9 @@ const askForCode = createRoute({
       description: "A sign-in code was sent to the address.",
       content: { "application/json": { schema: CodeSent } },
     },
-    429: problem("Too many codes for this address or from this IP."),
+    429: problem(
+      "Too many codes for this address or from this IP, or the app's daily ceiling on codes is reached.",
+    ),
     502: problem("The code could not be sent: try again in a moment."),
     503: problem("Login is not configured on this server."),
     ...problemResponses,
@@ -243,6 +247,7 @@ export function loginRoutes({
   requestLimiter,
   codeSender,
   signUp,
+  codesPerDay,
 }: LoginDeps): OpenAPIHono {
   const app = new OpenAPIHono({
     defaultHook: (result) => {
@@ -259,7 +264,16 @@ export function loginRoutes({
       // An address that may not get a code gets the same answer as one that
       // does, and nothing is made or sent: the answer tells a stranger
       // nothing about who is invited or has an account.
-      if (!(await mayGetCode(db, signUp, email))) return undefined;
+      // It spends nothing, so it isn't counted, but once the day's ceiling is
+      // full it gets the same 429 as an address that would.
+      if (!(await mayGetCode(db, signUp, email))) {
+        await requestLimiter.reached(db, codesPerDay, "all");
+        return undefined;
+      }
+      // Counted before the code is made: counting after the send would let
+      // two requests at once both pass the last slot, so a failed send
+      // spends its slot too.
+      await requestLimiter.check(db, codesPerDay, "all");
       await auth.api.sendVerificationOTP({ body: { email, type: "sign-in" } });
       return outbox.take();
     });

@@ -1,4 +1,4 @@
-import { sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import type { Database } from "../database/database.ts";
 import { requestLimit } from "../database/schema.ts";
 
@@ -29,4 +29,23 @@ export async function countRequest(
     })
     .returning({ count: requestLimit.count });
   return row?.count ?? 1;
+}
+
+// How many requests `key` has made in its current window, without counting
+// one: 0 when it has none, or its window has ended (as countRequest decides).
+export async function readCount(
+  db: Database,
+  key: string,
+  windowMs: number,
+  now: Date,
+): Promise<number> {
+  const windowStart = sql`${new Date(now.getTime() - windowMs).toISOString()}::timestamp`;
+  const [row] = await db
+    .select({
+      count: requestLimit.count,
+      ended: sql<boolean>`${requestLimit.windowStartedAt} <= ${windowStart}`,
+    })
+    .from(requestLimit)
+    .where(eq(requestLimit.key, key));
+  return row && !row.ended ? row.count : 0;
 }

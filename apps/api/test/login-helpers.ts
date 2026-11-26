@@ -36,7 +36,8 @@ export function loginApp(
   return createApp(
     { APP_ENV: appEnv, ...LOGIN_SETTINGS },
     { connectionString: () => postgres.connectionString },
-    { codeSender: sender },
+    // These tests aren't about the daily ceiling: test/sign-up.test.ts is.
+    { codeSender: sender, codesPerDay: 1000 },
   );
 }
 

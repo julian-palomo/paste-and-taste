@@ -11,6 +11,8 @@ import { startTestPostgres, type TestPostgres } from "./postgres.ts";
 
 const MINUTE = 60 * 1000;
 const HOUR = 60 * MINUTE;
+// The longest window in LIMITS: the daily ceiling on codes.
+const DAY = 24 * HOUR;
 const NOW = new Date("2026-11-25T03:17:00.000Z");
 const ago = (ms: number) => new Date(NOW.getTime() - ms);
 const later = (ms: number) => new Date(NOW.getTime() + ms);
@@ -70,7 +72,7 @@ describe("deleting the login's expired rows", () => {
     await addSession("expired", ago(1000));
     await addCode("expired", ago(1000));
     // Exactly the longest window ago: ended under every rule.
-    await addLimit("code:ip:203.0.113.7", ago(HOUR));
+    await addLimit("code:ip:203.0.113.7", ago(DAY));
 
     const deleted = await deleteExpiredLoginRows(db, NOW);
 
@@ -83,7 +85,7 @@ describe("deleting the login's expired rows", () => {
     await addSession("later", later(MINUTE));
     await addCode("at-now", NOW);
     await addCode("later", later(MINUTE));
-    await addLimit("login:ip:203.0.113.7", ago(59 * MINUTE));
+    await addLimit("login:ip:203.0.113.7", ago(DAY - MINUTE));
 
     const deleted = await deleteExpiredLoginRows(db, NOW);
 
@@ -105,6 +107,16 @@ describe("deleting the login's expired rows", () => {
     expect(await countRequest(db, "code:ip:203.0.113.7", HOUR, NOW)).toBe(3);
   });
 
+  it("never resets the daily ceiling while its day is still counting", async () => {
+    const start = ago(12 * HOUR);
+    await countRequest(db, "code:day:all", DAY, start);
+    await countRequest(db, "code:day:all", DAY, start);
+
+    await deleteExpiredLoginRows(db, NOW);
+
+    expect(await countRequest(db, "code:day:all", DAY, NOW)).toBe(3);
+  });
+
   it("changes nothing for a window that ended within the longest window", async () => {
     // A 15-minute window that ended 20 minutes ago: kept, and its next count
     // starts a new window, as it would with no deletion.
@@ -123,8 +135,8 @@ describe("the daily scheduled run", () => {
     const log = vi.spyOn(console, "log").mockImplementation(() => {});
     await addSession("expired", ago(1000));
     await addCode("expired", ago(1000));
-    await addLimit("code:email:ana@example.com", ago(HOUR));
-    await addLimit("code:ip:203.0.113.7", ago(HOUR));
+    await addLimit("code:email:ana@example.com", ago(DAY));
+    await addLimit("code:ip:203.0.113.7", ago(DAY));
 
     await createScheduledWork(
       { APP_ENV: "development", ...LOGIN_SETTINGS },

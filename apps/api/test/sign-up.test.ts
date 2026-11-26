@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Client } from "pg";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { createApp } from "../src/app.ts";
 import { invite, uninvite } from "../src/login/invited-address.repository.ts";
 import { json, LOGIN_SETTINGS, recordingSender } from "./login-helpers.ts";
@@ -36,11 +36,16 @@ async function invited(email: string) {
   }
 }
 
-function appWith(signUp: "invited" | "open", sender = recordingSender()) {
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
+function appWith(signUp: "invited" | "open", options: { codesPerDay?: number } = {}) {
+  const sender = recordingSender();
   const app = createApp(
     { APP_ENV: "development", ...LOGIN_SETTINGS, SIGN_UP: signUp },
     { connectionString: () => postgres.connectionString },
-    { codeSender: sender.sender },
+    { codeSender: sender.sender, ...options },
   );
   return { app, sender };
 }
@@ -187,5 +192,67 @@ describe("a missing sign-up value", () => {
     await askForCode(app, "unknown-when-missing@example.com");
 
     expect(sender.sent).toEqual([]);
+  });
+});
+
+// The ceiling counts the whole app, so each test starts from an empty count.
+describe("the daily ceiling on codes", () => {
+  async function freshCeiling() {
+    await query("delete from request_limit where key like 'code:day:%'");
+  }
+
+  function warnings() {
+    const spy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    return () => spy.mock.calls.map((call) => call.map(String).join(" "));
+  }
+
+  it("sends no code past the ceiling, answers 429, and logs it once without an address", async () => {
+    await freshCeiling();
+    const logged = warnings();
+    const { app, sender } = appWith("open", { codesPerDay: 2 });
+
+    const answers = [];
+    for (const n of [1, 2, 3, 4]) answers.push(await askForCode(app, `ceiling-${n}@example.com`));
+
+    expect(answers.map((a) => a.status)).toEqual([200, 200, 429, 429]);
+    expect(answers[2]?.body).toMatchObject({ status: 429, title: "Too Many Requests" });
+    expect(sender.sent).toHaveLength(2);
+    expect(logged()).toEqual([
+      "The ceiling of 2 sign-in codes a day is reached; no more are sent until its window ends.",
+    ]);
+  });
+
+  it("doesn't count requests for addresses that get no code", async () => {
+    await freshCeiling();
+    for (const guest of ["first-guest@example.com", "second-guest@example.com"])
+      await invited(guest);
+    const { app, sender } = appWith("invited", { codesPerDay: 2 });
+
+    for (const n of [1, 2, 3, 4, 5]) await askForCode(app, `not-invited-${n}@example.com`);
+    await askForCode(app, "first-guest@example.com");
+    await askForCode(app, "second-guest@example.com");
+
+    expect(sender.sent.map((s) => s.email)).toEqual([
+      "first-guest@example.com",
+      "second-guest@example.com",
+    ]);
+  });
+
+  it("answers a stranger the same 429 as a member once the ceiling is full", async () => {
+    await freshCeiling();
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    for (const guest of ["full-1@example.com", "full-2@example.com", "full-3@example.com"]) {
+      await invited(guest);
+    }
+    const { app } = appWith("invited", { codesPerDay: 2 });
+    await askForCode(app, "full-1@example.com");
+    await askForCode(app, "full-2@example.com");
+
+    // Exactly two codes sent: the stranger asks before any member is refused.
+    const stranger = await askForCode(app, "stranger-at-ceiling@example.com");
+    const member = await askForCode(app, "full-3@example.com");
+
+    expect(stranger.status).toBe(429);
+    expect(stranger).toEqual(member);
   });
 });
