@@ -7,6 +7,7 @@ import {
   type RecipeFormValues,
   readDraft,
   readRecipeForm,
+  recipeErrorSearch,
   toRecipeInput,
 } from "../src/recipes/recipe-form.ts";
 
@@ -238,5 +239,23 @@ describe("parseRecipeError", () => {
     ["title-missing", undefined],
   ])("reads %s on %s as none", (kind, field) => {
     expect(parseRecipeError(kind, field)).toBeUndefined();
+  });
+});
+
+// The router rewrites an address whose validated search differs in shape from
+// its query, which would drop ?field=: the form's search stays two strings.
+describe("recipeErrorSearch", () => {
+  it("keeps ?error= and ?field= as the two strings the address has", () => {
+    expect(recipeErrorSearch({ error: "source-invalid", field: "source" })).toEqual({
+      error: "source-invalid",
+      field: "source",
+    });
+  });
+
+  it("drops both when either isn't one the form knows", () => {
+    expect(recipeErrorSearch({ error: "other", field: "source" })).toEqual({
+      error: undefined,
+      field: undefined,
+    });
   });
 });

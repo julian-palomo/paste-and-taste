@@ -2,7 +2,7 @@ import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { pageHead } from "../../../../head.ts";
 import { messagesFor, parseLanguage } from "../../../../i18n/i18n.ts";
 import { keepErrorOnServer } from "../../../../layout/keep-error-on-server.ts";
-import { parseRecipeError } from "../../../../recipes/recipe-form.ts";
+import { recipeErrorSearch } from "../../../../recipes/recipe-form.ts";
 import { RecipeFormView } from "../../../../recipes/recipe-form-view.tsx";
 import { RecipeUnavailable } from "../../../../recipes/recipe-view.tsx";
 import { getRecipeForm, saveRecipeForm } from "../../../../recipes/recipes.functions.ts";
@@ -18,9 +18,7 @@ export const Route = createFileRoute("/$lang/recipes/$id/edit")({
       return { lang: language, id };
     },
   },
-  validateSearch: ({ error, field }: Record<string, unknown>) => ({
-    error: parseRecipeError(error, field),
-  }),
+  validateSearch: recipeErrorSearch,
   loader: async ({ params, location }) => {
     const page = await getRecipeForm({ data: { id: params.id } });
     if (page.kind !== "edit") throw notFound();
@@ -46,7 +44,9 @@ export const Route = createFileRoute("/$lang/recipes/$id/edit")({
 function EditRecipePage() {
   const { lang } = Route.useParams();
   const { state, draft } = Route.useLoaderData();
-  const { error } = Route.useSearch();
+  const search = Route.useSearch();
+  const error =
+    search.error && search.field ? { kind: search.error, field: search.field } : undefined;
   const messages = messagesFor(lang);
   if (state.kind !== "ok") return <RecipeUnavailable messages={messages} kind={state.kind} />;
   return (

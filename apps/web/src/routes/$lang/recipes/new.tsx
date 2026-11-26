@@ -2,7 +2,7 @@ import { createFileRoute, notFound } from "@tanstack/react-router";
 import { pageHead } from "../../../head.ts";
 import { messagesFor, parseLanguage } from "../../../i18n/i18n.ts";
 import { keepErrorOnServer } from "../../../layout/keep-error-on-server.ts";
-import { parseRecipeError } from "../../../recipes/recipe-form.ts";
+import { recipeErrorSearch } from "../../../recipes/recipe-form.ts";
 import { RecipeFormView } from "../../../recipes/recipe-form-view.tsx";
 import { getRecipeForm, saveRecipeForm } from "../../../recipes/recipes.functions.ts";
 
@@ -17,9 +17,7 @@ export const Route = createFileRoute("/$lang/recipes/new")({
       return { lang: language };
     },
   },
-  validateSearch: ({ error, field }: Record<string, unknown>) => ({
-    error: parseRecipeError(error, field),
-  }),
+  validateSearch: recipeErrorSearch,
   loader: async () => {
     const page = await getRecipeForm({ data: { id: null } });
     if (page.kind !== "new") throw notFound();
@@ -34,7 +32,9 @@ export const Route = createFileRoute("/$lang/recipes/new")({
 function NewRecipePage() {
   const { lang } = Route.useParams();
   const { draft } = Route.useLoaderData();
-  const { error } = Route.useSearch();
+  const search = Route.useSearch();
+  const error =
+    search.error && search.field ? { kind: search.error, field: search.field } : undefined;
   return (
     <RecipeFormView
       lang={lang}

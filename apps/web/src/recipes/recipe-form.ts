@@ -137,6 +137,17 @@ export function checkRecipe(
   return undefined;
 }
 
+// The form page's validated search: the same two strings the address has.
+// Never an object: the router rewrites an address whose validated search
+// differs in shape from its query, and ?field= would be lost on the way.
+export function recipeErrorSearch(search: Record<string, unknown>): {
+  error: RecipeErrorKind | undefined;
+  field: string | undefined;
+} {
+  const parsed = parseRecipeError(search.error, search.field);
+  return { error: parsed?.kind, field: parsed?.field };
+}
+
 // The draft: what was typed, in cookies of the web app's own, for the page
 // that shows the form again after an error. RFC 6265, section 6.1, asks
 // browsers to keep at least 4096 bytes per cookie, name and attributes
