@@ -1,7 +1,7 @@
 # Paste & Taste
 
-A working name. An app that saves a recipe shared from Instagram, YouTube or a
-web page, so it can be kept, edited and cooked from.
+An app that saves a recipe shared from Instagram, YouTube or a web page, so it
+can be kept, edited and cooked from.
 
 ## Status
 

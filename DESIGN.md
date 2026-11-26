@@ -321,8 +321,10 @@ as the canvas holds them; the earlier rounds are only on the canvas.
 
 - **The mark.** The owner wants one that looks well made and has not found it.
   Until then the name set in Outfit 800 stands in for it. Routes noted: the
-  initials "P&T", or the "&" as the main character. The name is itself a
-  working name.
+  initials "P&T", or the "&" as the main character. The name is decided:
+  Paste & Taste
+  ([the record](docs/adr/2026-11-26-the-name-is-paste-and-taste.md)); only
+  the mark is open.
 - The word for the people tab. "Mi gente" is drawn as a trial; the owner
   also likes "Amigos" and "Comunidad".
 - How the avatar photo is drawn. The screens show initials only.
