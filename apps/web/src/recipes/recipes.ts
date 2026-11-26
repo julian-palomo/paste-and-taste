@@ -94,6 +94,7 @@ export function signInFor(lang: Language, path: string): string {
 // in step.
 const UUID =
   /^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$/;
+const isRecipeId = (id: string) => UUID.test(id);
 
 // Saves the form: POST for a new recipe in the page's language, PUT for an
 // edited one in its own `language`, then the recipe's page. On an error, back
@@ -110,7 +111,7 @@ export async function saveRecipe(
 ): Promise<FormResult> {
   if (!deps.shown) return { notFound: true };
   // Not an id at all: its page is the not-found one, without asking the API.
-  if (id !== undefined && !UUID.test(id)) return { redirect: `/${lang}/recipes/${id}` };
+  if (id !== undefined && !isRecipeId(id)) return { redirect: `/${lang}/recipes/${id}` };
   const formPage = id ? `/${lang}/recipes/${id}/edit` : `/${lang}/recipes/new`;
   const keepDraft = () => {
     for (const cookie of draftCookies(values, secure(deps), id ?? "new") ?? []) {
@@ -146,5 +147,39 @@ export async function saveRecipe(
     // API's 400 names no field.
     if (error instanceof ApiError && error.status === 400) return back("refused", "title");
     return back(failed(error).kind === "unreachable" ? "unreachable" : "api-error", "title");
+  }
+}
+
+const DELETE_ERRORS = ["unreachable", "api-error"] as const;
+type DeleteError = (typeof DELETE_ERRORS)[number];
+
+// The confirmation's validated search: the one string the address has, or
+// none. Never an object, which the router would rewrite the address over.
+export function deleteErrorSearch(search: Record<string, unknown>): {
+  error: DeleteError | undefined;
+} {
+  return { error: DELETE_ERRORS.find((kind) => kind === search.error) };
+}
+
+// Deletes a recipe once its confirmation is sent, then the list. A recipe
+// that is gone or another user's goes to its page, not found; a 401 goes to
+// the sign-in and back to the confirmation, so it is asked again, never
+// deleted on the way back.
+export async function deleteRecipe(
+  deps: RecipesDeps,
+  { lang, id }: { lang: Language; id: string },
+): Promise<FormResult> {
+  if (!deps.shown) return { notFound: true };
+  const recipePage = `/${lang}/recipes/${id}`;
+  if (!isRecipeId(id)) return { redirect: recipePage };
+  const confirmation = `${recipePage}/delete`;
+  try {
+    await deps.client.delete("/recipes/{id}", { ...call(deps), params: { id } });
+    return { redirect: `/${lang}/recipes` };
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) return { redirect: recipePage };
+    const { kind } = failed(error);
+    if (kind === "signed-out") return { redirect: signInFor(lang, confirmation) };
+    return { redirect: `${confirmation}?${new URLSearchParams({ error: kind })}` };
   }
 }

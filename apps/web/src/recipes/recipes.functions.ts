@@ -10,7 +10,14 @@ import type { WebConfig } from "../config/config.ts";
 import { type Language, parseLanguage } from "../i18n/i18n.ts";
 import { formResponse, relayHeaders } from "../session/relay.ts";
 import { clearDraftCookies, readDraft, readRecipeForm } from "./recipe-form.ts";
-import { listRecipes, type RecipesDeps, readRecipe, readSignedIn, saveRecipe } from "./recipes.ts";
+import {
+  deleteRecipe,
+  listRecipes,
+  type RecipesDeps,
+  readRecipe,
+  readSignedIn,
+  saveRecipe,
+} from "./recipes.ts";
 import { recipesShown } from "./recipes-shown.ts";
 
 // The recipes' server functions: each wires the browser's request to the
@@ -101,6 +108,19 @@ export const saveRecipeForm = createServerFn({ method: "POST" })
         ...(typeof language === "string" && language ? { language } : {}),
         values: readRecipeForm(data),
       },
+    );
+    return formResponse(result, cookies);
+  });
+
+// The delete, sent from its confirmation page: a POST, never a link.
+export const deleteRecipeForm = createServerFn({ method: "POST" })
+  .middleware([withConfig])
+  .validator((form: FormData) => form)
+  .handler(async ({ data, context }) => {
+    const cookies: string[] = [];
+    const result = await deleteRecipe(
+      deps(context, (cookie) => cookies.push(cookie)),
+      { lang: langOf(data), id: String(data.get("id") ?? "") },
     );
     return formResponse(result, cookies);
   });

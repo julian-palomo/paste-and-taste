@@ -1,6 +1,7 @@
 import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { type Language, messagesFor } from "../src/i18n/i18n.ts";
+import { RecipeDeleteView } from "../src/recipes/recipe-delete-view.tsx";
 import { readRecipeForm } from "../src/recipes/recipe-form.ts";
 import { RecipeFormView } from "../src/recipes/recipe-form-view.tsx";
 import { RecipeListView } from "../src/recipes/recipe-list-view.tsx";
@@ -101,6 +102,14 @@ describe.each(["en", "es"] as const)("in %s", (lang: Language) => {
       expect(html).toMatch(
         new RegExp(`href="/${lang}/recipes/${ID}/edit"[^>]*>${escaped(m.recipeEdit)}<`),
       );
+    });
+
+    // A link only asks: preloading or a crawler following it deletes nothing.
+    it("links its delete confirmation, and holds no form", () => {
+      expect(html).toMatch(
+        new RegExp(`href="/${lang}/recipes/${ID}/delete"[^>]*>${escaped(m.recipeDelete)}<`),
+      );
+      expect(html).not.toContain("<form");
     });
 
     // The recipe keeps the language it was written in, whatever the interface's.
@@ -223,6 +232,58 @@ describe.each(["en", "es"] as const)("in %s", (lang: Language) => {
       );
       expect(classes.filter((name) => /[[(]/.test(name))).toEqual([]);
       expect(html).not.toContain("style=");
+    });
+  });
+
+  describe("the delete confirmation", () => {
+    const render = (error?: "unreachable" | "api-error") =>
+      renderToString(
+        <RecipeDeleteView
+          lang={lang}
+          messages={m}
+          action="/_serverFn/delete"
+          recipe={{ ...recipe, language: "it" }}
+          error={error}
+        />,
+      );
+    const html = render();
+
+    it("asks, names the recipe in its own language, and says what is lost", () => {
+      expect(html).toMatch(
+        new RegExp(`<h1[^>]*>${escapeRegExp(escaped(m.recipeDeleteHeading))}</h1>`),
+      );
+      expect(html).toMatch(/<[a-z]+[^>]*lang="it"[^>]*>Tortilla de patatas</);
+      expect(html).toContain(escaped(m.recipeDeleteWarning));
+    });
+
+    // Nothing is deleted until this one form is sent.
+    it("has one form, posted to the delete, with the recipe and the language", () => {
+      expect(html.match(/<form/g)).toHaveLength(1);
+      expect(html).toMatch(/<form[^>]*action="\/_serverFn\/delete"[^>]*method="post"/);
+      const value = (name: string) =>
+        attribute(inputs(html).find((tag) => attribute(tag, "name") === name) ?? "", "value");
+      expect(value("id")).toBe(ID);
+      expect(value("lang")).toBe(lang);
+      expect(html).toMatch(
+        new RegExp(`<button[^>]*type="submit"[^>]*>${escaped(m.recipeDelete)}</button>`),
+      );
+    });
+
+    it("cancels with a link back to the recipe", () => {
+      expect(html).toMatch(
+        new RegExp(`href="/${lang}/recipes/${ID}"[^>]*>${escaped(m.recipeDeleteCancel)}<`),
+      );
+    });
+
+    it("shows no error unless one came back", () => {
+      expect(html).not.toContain('role="alert"');
+    });
+
+    it.each([
+      ["unreachable", "recipeDeleteUnreachable"],
+      ["api-error", "recipeDeleteApiError"],
+    ] as const)("on %s, says so", (error, key) => {
+      expect(render(error)).toContain(`<p role="alert">${escaped(m[key])}</p>`);
     });
   });
 });

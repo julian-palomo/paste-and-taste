@@ -17,6 +17,7 @@ import { Route as LangSignInRouteImport } from './routes/$lang/sign-in'
 import { Route as LangRecipesIndexRouteImport } from './routes/$lang/recipes/index'
 import { Route as LangRecipesNewRouteImport } from './routes/$lang/recipes/new'
 import { Route as LangRecipesIdIndexRouteImport } from './routes/$lang/recipes/$id/index'
+import { Route as LangRecipesIdDeleteRouteImport } from './routes/$lang/recipes/$id/delete'
 import { Route as LangRecipesIdEditRouteImport } from './routes/$lang/recipes/$id/edit'
 
 const IndexRoute = IndexRouteImport.update({
@@ -59,6 +60,11 @@ const LangRecipesIdIndexRoute = LangRecipesIdIndexRouteImport.update({
   path: '/$lang/recipes/$id/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LangRecipesIdDeleteRoute = LangRecipesIdDeleteRouteImport.update({
+  id: '/$lang/recipes/$id/delete',
+  path: '/$lang/recipes/$id/delete',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LangRecipesIdEditRoute = LangRecipesIdEditRouteImport.update({
   id: '/$lang/recipes/$id/edit',
   path: '/$lang/recipes/$id/edit',
@@ -73,6 +79,7 @@ export interface FileRoutesByFullPath {
   '/$lang/': typeof LangIndexRoute
   '/$lang/recipes/new': typeof LangRecipesNewRoute
   '/$lang/recipes/': typeof LangRecipesIndexRoute
+  '/$lang/recipes/$id/delete': typeof LangRecipesIdDeleteRoute
   '/$lang/recipes/$id/edit': typeof LangRecipesIdEditRoute
   '/$lang/recipes/$id/': typeof LangRecipesIdIndexRoute
 }
@@ -84,6 +91,7 @@ export interface FileRoutesByTo {
   '/$lang': typeof LangIndexRoute
   '/$lang/recipes/new': typeof LangRecipesNewRoute
   '/$lang/recipes': typeof LangRecipesIndexRoute
+  '/$lang/recipes/$id/delete': typeof LangRecipesIdDeleteRoute
   '/$lang/recipes/$id/edit': typeof LangRecipesIdEditRoute
   '/$lang/recipes/$id': typeof LangRecipesIdIndexRoute
 }
@@ -96,6 +104,7 @@ export interface FileRoutesById {
   '/$lang/': typeof LangIndexRoute
   '/$lang/recipes/new': typeof LangRecipesNewRoute
   '/$lang/recipes/': typeof LangRecipesIndexRoute
+  '/$lang/recipes/$id/delete': typeof LangRecipesIdDeleteRoute
   '/$lang/recipes/$id/edit': typeof LangRecipesIdEditRoute
   '/$lang/recipes/$id/': typeof LangRecipesIdIndexRoute
 }
@@ -109,6 +118,7 @@ export interface FileRouteTypes {
     | '/$lang/'
     | '/$lang/recipes/new'
     | '/$lang/recipes/'
+    | '/$lang/recipes/$id/delete'
     | '/$lang/recipes/$id/edit'
     | '/$lang/recipes/$id/'
   fileRoutesByTo: FileRoutesByTo
@@ -120,6 +130,7 @@ export interface FileRouteTypes {
     | '/$lang'
     | '/$lang/recipes/new'
     | '/$lang/recipes'
+    | '/$lang/recipes/$id/delete'
     | '/$lang/recipes/$id/edit'
     | '/$lang/recipes/$id'
   id:
@@ -131,6 +142,7 @@ export interface FileRouteTypes {
     | '/$lang/'
     | '/$lang/recipes/new'
     | '/$lang/recipes/'
+    | '/$lang/recipes/$id/delete'
     | '/$lang/recipes/$id/edit'
     | '/$lang/recipes/$id/'
   fileRoutesById: FileRoutesById
@@ -143,6 +155,7 @@ export interface RootRouteChildren {
   LangIndexRoute: typeof LangIndexRoute
   LangRecipesNewRoute: typeof LangRecipesNewRoute
   LangRecipesIndexRoute: typeof LangRecipesIndexRoute
+  LangRecipesIdDeleteRoute: typeof LangRecipesIdDeleteRoute
   LangRecipesIdEditRoute: typeof LangRecipesIdEditRoute
   LangRecipesIdIndexRoute: typeof LangRecipesIdIndexRoute
 }
@@ -205,6 +218,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LangRecipesIdIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$lang/recipes/$id/delete': {
+      id: '/$lang/recipes/$id/delete'
+      path: '/$lang/recipes/$id/delete'
+      fullPath: '/$lang/recipes/$id/delete'
+      preLoaderRoute: typeof LangRecipesIdDeleteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/$lang/recipes/$id/edit': {
       id: '/$lang/recipes/$id/edit'
       path: '/$lang/recipes/$id/edit'
@@ -223,6 +243,7 @@ const rootRouteChildren: RootRouteChildren = {
   LangIndexRoute: LangIndexRoute,
   LangRecipesNewRoute: LangRecipesNewRoute,
   LangRecipesIndexRoute: LangRecipesIndexRoute,
+  LangRecipesIdDeleteRoute: LangRecipesIdDeleteRoute,
   LangRecipesIdEditRoute: LangRecipesIdEditRoute,
   LangRecipesIdIndexRoute: LangRecipesIdIndexRoute,
 }
