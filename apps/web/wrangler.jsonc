@@ -44,16 +44,30 @@
         "INDEXING": "blocked",
         "APP_ENV": "preview"
       },
-      "services": [{ "binding": "API", "service": "paste-and-taste-api-preview" }]
+      "services": [{ "binding": "API", "service": "paste-and-taste-api-preview" }],
+      // Its address on the app's domain, a Custom Domain: the deploy creates its
+      // DNS record and certificate (docs/adr/2026-11-25-the-apps-own-domain.md).
+      // workers.dev and its preview URLs are off: no second address. Each is
+      // set here, never at the top level, which environments would inherit.
+      "routes": [{ "pattern": "preview.pasteandtaste.app", "custom_domain": true }],
+      "workers_dev": false,
+      "preview_urls": false
     },
     "production": {
-      // Blocked until the app has a domain of its own: see
-      // docs/adr/2026-11-23-how-the-web-app-deploys.md.
+      // Blocked until launch, though on the app's own domain: see
+      // docs/adr/2026-11-25-the-apps-own-domain.md.
       "vars": {
         "INDEXING": "blocked",
         "APP_ENV": "production"
       },
-      "services": [{ "binding": "API", "service": "paste-and-taste-api-production" }]
+      "services": [{ "binding": "API", "service": "paste-and-taste-api-production" }],
+      // Its address on the app's domain, a Custom Domain: the deploy creates its
+      // DNS record and certificate (docs/adr/2026-11-25-the-apps-own-domain.md).
+      // workers.dev and its preview URLs are off: no second address. Each is
+      // set here, never at the top level, which environments would inherit.
+      "routes": [{ "pattern": "pasteandtaste.app", "custom_domain": true }],
+      "workers_dev": false,
+      "preview_urls": false
     }
   }
 }
