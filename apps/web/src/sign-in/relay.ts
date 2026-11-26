@@ -98,6 +98,7 @@ export const registrationError = (error: unknown) =>
 export function parseNext(value: unknown): string | undefined {
   if (typeof value !== "string") return undefined;
   if (!/^\/(en|es)(\/[^\s\\]*)?$/.test(value) || value.includes("//")) return undefined;
+  if (/\p{Cc}/u.test(value)) return undefined;
   return value;
 }
 

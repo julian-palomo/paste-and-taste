@@ -216,6 +216,8 @@ describe("parseNext", () => {
     "/es//evil.test",
     "/es\\evil.test",
     "/es/recipes\n",
+    "/en/a\u0000b",
+    "/en/a\u007fb",
     42,
   ])("drops %o", (next) => {
     expect(parseNext(next)).toBeUndefined();
