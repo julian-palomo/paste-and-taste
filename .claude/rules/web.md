@@ -28,9 +28,10 @@ it holds no logic of its own.
 **The layout comes from the root.** `src/routes/__root.tsx` reads the
 language from the address with `languageOfPath` and wraps every page in
 `Layout` (`src/layout/`): the header with the app's name and the link to the
-same page in the other language, `<main>`, and the footer. A page renders only
-its own content, starting with its one `<h1>`; it never renders `<main>`, a
-header or a footer. `Layout` also provides the page's language and address,
+same page in the other language, and `<main>`. There is no footer until it has
+something to hold, such as the legal links at launch. A page renders only its
+own content, starting with its one `<h1>`; it never renders `<main>`, a header
+or a footer. `Layout` also provides the page's language and address,
 which `usePage()` reads.
 
 **Not found and errors.** Any address no route matches, and any `notFound()`

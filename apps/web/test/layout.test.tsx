@@ -44,7 +44,9 @@ describe("Layout", () => {
         new RegExp(`<header[^>]*>.*href="/${lang}"[^>]*>${escaped(messages.appName)}</a>`),
       );
       expect(html).toMatch(/<main[^>]*><h1>The page<\/h1><\/main>/);
-      expect(html).toMatch(new RegExp(`<footer[^>]*>.*${escaped(messages.footer)}`));
+      // No footer: until it has something to hold, such as the legal links at
+      // launch, it would only repeat the header's name.
+      expect(html).not.toContain("<footer");
     },
   );
 });
