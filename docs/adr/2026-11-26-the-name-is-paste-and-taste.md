@@ -50,7 +50,7 @@ The repository, the packages (`@paste-and-taste/…`) and the Workers keep their
 
 ## Alternatives considered
 
-- **Keeping Paste & Taste a working name until the mark is drawn.** The mark
+- **Keeping Paste & Taste a working name until the logo is drawn.** The logo
   and the name are separate choices, and the name already reaches people in
   every sign-in email.
 - **Another name, because of `pasteandtaste.com`.** The site stopped answering
@@ -65,4 +65,4 @@ The repository, the packages (`@paste-and-taste/…`) and the Workers keep their
 - The decision is reviewed once `pasteandtaste.com`'s registration has passed
   its expiry, 21 Mar 2027, and in any case before a public launch.
 - None of this is legal advice.
-- The mark is still not decided; it stays in `DESIGN.md` section 11.
+- The logo is still not decided; it stays in `DESIGN.md` section 11.
