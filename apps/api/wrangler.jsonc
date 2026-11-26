@@ -54,12 +54,26 @@
       "vars": {
         "APP_ENV": "preview"
       },
+      // Its address on the app's domain, a Custom Domain: the deploy creates its
+      // DNS record and certificate (docs/adr/2026-11-25-the-apps-own-domain.md).
+      // workers.dev and its preview URLs are off: no second address. Each is
+      // set here, never at the top level, which environments would inherit.
+      "routes": [{ "pattern": "api.preview.pasteandtaste.app", "custom_domain": true }],
+      "workers_dev": false,
+      "preview_urls": false,
       "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "daeae46a631b44e699cce29f60621d58" }]
     },
     "production": {
       "vars": {
         "APP_ENV": "production"
       },
+      // Its address on the app's domain, a Custom Domain: the deploy creates its
+      // DNS record and certificate (docs/adr/2026-11-25-the-apps-own-domain.md).
+      // workers.dev and its preview URLs are off: no second address. Each is
+      // set here, never at the top level, which environments would inherit.
+      "routes": [{ "pattern": "api.pasteandtaste.app", "custom_domain": true }],
+      "workers_dev": false,
+      "preview_urls": false,
       "hyperdrive": [{ "binding": "HYPERDRIVE", "id": "9589777ba1cb4228a700495546ad29b3" }]
     }
   }

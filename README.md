@@ -32,7 +32,8 @@ preview; no screen is built yet. The same pipeline deploys it after the API, to 
 preview and a production Worker, each checked after its deploy; its server
 reaches that environment's API through a Service binding
 ([the record](docs/adr/2026-11-23-how-the-web-app-deploys.md)). Neither is
-indexed by search engines while the app is on `workers.dev`. The repo also holds the
+indexed by search engines until launch, though both answer on the app's own
+domain, `pasteandtaste.app`. The repo also holds the
 working agreement for the coding agents that build it: [`AGENTS.md`](AGENTS.md)
 has the rules and [`.claude/README.md`](.claude/README.md) explains the Claude
 Code setup.

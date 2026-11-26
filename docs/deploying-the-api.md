@@ -52,20 +52,26 @@ but GitHub refuses to run that job. Never remove the rule.
 
 In the Cloudflare dashboard, **My Profile > API Tokens > Create Token**, start
 from the **Edit Cloudflare Workers** template, then trim it to what this
-deploy uses. The token ends up with four permissions:
+deploy uses. The token ends up with five permissions:
 
 | Policy  | Permission       | Level |
 | ------- | ---------------- | ----- |
 | Account | Workers Scripts  | Edit  |
 | Account | Account Settings | Read  |
+| Zone    | Workers Routes   | Edit  |
 | User    | User Details     | Read  |
 | User    | Memberships      | Read  |
 
 A token trimmed this way deployed both environments on 22 November 2026
 ([the run](https://github.com/julian-palomo/paste-and-taste/actions/runs/45010902680)).
 
-- **Delete the zone policy.** It holds only Workers Routes, and
-  `apps/api/wrangler.jsonc` has no route.
+- **In the zone policy, keep Workers Routes only, on `pasteandtaste.app`.**
+  Under its resources, choose **Specific zone** and `pasteandtaste.app`. Each
+  Worker answers on a Custom Domain there, which `wrangler deploy` creates, and
+  that needs "*Zone* > *Workers Routes* > *Write*, scoped to each affected
+  zone" ([Cloudflare's roles page](https://developers.cloudflare.com/workers/authorization/workers/)).
+  The page names no DNS or SSL permission for it; the first deploy with the
+  domains shows whether one is needed.
 - **In the account policy, untick everything but its two rows above.** On 22
   November 2026 the template also ticked Cloudflare Pages, Containers, Workers
   Agents Configuration, Workers Builds Configuration, Workers KV Storage,
@@ -131,20 +137,59 @@ Before the merge, in each of `preview` and `production`:
 | -------- | ----------------------- | --------------------------------------------------------- |
 | Secret   | `CLOUDFLARE_API_TOKEN`  | The token from step 2 (the same one in both).             |
 | Secret   | `CLOUDFLARE_ACCOUNT_ID` | The account ID.                                           |
-| Variable | `API_URL`               | `https://paste-and-taste-api-<env>.<subdomain>.workers.dev` |
-| Variable | `WEB_URL`               | `https://paste-and-taste-web-<env>.<subdomain>.workers.dev` |
+| Variable | `API_URL`               | `preview`: `https://api.preview.pasteandtaste.app`; `production`: `https://api.pasteandtaste.app` |
+| Variable | `WEB_URL`               | `preview`: `https://preview.pasteandtaste.app`; `production`: `https://pasteandtaste.app` |
 
 `API_URL` and `WEB_URL` are variables, not secrets: the workflow reads
 `vars.API_URL` and `vars.WEB_URL`, and a secret with either name is never
-read. `<env>` is `preview` or `production`, and `<subdomain>` is the account's
-workers.dev subdomain. The web's server doesn't use `WEB_URL` or `API_URL`:
+read. They must match the Custom Domains in each `wrangler.jsonc`
+([the record](adr/2026-11-25-the-apps-own-domain.md)); the Workers have no
+`workers.dev` address. The web's server doesn't use `WEB_URL` or `API_URL`:
 it reaches the API through its binding. `WEB_URL` is only where the check
 looks.
 
-The variables keep the addresses out of the repo, **not out of view**: the
-smoke script and the web's check print them, so they show in every run's log,
-which anyone can read on a public repo. The secrets never do: GitHub masks them, and only the
-`wrangler deploy` step receives them.
+The addresses are public: they are in the repo and in every run's log. The
+secrets never show: GitHub masks them, and only the `wrangler deploy` step
+receives them.
+
+### Moving to `pasteandtaste.app`
+
+Once, for the pull request that gives the Workers their Custom Domains:
+
+1. **The token.** Edit the existing token (**My Profile > API Tokens**, its
+   **Edit**) and add the zone policy from step 2. Without it, the first deploy
+   fails at the preview API step and nothing reaches production.
+2. **DNS.** In the zone's **DNS > Records**, check that `pasteandtaste.app`,
+   `preview`, `api` and `api.preview` have no record: a Custom Domain can't be
+   created over an existing CNAME
+   ([Cloudflare's page](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/)).
+   Leave `mail`'s records and `_dmarc` as they are.
+3. **The variables, right before the merge.** Change `API_URL` and `WEB_URL`
+   in both environments to the values in step 3, then merge that pull request,
+   and merge no other one in between: every push to `main` runs the deploy,
+   and until the domains exist its smoke would read addresses that don't
+   answer yet.
+4. **The run.** The deploy creates each Custom Domain, with its DNS record and
+   certificate, turns the `workers.dev` addresses off, and checks the new
+   addresses. Each of the four jobs creates its own domain and checks it at
+   once, with no wait: if a job's check can't reach its new address yet,
+   re-run that job.
+5. **After it**, paste in the pull request what these show:
+
+   ```bash
+   curl -sI https://preview.pasteandtaste.app/en
+   curl -sI https://pasteandtaste.app/en
+   curl -sI https://api.preview.pasteandtaste.app/health
+   curl -sI https://api.pasteandtaste.app/health
+   ```
+
+   The web answers `200` with `x-robots-tag: noindex`; the API answers
+   `200`.
+
+If that first deploy fails at the preview API step on a permission, fix the
+token and re-run the failed job; don't revert. The error may not name the
+permission it lacks, so look at the zone policy from step 2 first. Production
+isn't touched until preview passes.
 
 ### 4. The databases: Neon and Hyperdrive
 
@@ -435,9 +480,8 @@ If `/wake` answers 503, the Worker is up but didn't reach its database:
   inside the limit.
 
 If the smoke can't reach the address at all, check `API_URL` in that
-environment first. The very first production deploy creates the Worker, and a
-new workers.dev address can take a moment to answer: re-run that job before
-concluding anything.
+environment first. A new Custom Domain's DNS record and certificate can take
+a moment to answer: re-run that job before concluding anything.
 
 ## When a web check fails
 
@@ -452,9 +496,8 @@ Its `FAIL` lines say which address answered what.
   points to the other environment's API. Fix `apps/web/wrangler.jsonc` with a
   pull request.
 - **`could not reach`**, or a 404 on every address: check `WEB_URL` in that
-  GitHub environment first. The first web deploy creates its Worker, and a new
-  workers.dev address can take a moment to answer: re-run the job before
-  concluding anything.
+  GitHub environment first. A new Custom Domain's DNS record and certificate
+  can take a moment to answer: re-run the job before concluding anything.
 - **`/en answered 500; expected 200`**, or any other status, on a home: the
   web Worker failed to render it; the job's log has the error.
 - **`has no X-Robots-Tag: noindex`**: `INDEXING` in that environment's block of
