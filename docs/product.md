@@ -177,4 +177,3 @@ How people meet and pass recipes is recorded in
 - How a user who loses access to their email address gets back in.
 - What the native app does that the web app doesn't. The owner sees sharing a
   post from Instagram as the main one, and perhaps Facebook or TikTok later.
-- The final name. Paste & Taste is the working one.

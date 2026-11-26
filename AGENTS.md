@@ -1,6 +1,6 @@
 # AGENTS.md
 
-The source of Paste & Taste (a working name): an app that saves a recipe
+The source of Paste & Taste: an app that saves a recipe
 shared from Instagram, YouTube or a web page so it can be kept, edited and
 cooked from. It will be a monorepo with a mobile app, a web app and an API.
 So far the API's skeleton exists, in `apps/api`, with the typed client the two
