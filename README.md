@@ -64,7 +64,7 @@ without Resend's key) and an optional passkey, and a user's recipes, which it
 lists, opens, adds, edits and deletes. The web app has the pages that go with
 them, also in development only: the sign-in at `/en/sign-in` and `/es/sign-in`,
 and the recipes at `/en/recipes` and `/es/recipes`, where a user lists, opens,
-adds by hand and edits their recipes.
+adds by hand, edits and deletes their recipes.
 
 [`docs/product.md`](docs/product.md) says what the app must do, and
 [`docs/roadmap.md`](docs/roadmap.md) in what order it is being built.

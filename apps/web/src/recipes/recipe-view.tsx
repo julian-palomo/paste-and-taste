@@ -69,6 +69,13 @@ export function RecipeView({
       <a href={`/${lang}/recipes/${recipe.id}/edit`} className={`text-body ${link}`}>
         {messages.recipeEdit}
       </a>
+      {/* Apart from editing, last on the page. A link only to the question:
+          the delete itself is the confirmation's POST. */}
+      <div className="border-t border-border pt-6">
+        <a href={`/${lang}/recipes/${recipe.id}/delete`} className={`text-body ${link}`}>
+          {messages.recipeDelete}
+        </a>
+      </div>
     </article>
   );
 }

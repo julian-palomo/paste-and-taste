@@ -2,6 +2,8 @@ import { createApiClient } from "@paste-and-taste/api-client";
 import { describe, expect, it } from "vitest";
 import { readDraft, readRecipeForm } from "../src/recipes/recipe-form.ts";
 import {
+  deleteErrorSearch,
+  deleteRecipe,
   listRecipes,
   type RecipesDeps,
   readRecipe,
@@ -112,6 +114,11 @@ const calls = [
     () => json(recipe),
     (d: RecipesDeps) => saveRecipe(d, { lang: "es", id: ID, values }),
   ],
+  [
+    "deleteRecipe",
+    () => new Response(null, { status: 204 }),
+    (d: RecipesDeps) => deleteRecipe(d, { lang: "es", id: ID }),
+  ],
 ] as const;
 
 describe.each(calls)("%s", (_, answer, call) => {
@@ -140,7 +147,9 @@ describe.each(calls)("%s", (_, answer, call) => {
     const result = await call({ ...deps, shown: false });
 
     expect(requests).toHaveLength(0);
-    expect(result).toEqual(_.startsWith("saveRecipe") ? { notFound: true } : { kind: "not-shown" });
+    // A form's function answers 404; a read is a state its page turns into one.
+    const form = _.startsWith("saveRecipe") || _ === "deleteRecipe";
+    expect(result).toEqual(form ? { notFound: true } : { kind: "not-shown" });
   });
 });
 
@@ -338,6 +347,77 @@ describe("saveRecipe", () => {
     expect(await saveRecipe(deps, { lang: "es", values })).toEqual({
       redirect: "/es/recipes/new?error=unreachable&field=title",
     });
+  });
+});
+
+describe("deleteRecipe", () => {
+  const confirmation = `/es/recipes/${ID}/delete`;
+
+  it("deletes the recipe and goes to the list", async () => {
+    const { deps, requests } = api(() => new Response(null, { status: 204 }));
+
+    expect(await deleteRecipe(deps, { lang: "es", id: ID })).toEqual({ redirect: "/es/recipes" });
+    expect(requests[0]?.method).toBe("DELETE");
+    expect(new URL(requests[0]?.url ?? "").pathname).toBe(`/recipes/${ID}`);
+  });
+
+  it("a recipe that is gone or another user's (404) shows its page, not found", async () => {
+    const { deps } = api(() => problem(404));
+
+    expect(await deleteRecipe(deps, { lang: "es", id: ID })).toEqual({
+      redirect: `/es/recipes/${ID}`,
+    });
+  });
+
+  it("an id that isn't one shows its page, not found, without calling the API", async () => {
+    const { deps, requests } = api(() => new Response(null, { status: 204 }));
+
+    expect(await deleteRecipe(deps, { lang: "es", id: "not-an-id" })).toEqual({
+      redirect: "/es/recipes/not-an-id",
+    });
+    expect(requests).toHaveLength(0);
+  });
+
+  // Back to the question after signing in, never to a delete.
+  it("sends a signed-out visitor to the sign-in, and back to the confirmation after", async () => {
+    const { deps } = api(() => problem(401));
+
+    expect(await deleteRecipe(deps, { lang: "es", id: ID })).toEqual({
+      redirect: `/es/sign-in?next=${encodeURIComponent(confirmation)}`,
+    });
+  });
+
+  it.each([
+    [503, "api-error"],
+    [500, "api-error"],
+  ])("on a %i, goes back to the confirmation with %s", async (status, kind) => {
+    const { deps } = api(() => problem(status));
+
+    expect(await deleteRecipe(deps, { lang: "es", id: ID })).toEqual({
+      redirect: `${confirmation}?error=${kind}`,
+    });
+  });
+
+  it("goes back to the confirmation when the API can't be reached", async () => {
+    const { deps } = api(() => {
+      throw new TypeError("fetch failed");
+    });
+
+    expect(await deleteRecipe(deps, { lang: "es", id: ID })).toEqual({
+      redirect: `${confirmation}?error=unreachable`,
+    });
+  });
+});
+
+// The router rewrites an address whose validated search differs in shape from
+// its query: the confirmation's search stays one string.
+describe("deleteErrorSearch", () => {
+  it.each(["unreachable", "api-error"])("keeps ?error=%s as the string it is", (error) => {
+    expect(deleteErrorSearch({ error })).toEqual({ error });
+  });
+
+  it.each([undefined, "other", 1])("drops %o", (error) => {
+    expect(deleteErrorSearch({ error })).toEqual({ error: undefined });
   });
 });
 
