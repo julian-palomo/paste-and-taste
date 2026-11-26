@@ -1,3 +1,4 @@
+import { spawnSync } from "node:child_process";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Client } from "pg";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
@@ -73,5 +74,27 @@ describe("the owner's invite command", () => {
     ];
 
     for (const line of said) expect(line).not.toContain("cleo");
+  });
+});
+
+describe("the script, scripts/invite.ts", () => {
+  // Run as the owner runs it, with nothing typed and a database that isn't
+  // there: a wrong action must stop it before it asks for an address or
+  // connects anywhere.
+  it.each([[[]], [["list"]]])("stops at once on a missing or unknown action: %j", (args) => {
+    const run = spawnSync(
+      process.execPath,
+      [new URL("../scripts/invite.ts", import.meta.url).pathname, ...args],
+      {
+        input: "",
+        encoding: "utf8",
+        timeout: 10_000,
+        env: { ...process.env, DATABASE_URL: "postgres://127.0.0.1:1/nowhere" },
+      },
+    );
+
+    expect(run.status).toBe(1);
+    expect(run.stdout).not.toContain("Email address");
+    expect(run.stderr).toContain("Usage: pnpm -C apps/api invite add|remove");
   });
 });

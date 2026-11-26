@@ -7,9 +7,15 @@ import { stdin, stdout } from "node:process";
 import { createInterface } from "node:readline/promises";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Client } from "pg";
-import { inviteCommand } from "../src/login/invite-command.ts";
+import { inviteAction, inviteCommand } from "../src/login/invite-command.ts";
 
-const action = process.argv[2] ?? "";
+let action: "add" | "remove";
+try {
+  action = inviteAction(process.argv[2]);
+} catch (error) {
+  console.error(error instanceof Error ? error.message : "The command failed.");
+  process.exit(1);
+}
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
   console.error("DATABASE_URL is not set: see docs/deploying-the-api.md.");

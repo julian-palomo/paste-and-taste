@@ -10,9 +10,7 @@ export async function inviteCommand(
   action: string,
   address: string,
 ): Promise<string> {
-  if (action !== "add" && action !== "remove") {
-    throw new Error("Usage: pnpm -C apps/api invite add|remove");
-  }
+  inviteAction(action);
   // The repository stores it in lower case.
   const email = address.trim();
   if (!z.email().safeParse(email).success) throw new Error("That isn't an email address.");
@@ -22,4 +20,11 @@ export async function inviteCommand(
     return "Invited.";
   }
   return (await uninvite(db, email)) ? "Removed." : "Not on the list.";
+}
+
+// The command's action, or the usage line as an error. The script calls it
+// before anything else, so a mistyped action never asks for an address.
+export function inviteAction(action: string | undefined): "add" | "remove" {
+  if (action === "add" || action === "remove") return action;
+  throw new Error("Usage: pnpm -C apps/api invite add|remove");
 }

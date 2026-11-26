@@ -3,6 +3,7 @@ import { Client } from "pg";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { createApp } from "../src/app.ts";
 import { invite, uninvite } from "../src/login/invited-address.repository.ts";
+import { LIMITS } from "../src/login/request-limiter.ts";
 import { json, LOGIN_SETTINGS, recordingSender } from "./login-helpers.ts";
 import { startTestPostgres, type TestPostgres } from "./postgres.ts";
 
@@ -254,5 +255,31 @@ describe("the daily ceiling on codes", () => {
 
     expect(stranger.status).toBe(429);
     expect(stranger).toEqual(member);
+  });
+
+  it("is set under Resend's free 100 a day, even across two windows back to back", () => {
+    // The window starts at its first code, so two windows can meet inside
+    // any 24 hours: at most twice the ceiling.
+    expect(LIMITS.codesPerDay.windowMs).toBe(24 * 60 * 60 * 1000);
+    expect(2 * LIMITS.codesPerDay.max).toBeLessThan(100);
+  });
+
+  it("counts from nothing again once its window has ended, for a stranger as for a member", async () => {
+    await freshCeiling();
+    await invited("next-day-guest@example.com");
+    // Yesterday's window, full and ended 25 hours after it started.
+    const started = new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString();
+    await query(
+      "insert into request_limit (key, window_started_at, count) values ('code:day:all', $1::timestamp, 2)",
+      [started],
+    );
+    const { app, sender } = appWith("invited", { codesPerDay: 2 });
+
+    const stranger = await askForCode(app, "next-day-stranger@example.com");
+    const member = await askForCode(app, "next-day-guest@example.com");
+
+    expect(stranger).toEqual({ status: 200, body: { sent: true } });
+    expect(member).toEqual(stranger);
+    expect(sender.sent.map((s) => s.email)).toEqual(["next-day-guest@example.com"]);
   });
 });
