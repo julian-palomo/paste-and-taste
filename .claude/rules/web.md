@@ -80,9 +80,10 @@ their own words. The page answers only in development, where the API mounts
 `/login` (`signInShown`), and so does every sign-in server function: each is an
 address of its own, so each checks it, and a form answers 404 elsewhere.
 
-**Recipes, in `src/recipes/`.** The list, a recipe and one form for a new
-recipe and an edited one, at `/<lang>/recipes`, `/new`, `/<id>` and
-`/<id>/edit`, answer only in development, where the API mounts `/recipes`
+**Recipes, in `src/recipes/`.** The list, a recipe, one form for a new
+recipe and an edited one, and the page that asks before a delete, at
+`/<lang>/recipes`, `/new`, `/<id>`, `/<id>/edit` and `/<id>/delete`, answer
+only in development, where the API mounts `/recipes`
 (`recipesShown`); every page and server function there checks it, and a GET
 function answers 404 elsewhere with `setResponseStatus`. What the sign-in and
 the recipes share sits in `src/session/`: `relayHeaders`, which passes the
@@ -108,6 +109,12 @@ does. Ingredients and steps are rows: spare empty rows to add, a cleared row
 to remove, and an `Orden` number to reorder. A recipe keeps its own language:
 a new one takes the page's, an edited one sends back its own from a hidden
 field, and its content carries its `lang`, which may not be the interface's.
+A recipe's page links to `/<id>/delete`, which only reads the recipe: the
+delete is that page's form, posted to `deleteRecipeForm`, never a link, which
+preloading or a crawler could follow. It answers a 303 to the list; a 404
+goes to the recipe's page, not found; a 401 goes to the sign-in and back to
+the question, never to a delete; any other failure goes back to it with
+`?error=`.
 
 **The home depends on the environment.** `homeOf` (`src/home/home-of.ts`)
 picks it: the API's health in development and preview, the building page in

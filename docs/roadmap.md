@@ -14,7 +14,7 @@ needs, and a phase gets its issues when it is next.
 | 1   | The API's base                | Done        | [#35](https://github.com/julian-palomo/paste-and-taste/issues/35)      |
 | 2   | The Instagram prototype       | In progress | [#22](https://github.com/julian-palomo/paste-and-taste/issues/22)      |
 | 3   | Database and login            | In progress | [#42](https://github.com/julian-palomo/paste-and-taste/issues/42), [#58](https://github.com/julian-palomo/paste-and-taste/issues/58), [#66](https://github.com/julian-palomo/paste-and-taste/issues/66), [#69](https://github.com/julian-palomo/paste-and-taste/issues/69), [#80](https://github.com/julian-palomo/paste-and-taste/issues/80), [#77](https://github.com/julian-palomo/paste-and-taste/issues/77), [#90](https://github.com/julian-palomo/paste-and-taste/issues/90), [#93](https://github.com/julian-palomo/paste-and-taste/issues/93) |
-| 4   | The first recipe, end to end  | In progress | [#46](https://github.com/julian-palomo/paste-and-taste/issues/46), [#73](https://github.com/julian-palomo/paste-and-taste/issues/73), [#98](https://github.com/julian-palomo/paste-and-taste/issues/98), [#85](https://github.com/julian-palomo/paste-and-taste/issues/85) |
+| 4   | The first recipe, end to end  | Done        | [#46](https://github.com/julian-palomo/paste-and-taste/issues/46), [#73](https://github.com/julian-palomo/paste-and-taste/issues/73), [#98](https://github.com/julian-palomo/paste-and-taste/issues/98), [#85](https://github.com/julian-palomo/paste-and-taste/issues/85), [#96](https://github.com/julian-palomo/paste-and-taste/issues/96) |
 | 5   | The real import               | Not started |                                                                        |
 | 6   | The native app                | Not started |                                                                        |
 | 7   | What makes the product        | Not started |                                                                        |
@@ -84,8 +84,8 @@ needs, and a phase gets its issues when it is next.
    included. #95 deletes a recipe in the API and the client, removing its row.
    Since #85 the web app has the recipe pages, in development: the list, a
    recipe, and one form to add one by hand or edit it, which works with no
-   JavaScript. Deleting a recipe from the web app, #96, is what phase 4 still
-   needs.
+   JavaScript. Since #96 a recipe can be deleted from its page, after a
+   confirmation.
 5. **The real import.** Workflows in the background and the limit per user.
    Web pages first, the cheapest source to read, then Instagram, then YouTube.
 6. **The native app.** Android first, with sharing a post to the app. iPhone
