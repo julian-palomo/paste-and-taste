@@ -34,6 +34,22 @@ describe("TextField", () => {
     expect(described.map((id) => textOf(html, id))).toEqual(["Write a valid address."]);
   });
 
+  // An id from outside the field, such as a notice above it, is read first.
+  it("names an outside description first, then the hint", () => {
+    const html = renderToString(
+      <>
+        <p id="notice">Another code went out.</p>
+        <TextField label="Code" name="code" type="text" hint="Six digits." describedBy="notice" />
+      </>,
+    );
+    const described = attribute(inputTag(html), "aria-describedby")?.split(" ") ?? [];
+
+    expect(described.map((id) => textOf(html, id))).toEqual([
+      "Another code went out.",
+      "Six digits.",
+    ]);
+  });
+
   it("names the hint first and the error after it", () => {
     const html = renderToString(
       <TextField
@@ -162,4 +178,21 @@ describe("Button", () => {
 
     expect(html).toMatch(/^<button[^>]*\sdisabled=""[^>]*>Back<\/button>$/);
   });
+
+  // Tailwind 4's base styles give a button the default arrow; a button that
+  // can be pressed shows the hand, as a link and the checkbox do.
+  it.each(["main", "secondary"] as const)(
+    "shows the hand cursor while it can be pressed (%s)",
+    (kind) => {
+      const html = renderToString(
+        <Button kind={kind} type="button">
+          Continue
+        </Button>,
+      );
+      const classes = /class="([^"]*)"/.exec(html)?.[1]?.split(" ") ?? [];
+
+      expect(classes).toContain("enabled:cursor-pointer");
+      expect(classes).toContain("disabled:cursor-not-allowed");
+    },
+  );
 });

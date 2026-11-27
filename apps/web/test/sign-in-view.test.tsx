@@ -17,12 +17,13 @@ const signedIn: Session = {
   user: { id: "u1", email: "ana@example.com", name: "Ana" },
 };
 const sent = { email: "ana@example.com", sentAt: 1 };
+const resent = { ...sent, resent: true as const };
 
 function render(
   lang: Language,
   props: {
     session?: Session;
-    pending?: { email: string; sentAt?: number };
+    pending?: { email: string; sentAt?: number; resent?: true };
     error?: SignInErrorKind;
     step?: "passkey" | "passkey-added";
     next?: string;
@@ -120,6 +121,55 @@ describe.each(["en", "es"] as const)("in %s", (lang) => {
       );
       expect(html).toMatch(new RegExp(`<form[^>]*action="${actions.changeAddress}"`));
       expect(html).not.toContain("<details");
+    });
+  });
+
+  // After "Enviar otro código": a notice, not an alert, read out with the code
+  // field, which takes the focus because the page came back from a form.
+  describe("another code sent", () => {
+    it("says so on the code step, tied to the code field, which has the focus", () => {
+      const html = render(lang, { pending: resent });
+      const focused = inputs(html).filter((tag) => /\sautofocus=""/.test(tag));
+
+      expect(focused).toHaveLength(1);
+      const [tag = ""] = focused;
+      expect(attribute(tag, "name")).toBe("code");
+      expect(attribute(tag, "aria-invalid")).toBeUndefined();
+      const [first = ""] = attribute(tag, "aria-describedby")?.split(" ") ?? [];
+      expect(textOf(html, first)).toBe(escaped(m.signInCodeResent));
+    });
+
+    it("reads as a success: no alert, no danger, and a tick hidden from screen readers", () => {
+      const html = render(lang, { pending: resent });
+      const notice = new RegExp(
+        `<p[^>]*>(<svg[^>]*aria-hidden="true"[^>]*>.*?</svg>)<span[^>]*>${escapeRegExp(escaped(m.signInCodeResent))}</span></p>`,
+      ).exec(html)?.[0];
+
+      expect(notice).toBeDefined();
+      expect(notice).not.toContain("role=");
+      expect(notice).not.toContain("danger");
+    });
+
+    it("isn't there after the first code, and the field has no focus", () => {
+      const html = render(lang, { pending: sent });
+
+      expect(html).not.toContain(escaped(m.signInCodeResent));
+      expect(html).not.toContain("autofocus");
+    });
+
+    it("gives way to an error: a wrong code after it shows the error alone", () => {
+      const html = render(lang, { pending: resent, error: "wrong-code" });
+
+      expect(html).not.toContain(escaped(m.signInCodeResent));
+      expect(html).toContain(escaped(errorText(lang, "wrong-code")));
+    });
+
+    it.each([
+      ["the email step", { pending: { email: "ana@example.com", resent: true as const } }],
+      ["the signed-in page", { session: signedIn, pending: resent }],
+      ["the passkey offer", { session: signedIn, step: "passkey" as const, pending: resent }],
+    ])("never shows on %s", (_, props) => {
+      expect(render(lang, props)).not.toContain(escaped(m.signInCodeResent));
     });
   });
 

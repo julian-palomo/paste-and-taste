@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { type ReactNode, useId } from "react";
 import type { Language, Messages } from "../i18n/i18n.ts";
 import { Button } from "../pieces/button.tsx";
 import { Card } from "../pieces/card.tsx";
@@ -89,6 +89,29 @@ function Alert({ text }: { text: string }) {
   );
 }
 
+// A notice: an action worked. Not an alert, which reports an error, and not
+// told by colour alone: a tick, hidden from screen readers, and the words,
+// whose id a field names in aria-describedby.
+function Notice({ id, text }: { id: string; text: string }) {
+  return (
+    <p className="flex items-start gap-2 text-body text-text">
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 20 20"
+        className="mt-1 size-5 shrink-0 text-accent"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M4 10.5l4 4 8-9" />
+      </svg>
+      <span id={id}>{text}</span>
+    </p>
+  );
+}
+
 function AddressStep({ lang, messages, pending, error, actions, passkeySignIn, next }: Props) {
   // A failed passkey is said next to the passkey; creating one happens only
   // from the offer, so passkey-not-created shows nothing here.
@@ -120,9 +143,21 @@ function AddressStep({ lang, messages, pending, error, actions, passkeySignIn, n
   );
 }
 
-function CodeStep({ lang, messages, error, actions, email, next }: Props & { email: string }) {
+function CodeStep({
+  lang,
+  messages,
+  pending,
+  error,
+  actions,
+  email,
+  next,
+}: Props & { email: string }) {
   // A code that couldn't be sent sends the page back to the email step.
   const fieldError = error === "code-not-sent" ? undefined : fieldErrorOf(error);
+  // Another code went out, and nothing failed since: say so, and give the
+  // field the focus so a screen reader reads it out with the field.
+  const resent = pending?.resent === true && error === undefined;
+  const noticeId = useId();
   return (
     <section className="flex flex-col gap-8">
       <div className="flex flex-col gap-2">
@@ -131,6 +166,7 @@ function CodeStep({ lang, messages, error, actions, email, next }: Props & { ema
           {messages.signInCodeSentTo} <strong>{email}</strong>
         </p>
         <p className="text-body text-text-muted">{messages.signInSpam}</p>
+        {resent && <Notice id={noticeId} text={messages.signInCodeResent} />}
       </div>
       <PostForm action={actions.signIn} lang={lang} next={next}>
         <TextField
@@ -143,7 +179,8 @@ function CodeStep({ lang, messages, error, actions, email, next }: Props & { ema
           required
           hint={messages.signInCodeHint}
           error={fieldError && errorText(messages, fieldError)}
-          autoFocus={fieldError !== undefined}
+          autoFocus={fieldError !== undefined || resent}
+          describedBy={resent ? noticeId : undefined}
         />
         <Checkbox label={messages.signInRemember} name="remember" value="on" />
         <Button kind="main" type="submit">

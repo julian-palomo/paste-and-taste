@@ -174,6 +174,56 @@ describe("sendCode", () => {
     expect(readPending(setCookies.at(-1)?.split(";")[0])).toEqual({ email: "ana@" });
   });
 
+  // "Enviar otro código" posts the same address the cookie already has a code
+  // for; the code step then says another code went out.
+  it("marks another code for the same address as sent again", async () => {
+    const { deps, setCookies } = api(() => json({ sent: true }));
+
+    const result = await sendCode(deps, {
+      lang: "es",
+      email: "ana@example.com",
+      pending: { email: "ana@example.com", sentAt: NOW - 61_000 },
+    });
+
+    expect(result).toEqual({ redirect: "/es/sign-in" });
+    expect(readPending(setCookies.at(-1)?.split(";")[0])).toEqual({
+      email: "ana@example.com",
+      sentAt: NOW,
+      resent: true,
+    });
+  });
+
+  // A second tab still on the email step: the other address's first code.
+  it.each([
+    ["no pending address", undefined],
+    ["a pending address with no code sent", { email: "ana@example.com" }],
+    ["a code sent to another address", { email: "bea@example.com", sentAt: NOW - 61_000 }],
+  ])("with %s, the code is a first one, not marked as sent again", async (_, pending) => {
+    const { deps, setCookies } = api(() => json({ sent: true }));
+
+    await sendCode(deps, { lang: "es", email: "ana@example.com", pending });
+
+    expect(readPending(setCookies.at(-1)?.split(";")[0])).toEqual({
+      email: "ana@example.com",
+      sentAt: NOW,
+    });
+  });
+
+  it.each([502, 429])(
+    "another code that fails (%i) carries its error, not the mark",
+    async (status) => {
+      const { deps, setCookies } = api(() => problem(status));
+
+      await sendCode(deps, {
+        lang: "es",
+        email: "ana@example.com",
+        pending: { email: "ana@example.com", sentAt: NOW - 61_000, resent: true },
+      });
+
+      expect(readPending(setCookies.at(-1)?.split(";")[0])).toEqual({ email: "ana@example.com" });
+    },
+  );
+
   it("refuses to send again within 60 seconds, without calling the API", async () => {
     const { deps, requests } = api(() => json({ sent: true }));
 

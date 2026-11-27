@@ -87,6 +87,20 @@ describe("the pending cookie", () => {
     });
   });
 
+  it("keeps the mark of another code sent, and only when it is true", () => {
+    const cookie = (value: unknown) =>
+      `sign_in_pending=${encodeURIComponent(JSON.stringify({ email: "ana@example.com", sentAt: 1000, resent: value }))}`;
+
+    expect(readPending(cookie(true))).toEqual({
+      email: "ana@example.com",
+      sentAt: 1000,
+      resent: true,
+    });
+    for (const value of [false, "true", 1, null]) {
+      expect(readPending(cookie(value))).toEqual({ email: "ana@example.com", sentAt: 1000 });
+    }
+  });
+
   it.each([
     ["no cookie header", undefined],
     ["no such cookie", "session=abc"],

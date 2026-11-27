@@ -50,6 +50,7 @@
   "signInSendCode": "Send code",
   "signInCodeHeading": "Enter the code",
   "signInCodeSentTo": "We sent it to",
+  "signInCodeResent": "We've sent you another code.",
   "signInSpam": "If you can't find it, look in your spam folder.",
   "signInCode": "Code",
   "signInCodeHint": "The 6 digits in the email.",

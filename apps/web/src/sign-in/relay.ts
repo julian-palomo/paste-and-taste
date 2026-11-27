@@ -4,8 +4,10 @@ import type { Language } from "../i18n/i18n.ts";
 // The address being signed in with, between the address step and the code
 // step, in a cookie of the web app's own: never in the page's address, which
 // lands in history and logs. sentAt, in milliseconds, is when the last code
-// was sent; with none, the address was typed but no code went out.
-export type Pending = { email: string; sentAt?: number };
+// was sent; with none, the address was typed but no code went out. resent is
+// there when that code was another one, from "Enviar otro código", so the
+// code step says so; nobody can type it into an address.
+export type Pending = { email: string; sentAt?: number; resent?: true };
 
 const PENDING = "sign_in_pending";
 
@@ -36,9 +38,10 @@ export function readPending(cookieHeader: string | undefined): Pending | undefin
   try {
     const value: unknown = JSON.parse(decodeURIComponent(raw));
     if (typeof value !== "object" || value === null) return undefined;
-    const { email, sentAt } = value as Record<string, unknown>;
+    const { email, sentAt, resent } = value as Record<string, unknown>;
     if (typeof email !== "string") return undefined;
-    return typeof sentAt === "number" ? { email, sentAt } : { email };
+    if (typeof sentAt !== "number") return { email };
+    return resent === true ? { email, sentAt, resent } : { email, sentAt };
   } catch {
     return undefined;
   }

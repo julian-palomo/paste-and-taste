@@ -50,6 +50,7 @@
   "signInSendCode": "Enviar código",
   "signInCodeHeading": "Escribe el código",
   "signInCodeSentTo": "Te lo hemos enviado a",
+  "signInCodeResent": "Te hemos enviado otro código.",
   "signInSpam": "Si no lo encuentras, mira en la carpeta de spam.",
   "signInCode": "Código",
   "signInCodeHint": "Los 6 dígitos del correo.",
