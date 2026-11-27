@@ -15,6 +15,7 @@
     "openapi:check": "node scripts/openapi.ts --check",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "invite": "node scripts/invite.ts",
     "types": "CLOUDFLARE_LOAD_DEV_VARS_FROM_DOT_ENV=false wrangler types"
   },
   "dependencies": {

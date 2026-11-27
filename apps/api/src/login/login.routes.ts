@@ -4,6 +4,7 @@ import { InvalidRequestError } from "../errors/invalid-request-error.ts";
 import { ProblemDetails, problemResponses } from "../errors/problem-details.ts";
 import { toAppError } from "./auth-errors.ts";
 import type { CodeSender } from "./code-sender.ts";
+import { uninvite } from "./invited-address.repository.ts";
 import {
   InvalidCodeError,
   NotSignedInError,
@@ -11,10 +12,18 @@ import {
   PasskeyRefusedError,
 } from "./login-errors.ts";
 import { REMEMBER_ME_HEADER } from "./remember-me.ts";
-import { LIMITS, type RequestLimiter } from "./request-limiter.ts";
+import { LIMITS, type LimitRule, type RequestLimiter } from "./request-limiter.ts";
+import { mayGetCode, type SignUp } from "./sign-up.ts";
 import type { Auth, WithAuth } from "./with-auth.ts";
 
-type LoginDeps = { withAuth: WithAuth; requestLimiter: RequestLimiter; codeSender: CodeSender };
+type LoginDeps = {
+  withAuth: WithAuth;
+  requestLimiter: RequestLimiter;
+  codeSender: CodeSender;
+  signUp: SignUp;
+  // LIMITS.codesPerDay, or a smaller ceiling a test sets.
+  codesPerDay: LimitRule;
+};
 
 const User = z.object({ id: z.string(), email: z.string(), name: z.string() }).openapi("User");
 const SignedIn = z.object({ user: User }).openapi("SignedIn");
@@ -60,7 +69,9 @@ const askForCode = createRoute({
       description: "A sign-in code was sent to the address.",
       content: { "application/json": { schema: CodeSent } },
     },
-    429: problem("Too many codes for this address or from this IP."),
+    429: problem(
+      "Too many codes for this address or from this IP, or the app's daily ceiling on codes is reached.",
+    ),
     502: problem("The code could not be sent: try again in a moment."),
     503: problem("Login is not configured on this server."),
     ...problemResponses,
@@ -231,7 +242,13 @@ function toUser(user: { id: string; email: string; name: string }) {
   return { id: user.id, email: user.email, name: user.name };
 }
 
-export function loginRoutes({ withAuth, requestLimiter, codeSender }: LoginDeps): OpenAPIHono {
+export function loginRoutes({
+  withAuth,
+  requestLimiter,
+  codeSender,
+  signUp,
+  codesPerDay,
+}: LoginDeps): OpenAPIHono {
   const app = new OpenAPIHono({
     defaultHook: (result) => {
       if (!result.success) throw new InvalidRequestError("The request body is not valid.");
@@ -244,6 +261,19 @@ export function loginRoutes({ withAuth, requestLimiter, codeSender }: LoginDeps)
     const pending = await withAuth(c.req.raw, async (auth, db, outbox) => {
       await requestLimiter.check(db, LIMITS.codePerIp, clientIp(c));
       await requestLimiter.check(db, LIMITS.codePerAddress, email);
+      // An address that may not get a code gets the same answer as one that
+      // does, and nothing is made or sent: the answer tells a stranger
+      // nothing about who is invited or has an account.
+      // It spends nothing, so it isn't counted, but once the day's ceiling is
+      // full it gets the same 429 as an address that would.
+      if (!(await mayGetCode(db, signUp, email))) {
+        await requestLimiter.reached(db, codesPerDay, "all");
+        return undefined;
+      }
+      // Counted before the code is made: counting after the send would let
+      // two requests at once both pass the last slot, so a failed send
+      // spends its slot too.
+      await requestLimiter.check(db, codesPerDay, "all");
       await auth.api.sendVerificationOTP({ body: { email, type: "sign-in" } });
       return outbox.take();
     });
@@ -257,6 +287,9 @@ export function loginRoutes({ withAuth, requestLimiter, codeSender }: LoginDeps)
     withAuth(c.req.raw, async (auth, db) => {
       const { email, code, rememberMe } = c.req.valid("json");
       await requestLimiter.check(db, LIMITS.loginPerIp, clientIp(c));
+      // The same 401 as a wrong code, and Better Auth never sees the address,
+      // so no account can come out of it.
+      if (!(await mayGetCode(db, signUp, email.toLowerCase()))) throw new InvalidCodeError();
       const headers = forwardedHeaders(c);
       headers.set(REMEMBER_ME_HEADER, String(rememberMe));
       const result = await auth.api
@@ -268,6 +301,9 @@ export function loginRoutes({ withAuth, requestLimiter, codeSender }: LoginDeps)
         .catch((error: unknown) => {
           throw toAppError(error, CODE_ERRORS);
         });
+      // Its account lets it in from now on, so the invitation goes: the
+      // address isn't kept twice.
+      await uninvite(db, email);
       relayCookies(c, result.headers);
       return c.json({ user: toUser(result.response.user) }, 200);
     }),

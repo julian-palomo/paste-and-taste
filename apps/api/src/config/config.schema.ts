@@ -31,6 +31,13 @@ const configSchema = z.object({
     .url()
     .optional()
     .describe("The address of the page the browser runs the passkey ceremony on."),
+  // Optional so a missing value fails closed: the app treats it as "invited".
+  SIGN_UP: z
+    .enum(["invited", "open"])
+    .optional()
+    .describe(
+      'Who may get a sign-in code: "invited" (an invited address or an account) or "open" (anyone).',
+    ),
 });
 
 export type AppConfig = z.infer<typeof configSchema>;

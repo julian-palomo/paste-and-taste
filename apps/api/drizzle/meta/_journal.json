@@ -15,6 +15,13 @@
       "when": 1795621901226,
       "tag": "0001_amusing_hellfire_club",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795720184173,
+      "tag": "0002_sour_sauron",
+      "breakpoints": true
     }
   ]
 }

@@ -27,7 +27,8 @@ competition. Nobody becomes famous in it.
   read too.
 - The import runs in the background. A recipe may show as loading and be
   ready later.
-- Each user has an import limit.
+- Each user has an import limit, and the imports made in a day have a
+  ceiling for the whole app too.
 - When a link can't be imported, the user can tell us, and we look at it.
   The app also has a way to send feedback.
 - A video downloaded to read a post is deleted once the recipe has been made
@@ -120,6 +121,12 @@ How people meet and pass recipes is recorded in
   screen opens a short form, the feedback form with the reason "No puedo
   entrar", protected against spam. There is no published email address for
   it.
+- Until launch, sign-up is by invitation: only an address the owner has
+  invited, or one that already has an account, gets a sign-in code, and a
+  stranger's request gets the same answer with nothing sent
+  ([the record](adr/2026-11-26-sign-up-by-invitation.md)).
+- The sign-in codes sent in a day have a ceiling for the whole app, under
+  what the email service sends for free.
 - One email address, one account.
 - A user can change their email address.
 - A session lasts while the app is open. At sign-in, a "Mantener la sesión

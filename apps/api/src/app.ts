@@ -7,7 +7,7 @@ import { healthRoutes } from "./health/health.routes.ts";
 import { type CodeSender, chooseCodeSender } from "./login/code-sender.ts";
 import { deleteExpiredLoginRows } from "./login/expired-rows.repository.ts";
 import { loginRoutes } from "./login/login.routes.ts";
-import { createRequestLimiter } from "./login/request-limiter.ts";
+import { createRequestLimiter, LIMITS } from "./login/request-limiter.ts";
 import { createSessionReader } from "./login/session-reader.ts";
 import { createWithAuth } from "./login/with-auth.ts";
 import { createPostgresRecipesRepository } from "./recipes/postgres-recipes.repository.ts";
@@ -20,8 +20,9 @@ import { wakeRoutes } from "./wake/wake.routes.ts";
 export { type DatabaseSource, noDatabase } from "./database/database.ts";
 
 // What a caller may choose instead of the default. Tests pass a sender that
-// keeps the codes; everywhere else the default applies.
-type AppOptions = { codeSender?: CodeSender };
+// keeps the codes, and a daily ceiling on codes of their own; everywhere else
+// the default applies.
+type AppOptions = { codeSender?: CodeSender; codesPerDay?: number };
 
 // The composition root, with createScheduledWork below for the cron: the
 // only places that read the raw variables or create a dependency. Everything a module needs is created here and passed
@@ -55,6 +56,9 @@ export function createApp(
         withAuth,
         requestLimiter: createRequestLimiter(),
         codeSender: options.codeSender ?? chooseCodeSender(config),
+        // A missing value fails closed.
+        signUp: config.SIGN_UP ?? "invited",
+        codesPerDay: { ...LIMITS.codesPerDay, max: options.codesPerDay ?? LIMITS.codesPerDay.max },
       }),
     );
     // A user's recipes need a session, so they run where the login does.

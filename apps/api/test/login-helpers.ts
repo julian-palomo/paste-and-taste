@@ -9,6 +9,8 @@ export const LOGIN_SETTINGS = {
   BETTER_AUTH_SECRET: TEST_SECRET,
   PASSKEY_RP_ID: "localhost",
   PASSKEY_ORIGIN: "http://localhost:5173",
+  // These tests sign in new addresses; test/sign-up.test.ts covers "invited".
+  SIGN_UP: "open",
 };
 
 // Keeps every code it is handed, for the test to read.
@@ -34,7 +36,8 @@ export function loginApp(
   return createApp(
     { APP_ENV: appEnv, ...LOGIN_SETTINGS },
     { connectionString: () => postgres.connectionString },
-    { codeSender: sender },
+    // These tests aren't about the daily ceiling: test/sign-up.test.ts is.
+    { codeSender: sender, codesPerDay: 1000 },
   );
 }
 
