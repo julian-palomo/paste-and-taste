@@ -110,12 +110,12 @@ describe.each(["en", "es"] as const)("in %s", (lang) => {
     });
 
     // As docs/product.md says: always on the screen, not behind a link.
-    it("always shows the address, sending again after the wait, and the spam reminder", () => {
+    it("always shows the address, sending again, and the spam reminder", () => {
       const html = render(lang, { pending: sent });
 
       expect(html).toContain("ana@example.com");
       expect(html).toContain(escaped(m.signInSpam));
-      expect(html).toContain(escaped(m.signInResendHint));
+      expect(html).toContain(escaped(m.signInResend));
       expect(html).toMatch(
         /<form[^>]*action="\/_serverFn\/send-code"[^>]*>.*<input type="hidden" name="email" value="ana@example.com"\/>/,
       );
@@ -124,10 +124,23 @@ describe.each(["en", "es"] as const)("in %s", (lang) => {
     });
   });
 
-  // After "Enviar otro código": a notice, not an alert, read out with the code
-  // field, which takes the focus because the page came back from a form.
+  // After "Enviar otro código": a notice, not an alert, in a soft card with a
+  // drawing, read out with the code field, which takes the focus because the
+  // page came back from a form.
   describe("another code sent", () => {
-    it("says so on the code step, tied to the code field, which has the focus", () => {
+    const card = (html: string) => /<div[^>]*\bbg-accent-soft\b[^>]*>(.*?)<\/div>/.exec(html)?.[1];
+
+    it("says so in a card with the envelope, which screen readers skip", () => {
+      const html = render(lang, { pending: resent });
+      const inside = card(html) ?? "";
+
+      expect(inside).toMatch(/^<svg[^>]*aria-hidden="true"/);
+      expect(inside).toContain(escaped(m.signInCodeResent));
+      expect(html).not.toMatch(/<div[^>]*\bbg-accent-soft\b[^>]*\srole=/);
+      expect(inside).not.toContain("danger");
+    });
+
+    it("is named first by the code field, which alone has the focus", () => {
       const html = render(lang, { pending: resent });
       const focused = inputs(html).filter((tag) => /\sautofocus=""/.test(tag));
 
@@ -139,20 +152,10 @@ describe.each(["en", "es"] as const)("in %s", (lang) => {
       expect(textOf(html, first)).toBe(escaped(m.signInCodeResent));
     });
 
-    it("reads as a success: no alert, no danger, and a tick hidden from screen readers", () => {
-      const html = render(lang, { pending: resent });
-      const notice = new RegExp(
-        `<p[^>]*>(<svg[^>]*aria-hidden="true"[^>]*>.*?</svg>)<span[^>]*>${escapeRegExp(escaped(m.signInCodeResent))}</span></p>`,
-      ).exec(html)?.[0];
-
-      expect(notice).toBeDefined();
-      expect(notice).not.toContain("role=");
-      expect(notice).not.toContain("danger");
-    });
-
     it("isn't there after the first code, and the field has no focus", () => {
       const html = render(lang, { pending: sent });
 
+      expect(card(html)).toBeUndefined();
       expect(html).not.toContain(escaped(m.signInCodeResent));
       expect(html).not.toContain("autofocus");
     });
@@ -160,7 +163,7 @@ describe.each(["en", "es"] as const)("in %s", (lang) => {
     it("gives way to an error: a wrong code after it shows the error alone", () => {
       const html = render(lang, { pending: resent, error: "wrong-code" });
 
-      expect(html).not.toContain(escaped(m.signInCodeResent));
+      expect(card(html)).toBeUndefined();
       expect(html).toContain(escaped(errorText(lang, "wrong-code")));
     });
 
@@ -170,6 +173,63 @@ describe.each(["en", "es"] as const)("in %s", (lang) => {
       ["the passkey offer", { session: signedIn, step: "passkey" as const, pending: resent }],
     ])("never shows on %s", (_, props) => {
       expect(render(lang, props)).not.toContain(escaped(m.signInCodeResent));
+    });
+  });
+
+  // Round 14: one wide main button per step, the box above it, and the other
+  // two actions as text buttons side by side, each still its own form.
+  describe("round 14", () => {
+    const button = (html: string, label: string) =>
+      new RegExp(`<button[^>]*>${escapeRegExp(escaped(label))}</button>`).exec(html)?.[0] ?? "";
+    const classes = (tag: string) => attribute(tag, "class")?.split(" ") ?? [];
+
+    it.each([
+      ["the email step", {}, m.signInSendCode],
+      ["the code step", { pending: sent }, m.signInEnter],
+    ])("on %s, the main button spans the column and is never disabled", (_, props, label) => {
+      const tag = button(render(lang, props), label);
+
+      expect(classes(tag)).toContain("w-full");
+      expect(tag).not.toMatch(/\sdisabled=""/);
+    });
+
+    it("puts the box above the main button", () => {
+      const html = render(lang, { pending: sent });
+
+      expect(html.indexOf('name="remember"')).toBeGreaterThan(-1);
+      expect(html.indexOf('name="remember"')).toBeLessThan(
+        html.indexOf(`>${escaped(m.signInEnter)}<`),
+      );
+    });
+
+    it.each([
+      [m.signInResend, actions.sendCode, ["lang", "email"]],
+      [m.signInChangeAddress, actions.changeAddress, ["lang"]],
+    ])("sends %s from its own form, as a text button", (label, action, hidden) => {
+      const html = render(lang, { pending: sent, next: "/es/recipes" });
+      const form =
+        new RegExp(`<form[^>]*action="${action}"[^>]*>(.*?)</form>`).exec(html)?.[1] ?? "";
+      const tag = button(form, label);
+
+      expect(tag).toMatch(/^<button type="submit"/);
+      for (const name of [...hidden, "next"])
+        expect(form).toContain(`type="hidden" name="${name}"`);
+      expect(classes(tag)).toContain("underline");
+      expect(classes(tag)).not.toContain("bg-chip");
+    });
+
+    // The texts round 14 removed, written out since their keys are gone.
+    it("shows neither removed hint", () => {
+      const html = render(lang, { pending: sent });
+
+      for (const text of [
+        "Puedes pedir otro código un minuto después del anterior.",
+        "You can ask for another code a minute after the last one.",
+        "Los 6 dígitos del correo.",
+        "The 6 digits in the email.",
+      ]) {
+        expect(html).not.toContain(escaped(text));
+      }
     });
   });
 

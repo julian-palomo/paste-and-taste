@@ -44,6 +44,8 @@
   /* Buttons, inputs, tags and filters are pills; Tailwind's rounded-full is this value. */
   --radius-control: calc(infinity * 1px);
   --radius-card: 1.75rem;
+  /* A row, and the sign-in notice's card. */
+  --radius-row: 1.375rem;
   /* A rounded square: a round checkbox reads as a radio button. */
   --radius-checkbox: 0.375rem;
 
@@ -73,6 +75,13 @@
   --animate-bounce: bounce var(--transition-duration-reaction) var(--ease-overshoot) both;
   /* For a path with pathLength="1" and stroke-dasharray="1". */
   --animate-draw: draw var(--transition-duration-base) var(--ease-standard) both;
+  /* The sign-in notice, once, when the page arrives with it: the card arrives,
+     then the envelope hops, then its tick draws, with the envelope still. */
+  --animate-arrive: arrive var(--transition-duration-base) var(--ease-standard) both;
+  --animate-hop: hop var(--transition-duration-reaction) var(--ease-standard)
+    var(--transition-duration-base) both;
+  --animate-draw-late: draw var(--transition-duration-base) var(--ease-standard)
+    calc(var(--transition-duration-base) + var(--transition-duration-reaction)) both;
 
   @keyframes bounce {
     from {
@@ -89,6 +98,37 @@
     }
     to {
       stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes arrive {
+    from {
+      opacity: 0;
+      translate: 0 -6px;
+    }
+    to {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+
+  /* Up 7px with a slight tilt, back a little past, and settled. */
+  @keyframes hop {
+    0% {
+      translate: 0 0;
+      rotate: 0deg;
+    }
+    45% {
+      translate: 0 -7px;
+      rotate: -6deg;
+    }
+    75% {
+      translate: 0 1.5px;
+      rotate: 1deg;
+    }
+    100% {
+      translate: 0 0;
+      rotate: 0deg;
     }
   }
 

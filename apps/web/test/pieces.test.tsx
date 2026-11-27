@@ -179,6 +179,39 @@ describe("Button", () => {
     expect(html).toMatch(/^<button[^>]*\sdisabled=""[^>]*>Back<\/button>$/);
   });
 
+  // A text button: an action beside the main one, with no fill and no border,
+  // still a touch target and still a button.
+  it("of kind text has no fill or border, is underlined, and is at least a touch target tall", () => {
+    const html = renderToString(
+      <Button kind="text" type="submit">
+        Send another code
+      </Button>,
+    );
+    const classes = /class="([^"]*)"/.exec(html)?.[1]?.split(" ") ?? [];
+
+    expect(html).toMatch(/^<button type="submit"/);
+    expect(classes).toEqual(
+      expect.arrayContaining(["min-h-touch", "underline", "text-accent", "font-bold"]),
+    );
+    expect(classes.filter((c) => /^(enabled:hover:)?bg-|^border(-|$)/.test(c))).toEqual([]);
+  });
+
+  it("is as wide as its column when wide", () => {
+    const wide = renderToString(
+      <Button kind="main" type="submit" wide>
+        Sign in
+      </Button>,
+    );
+    const narrow = renderToString(
+      <Button kind="main" type="submit">
+        Sign in
+      </Button>,
+    );
+
+    expect(/class="([^"]*)"/.exec(wide)?.[1]?.split(" ")).toContain("w-full");
+    expect(/class="([^"]*)"/.exec(narrow)?.[1]?.split(" ")).not.toContain("w-full");
+  });
+
   // Tailwind 4's base styles give a button the default arrow; a button that
   // can be pressed shows the hand, as a link and the checkbox do.
   it.each(["main", "secondary"] as const)(

@@ -4,6 +4,7 @@ import { Button } from "../pieces/button.tsx";
 import { Card } from "../pieces/card.tsx";
 import { Checkbox } from "../pieces/checkbox.tsx";
 import { TextField } from "../pieces/text-field.tsx";
+import { EnvelopeSent } from "./notice-drawing.tsx";
 import type { Pending, SignInErrorKind } from "./relay.ts";
 import type { Session } from "./sign-in.ts";
 
@@ -90,35 +91,33 @@ function Alert({ text }: { text: string }) {
 }
 
 // A notice: an action worked. Not an alert, which reports an error, and not
-// told by colour alone: a tick, hidden from screen readers, and the words,
-// whose id a field names in aria-describedby.
+// told by colour alone: the envelope, hidden from screen readers, and the
+// words, whose id a field names in aria-describedby. A soft card that arrives
+// once with the page; with reduced motion it is simply there.
 function Notice({ id, text }: { id: string; text: string }) {
   return (
-    <p className="flex items-start gap-2 text-body text-text">
-      <svg
-        aria-hidden="true"
-        viewBox="0 0 20 20"
-        className="mt-1 size-5 shrink-0 text-accent"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M4 10.5l4 4 8-9" />
-      </svg>
-      <span id={id}>{text}</span>
-    </p>
+    <div className="flex animate-arrive items-center justify-center gap-3 rounded-row bg-accent-soft px-4 py-3">
+      <EnvelopeSent />
+      <span id={id} className="font-bold text-body text-text">
+        {text}
+      </span>
+    </div>
   );
 }
+
+// The sign-in's two steps: one centred column, as narrow as a phone's at
+// every width, with its heading and the lines under it centred.
+const column = "mx-auto flex w-full max-w-sm flex-col gap-8";
 
 function AddressStep({ lang, messages, pending, error, actions, passkeySignIn, next }: Props) {
   // A failed passkey is said next to the passkey; creating one happens only
   // from the offer, so passkey-not-created shows nothing here.
   const fieldError = fieldErrorOf(error);
   return (
-    <section className="flex flex-col gap-8">
-      <h1>{messages.signInHeading}</h1>
+    <section className={column}>
+      <div className="text-center">
+        <h1>{messages.signInHeading}</h1>
+      </div>
       <PostForm action={actions.sendCode} lang={lang} next={next}>
         <TextField
           label={messages.signInEmail}
@@ -131,7 +130,7 @@ function AddressStep({ lang, messages, pending, error, actions, passkeySignIn, n
           error={fieldError && errorText(messages, fieldError)}
           autoFocus={fieldError !== undefined}
         />
-        <Button kind="main" type="submit">
+        <Button kind="main" type="submit" wide>
           {messages.signInSendCode}
         </Button>
       </PostForm>
@@ -159,15 +158,15 @@ function CodeStep({
   const resent = pending?.resent === true && error === undefined;
   const noticeId = useId();
   return (
-    <section className="flex flex-col gap-8">
-      <div className="flex flex-col gap-2">
+    <section className={column}>
+      <div className="flex flex-col gap-2 text-center">
         <h1>{messages.signInCodeHeading}</h1>
         <p className="text-body">
           {messages.signInCodeSentTo} <strong>{email}</strong>
         </p>
         <p className="text-body text-text-muted">{messages.signInSpam}</p>
-        {resent && <Notice id={noticeId} text={messages.signInCodeResent} />}
       </div>
+      {resent && <Notice id={noticeId} text={messages.signInCodeResent} />}
       <PostForm action={actions.signIn} lang={lang} next={next}>
         <TextField
           label={messages.signInCode}
@@ -177,28 +176,32 @@ function CodeStep({
           autoComplete="one-time-code"
           maxLength={6}
           required
-          hint={messages.signInCodeHint}
           error={fieldError && errorText(messages, fieldError)}
           autoFocus={fieldError !== undefined || resent}
           describedBy={resent ? noticeId : undefined}
         />
-        <Checkbox label={messages.signInRemember} name="remember" value="on" />
-        <Button kind="main" type="submit">
+        <div className="flex w-full justify-center">
+          <Checkbox label={messages.signInRemember} name="remember" value="on" />
+        </div>
+        <Button kind="main" type="submit" wide>
           {messages.signInEnter}
         </Button>
       </PostForm>
-      <PostForm action={actions.sendCode} lang={lang} next={next}>
-        <input type="hidden" name="email" value={email} />
-        <p className="text-small text-text-muted">{messages.signInResendHint}</p>
-        <Button kind="secondary" type="submit">
-          {messages.signInResend}
-        </Button>
-      </PostForm>
-      <PostForm action={actions.changeAddress} lang={lang} next={next}>
-        <Button kind="secondary" type="submit">
-          {messages.signInChangeAddress}
-        </Button>
-      </PostForm>
+      {/* Side by side and centred, two lines when the column is too narrow;
+          each still its own form, sent with no JavaScript. */}
+      <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
+        <PostForm action={actions.sendCode} lang={lang} next={next}>
+          <input type="hidden" name="email" value={email} />
+          <Button kind="text" type="submit">
+            {messages.signInResend}
+          </Button>
+        </PostForm>
+        <PostForm action={actions.changeAddress} lang={lang} next={next}>
+          <Button kind="text" type="submit">
+            {messages.signInChangeAddress}
+          </Button>
+        </PostForm>
+      </div>
     </section>
   );
 }

@@ -103,11 +103,15 @@ asks for dark (`prefers-color-scheme`).
   November 2026: WCAG 2's formula on the token values, and the colour
   blindness simulated in Chromium on the production page. Not checked: APCA,
   a real phone, Safari, or a person with colour blindness looking at it.
-- **Decided** on 27 November 2026, on issue #101: a notice, the line that says
-  an action worked, is plain text in the text colour after a small tick in the
-  accent colour, which a screen reader skips. It is not an alert and never
-  `danger`, and it doesn't move. The first is "Te hemos enviado otro código."
-  on the sign-in page.
+- **Decided** on 27 November 2026, on design round 14 (issue #119), replacing
+  what issue #101 decided the same day: a notice about an email, the line that
+  says it went out, is a soft card (`accent-soft`, a row's 22px radius) with
+  the envelope drawing and the words, bold, in the text colour, centred. It
+  arrives once with the page (section 7). It is not an alert and never
+  `danger`, and a screen reader skips the drawing and reads the words with the
+  field that has the focus. The first is "Te hemos enviado otro código." on
+  the sign-in page. A notice about anything else has no look decided yet, and
+  none is ever a toast that floats or closes itself.
 - Drawing colours (tomato red, wood, yolk) are not tokens. They live in the
   drawings.
 
@@ -129,6 +133,16 @@ asks for dark (`prefers-color-scheme`).
 - **Decided:** buttons, inputs, tags and filters are pills.
 - **Decided** on 27 November 2026: a button that can be pressed shows the hand
   cursor, as a link and the checkbox do; a disabled one shows "not allowed".
+- **Decided** on design round 14, 27 November 2026, for the sign-in page:
+  - each step's one main button spans the column;
+  - the other actions are text buttons, bold accent text, underlined, with no
+    fill and no border, side by side and centred, and still 48px tall;
+  - the steps sit in one centred column as wide as a phone's at every width,
+    their headings and the lines under them centred;
+  - "Mantener la sesión iniciada" is centred, above the main button: below it,
+    the page changes before it is seen and a phone's keyboard covers it;
+  - the main button is never disabled until something is typed: that needs
+    JavaScript and doesn't say why.
 - **Proposed:** cards with a 28px radius, rows with 22px, controls 54px tall,
   and no shadows beyond a 2px line under a card. The web app's button, text
   field and card are built with these values; rows are not built yet.
@@ -148,7 +162,11 @@ asks for dark (`prefers-color-scheme`).
 
 **Decided:** flat drawings of food and of kitchen utensils, with no outline
 and **no faces**. Food is vegetables, fruit, legumes, bread, olives and
-cheese; the utensils were the owner's idea for the friendly element.
+cheese; the utensils were the owner's idea for the friendly element. One
+drawing is neither: the envelope with a tick on a round badge, for the notice
+that an email went out, which the owner chose on design round 14 knowing it
+was a new kind. Its badge takes the accent from the tokens; its creams are its
+own.
 
 Each drawing is one SVG with a `<title>` that names it, on a 120 by 120 box
 (the rating is wider), built from a base colour, one darker tone on one side
@@ -160,7 +178,7 @@ and one small highlight. The reference drawings are in
   sprig of green olives.
 - `utensils/`: wooden spoon, pot, apron, salt shaker, oil cruet, mortar, pan
   with an egg, oven mitt.
-- `states/`: the rating in spoons and the broken egg.
+- `states/`: the rating in spoons, the broken egg, and the envelope sent.
 - `loaders/`: the four waits, animated as mock-ups (section 8).
 - `screens/`: the mock-ups of rounds 11 and 12 (section 10), one file per
   screen, as the design canvas keeps them.
@@ -211,7 +229,11 @@ The rule (proposed, and the owner liked what it produced):
   checkbox bounces and draws its tick, a heart beats when a recipe is saved.
 - Built so far: the checkbox's bounce (0.32 seconds, with a slight overshoot)
   and the drawing of its tick (0.2 seconds); with reduced motion the tick
-  appears drawn, without moving.
+  appears drawn, without moving. The sign-in notice, once, as the page
+  arrives: the card fades in sliding down 6px (0.2 seconds), then the envelope
+  hops 7px with a slight tilt, a little past and settled (0.32 seconds), then
+  its tick draws (0.2 seconds) with the envelope still. With reduced motion
+  the card is simply there.
 - Entrances are staggered. Big animations are only for waits and for entering
   a page.
 - With `prefers-reduced-motion: reduce` nothing decorative moves.
