@@ -92,7 +92,12 @@ export async function sendCode(
     deps.appendSetCookie(pendingCookie({ email }, secure(deps)));
     return { redirect: withError(lang, codeError(error), next) };
   }
-  deps.appendSetCookie(pendingCookie({ email, sentAt: deps.now() }, secure(deps)));
+  // Another code for the address that already had one: "Enviar otro código".
+  // A code to another address, from a second tab, is that address's first.
+  const resent = pending?.sentAt !== undefined && pending.email === email;
+  deps.appendSetCookie(
+    pendingCookie({ email, sentAt: deps.now(), ...(resent ? { resent } : {}) }, secure(deps)),
+  );
   return { redirect: page(lang, { next }) };
 }
 

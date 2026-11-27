@@ -150,6 +150,11 @@ in the look `DESIGN.md` describes. A screen arranges pieces and picks no
 colour or size of its own.\
 _Avoid_: widget, primitive.
 
+**Notice**: A short line on a page that says an action worked, shown when the
+page comes back from a form: "Te hemos enviado otro código." It is not an
+alert, which reports an error.\
+_Avoid_: message (what a user writes in a conversation), toast, flash.
+
 **Showcase page**: The page that shows every piece in every state, for the
 owner to look at. It answers in development and preview, never in
 production.\

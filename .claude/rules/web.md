@@ -63,7 +63,12 @@ The IP is read as the `cf-connecting-ip` header, never with Start's
 `getRequestIP`, which finds nothing on Workers. Nothing reads, rewrites or
 logs a cookie. The address being signed in with sits between the steps in a
 cookie of the web app's own, `sign_in_pending` (`HttpOnly`, 15 minutes, and
-`Secure` when the page is served over HTTPS), never in the page's address. The code path works with no JavaScript: each
+`Secure` when the page is served over HTTPS), never in the page's address.
+After "Enviar otro código" the cookie also carries `resent: true`, set only
+when the address already had a code, and the code step shows a notice that
+another code went out, unless the page came back with an error; the code
+field then takes the focus and names the notice first in `aria-describedby`,
+since a live region isn't read on a page load. The code path works with no JavaScript: each
 step is a form posted to a server function's `url`, which answers with a 303
 back to the page, the cookies on it, and `?error=<kind>` when it failed; the
 field with the error is rendered with `autoFocus`, which React writes into

@@ -23,7 +23,7 @@ export function Button({
     <button
       type={type}
       disabled={disabled}
-      className={`inline-flex h-control items-center justify-center rounded-control px-6 font-bold text-body transition-colors ${kinds[kind]} disabled:cursor-not-allowed disabled:border-2 disabled:border-dashed disabled:border-border-control disabled:bg-transparent disabled:text-text-muted`}
+      className={`inline-flex h-control items-center justify-center rounded-control px-6 font-bold text-body transition-colors ${kinds[kind]} enabled:cursor-pointer disabled:cursor-not-allowed disabled:border-2 disabled:border-dashed disabled:border-border-control disabled:bg-transparent disabled:text-text-muted`}
     >
       {children}
     </button>

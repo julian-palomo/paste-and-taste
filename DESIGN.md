@@ -103,6 +103,11 @@ asks for dark (`prefers-color-scheme`).
   November 2026: WCAG 2's formula on the token values, and the colour
   blindness simulated in Chromium on the production page. Not checked: APCA,
   a real phone, Safari, or a person with colour blindness looking at it.
+- **Decided** on 27 November 2026, on issue #101: a notice, the line that says
+  an action worked, is plain text in the text colour after a small tick in the
+  accent colour, which a screen reader skips. It is not an alert and never
+  `danger`, and it doesn't move. The first is "Te hemos enviado otro código."
+  on the sign-in page.
 - Drawing colours (tomato red, wood, yolk) are not tokens. They live in the
   drawings.
 
@@ -122,6 +127,8 @@ asks for dark (`prefers-color-scheme`).
 ## 5. Shape
 
 - **Decided:** buttons, inputs, tags and filters are pills.
+- **Decided** on 27 November 2026: a button that can be pressed shows the hand
+  cursor, as a link and the checkbox do; a disabled one shows "not allowed".
 - **Proposed:** cards with a 28px radius, rows with 22px, controls 54px tall,
   and no shadows beyond a 2px line under a card. The web app's button, text
   field and card are built with these values; rows are not built yet.
