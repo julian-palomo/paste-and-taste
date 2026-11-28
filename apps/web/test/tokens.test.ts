@@ -110,8 +110,16 @@ describe("motion", () => {
     ]),
   );
 
-  it("has the checkbox's bounce and draw", () => {
-    expect([...animations.keys()].sort()).toEqual(["bounce", "draw"]);
+  // The checkbox's bounce and draw; the sign-in notice's arrive, hop and
+  // late draw, which starts once the card has arrived and the envelope hopped.
+  it("has the checkbox's and the notice's animations", () => {
+    expect([...animations.keys()].sort()).toEqual(["arrive", "bounce", "draw", "draw-late", "hop"]);
+  });
+
+  it("starts the notice's tick once the card and the hop are over", () => {
+    expect(animations.get("draw-late")).toContain(
+      "calc(var(--transition-duration-base) + var(--transition-duration-reaction))",
+    );
   });
 
   // A 0s animation shows its last frame only with fill mode forwards or both;
@@ -133,4 +141,9 @@ describe("motion", () => {
       expect(reduced).toMatch(new RegExp(`--transition-duration-${name}:\\s*0s;`));
     }
   });
+});
+
+// Rows and the sign-in notice's card: DESIGN.md section 5's 22px.
+it("declares the radius of a row", () => {
+  expect(block("@theme static")).toMatch(/--radius-row:\s*1\.375rem;/);
 });

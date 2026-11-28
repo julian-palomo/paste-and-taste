@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { messagesFor, parseLanguage, pickLanguage } from "../src/i18n/i18n.ts";
 
+// Round 14 removed them: the error after asking too soon already says when,
+// and a code field needs no "the 6 digits" under it.
+it.each(["en", "es"] as const)("in %s, the removed sign-in hints are gone", (lang) => {
+  const messages: Record<string, string> = messagesFor(lang);
+
+  expect(messages).not.toHaveProperty("signInResendHint");
+  expect(messages).not.toHaveProperty("signInCodeHint");
+});
+
 describe("parseLanguage", () => {
   it("accepts the two languages of the interface", () => {
     expect(parseLanguage("en")).toBe("en");

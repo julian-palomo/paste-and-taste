@@ -22,10 +22,11 @@ describe.each(["en", "es"] as const)("the showcase page in %s", (lang) => {
 
   it("has its heading and every piece in every state", () => {
     expect(html).toContain(`<h1>${messages.showcaseHeading}</h1>`);
-    // Buttons: main and secondary, each normal and disabled, and the form's submit.
-    expect(count(html, /<button type="button"/)).toBe(4);
+    // Buttons: main, secondary and text, each normal and disabled, and the form's submit.
+    expect(count(html, /<button type="button"/)).toBe(6);
     expect(count(html, /<button type="submit"/)).toBe(1);
-    expect(count(html, /<button[^>]*\sdisabled=""/)).toBe(2);
+    expect(count(html, /<button[^>]*\sdisabled=""/)).toBe(3);
+    expect(html).toContain(messages.showcaseText);
     // Text fields: with a hint, plain, with an error, disabled.
     expect(count(html, /<input(?![^>]*type="checkbox")[^>]*>/)).toBe(4);
     expect(count(html, /aria-invalid="true"/)).toBe(1);

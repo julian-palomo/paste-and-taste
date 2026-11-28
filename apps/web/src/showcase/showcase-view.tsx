@@ -37,6 +37,16 @@ export function ShowcaseView({ messages }: { messages: Messages }) {
             {messages.showcaseBack}
           </Button>
         </State>
+        <State name={messages.showcaseText}>
+          <Button kind="text" type="button">
+            {messages.showcaseBack}
+          </Button>
+        </State>
+        <State name={messages.showcaseTextDisabled}>
+          <Button kind="text" type="button" disabled>
+            {messages.showcaseBack}
+          </Button>
+        </State>
       </Section>
 
       <Section title={messages.showcaseTextFields}>

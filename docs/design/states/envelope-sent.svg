@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+<title>Envelope sent</title>
+<rect x="10" y="30" width="92" height="66" rx="12" fill="#FFF3CF"/>
+<path d="M56 30h34a12 12 0 0 1 12 12v42a12 12 0 0 1-12 12H56z" fill="#F4E2A6"/>
+<path d="M16 38l40 30 40-30" fill="none" stroke="#C9A24A" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+<ellipse cx="28" cy="46" rx="8" ry="4" fill="#FFFBEA" transform="rotate(-20 28 46)"/>
+<circle cx="94" cy="34" r="20" fill="#3B7A1E"/>
+<path d="M85 34.5l6.5 6.5 11.5-13.5" fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -66,13 +66,19 @@ cookie of the web app's own, `sign_in_pending` (`HttpOnly`, 15 minutes, and
 `Secure` when the page is served over HTTPS), never in the page's address.
 After "Enviar otro código" the cookie also carries `resent: true`, set only
 when the address already had a code, and the code step shows a notice that
-another code went out, unless the page came back with an error; the code
+another code went out, unless the page came back with an error: a card with
+the envelope (`src/sign-in/notice-drawing.tsx`) that moves once, in CSS, from
+the tokens' animations, and stays still with reduced motion; the code
 field then takes the focus and names the notice first in `aria-describedby`,
 since a live region isn't read on a page load. The code path works with no JavaScript: each
 step is a form posted to a server function's `url`, which answers with a 303
 back to the page, the cookies on it, and `?error=<kind>` when it failed; the
 field with the error is rendered with `autoFocus`, which React writes into
-the server's HTML. Asking for a code sends the page's language, so the email
+the server's HTML. Each step shows only the errors that come back to it: an
+address with another step's kind, from a reload or going back once the cookie
+is gone, shows nothing. `too-soon` is the code step's own centred line where
+the notice goes, named by the code field in `aria-describedby`, with the
+field neither red nor invalid. Asking for a code sends the page's language, so the email
 arrives in it, and a 502 (the email couldn't be sent) is `code-not-sent`, shown
 only on the email step. Start refuses a server function request that carries no
 `Sec-Fetch-Site`, `Origin` or `Referer` of the same origin, with 403, so a
@@ -131,8 +137,9 @@ home shows; the smoke also checks that each home answers 200 with its `lang`
 and, where indexing is blocked, `noindex`
 (`docs/adr/2026-11-25-production-home-is-the-building-page.md`).
 
-**Shared pieces live in `src/pieces/`**: the button, the text field, the
-checkbox and the card, one file each. A piece is plain React with no router
+**Shared pieces live in `src/pieces/`**: the button (main, secondary or
+text, and `wide` to span its column), the text field, the checkbox and the
+card, one file each. A piece is plain React with no router
 and no server function, takes its texts as props, and is styled only from the
 tokens. Anything only one feature uses stays in that feature's folder; a
 piece moves to `src/pieces/` when a second feature needs it. A screen
