@@ -246,8 +246,6 @@ describe.each(["en", "es"] as const)("in %s", (lang) => {
     ["wrong-code", { pending: sent }, "code"],
     ["too-many", { pending: sent }, "code"],
     ["unreachable", { pending: sent }, "code"],
-    ["too-soon", { pending: sent }, "code"],
-    ["too-many-codes", { pending: sent }, "code"],
   ] as const)("%s, %o, is on the %s field, which has the focus", (kind, props, field) => {
     const html = render(lang, { ...props, error: kind });
     const focused = inputs(html).filter((tag) => /\sautofocus=""/.test(tag));
@@ -258,6 +256,47 @@ describe.each(["en", "es"] as const)("in %s", (lang) => {
     expect(attribute(tag, "aria-invalid")).toBe("true");
     const described = attribute(tag, "aria-describedby")?.split(" ") ?? [];
     expect(described.map((id) => textOf(html, id))).toContain(escaped(errorText(lang, kind)));
+  });
+
+  // Each step shows only the errors that come back to it. An address with
+  // another step's error, from a reload or going back once the cookie is gone
+  // or changed, shows nothing and gives no field the focus.
+  it.each([
+    ["too-soon", {}],
+    ["wrong-code", {}],
+    ["too-soon", { pending: { email: "ana@example.com" } }],
+    ["wrong-code", { pending: { email: "ana@example.com" } }],
+    ["invalid-email", { pending: sent }],
+    ["too-many-codes", { pending: sent }],
+    ["start-again", { pending: sent }],
+    ["code-not-sent", { pending: sent }],
+  ] as const)("%s, %o, belongs to the other step and shows nothing", (kind, props) => {
+    const html = render(lang, { ...props, error: kind });
+
+    expect(html).not.toContain(escaped(errorText(lang, kind)));
+    expect(html).not.toContain("autofocus");
+    expect(html).not.toContain('aria-invalid="true"');
+  });
+
+  // Asking again too soon is about the button, not the code typed: a line of
+  // its own where the notice goes, read out with the code field, which keeps
+  // the focus and isn't marked as wrong.
+  it("asking again too soon says so on its own line, read out with the code field", () => {
+    const html = render(lang, { pending: resent, error: "too-soon" });
+    const focused = inputs(html).filter((tag) => /\sautofocus=""/.test(tag));
+
+    expect(focused).toHaveLength(1);
+    const [tag = ""] = focused;
+    expect(attribute(tag, "name")).toBe("code");
+    expect(attribute(tag, "aria-invalid")).toBeUndefined();
+    const [first = ""] = attribute(tag, "aria-describedby")?.split(" ") ?? [];
+    expect(textOf(html, first)).toBe(escaped(errorText(lang, "too-soon")));
+    const line = new RegExp(`<p[^>]*id="${escapeRegExp(first)}"[^>]*>`).exec(html)?.[0] ?? "";
+    expect(line).toContain("text-center");
+    expect(line).not.toContain("role=");
+    expect(line).not.toContain("danger");
+    expect(html).not.toContain(escaped(m.signInCodeResent));
+    expect(html.indexOf(`id="${first}"`)).toBeLessThan(html.indexOf('name="code"'));
   });
 
   it.each([

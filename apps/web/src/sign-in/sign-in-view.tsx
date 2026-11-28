@@ -42,10 +42,21 @@ function errorText(messages: Messages, kind: SignInErrorKind): string {
   }[kind];
 }
 
-// The passkey's errors belong to the passkey, not to a step's field.
-const PASSKEY_KINDS: readonly SignInErrorKind[] = ["passkey-failed", "passkey-not-created"];
-const fieldErrorOf = (error: SignInErrorKind | undefined) =>
-  error && !PASSKEY_KINDS.includes(error) ? error : undefined;
+// Each step shows only the errors that come back to it, on its field. An
+// address can carry another step's (a reload, or going back once the cookie
+// is gone or changed); that step shows nothing for it. The passkey's errors
+// belong to the passkey; "too-soon" is the code step's own line, not a field's.
+const ADDRESS_FIELD_KINDS: readonly SignInErrorKind[] = [
+  "invalid-email",
+  "too-many-codes",
+  "too-many",
+  "unreachable",
+  "start-again",
+  "code-not-sent",
+];
+const CODE_FIELD_KINDS: readonly SignInErrorKind[] = ["wrong-code", "too-many", "unreachable"];
+const fieldErrorOf = (error: SignInErrorKind | undefined, kinds: readonly SignInErrorKind[]) =>
+  error && kinds.includes(error) ? error : undefined;
 
 // <h1> and <p role="alert"> carry no class: tests match them exactly.
 export function SignInView(props: Props) {
@@ -112,7 +123,7 @@ const column = "mx-auto flex w-full max-w-sm flex-col gap-8";
 function AddressStep({ lang, messages, pending, error, actions, passkeySignIn, next }: Props) {
   // A failed passkey is said next to the passkey; creating one happens only
   // from the offer, so passkey-not-created shows nothing here.
-  const fieldError = fieldErrorOf(error);
+  const fieldError = fieldErrorOf(error, ADDRESS_FIELD_KINDS);
   return (
     <section className={column}>
       <div className="text-center">
@@ -151,11 +162,13 @@ function CodeStep({
   email,
   next,
 }: Props & { email: string }) {
-  // A code that couldn't be sent sends the page back to the email step.
-  const fieldError = error === "code-not-sent" ? undefined : fieldErrorOf(error);
+  const fieldError = fieldErrorOf(error, CODE_FIELD_KINDS);
   // Another code went out, and nothing failed since: say so, and give the
   // field the focus so a screen reader reads it out with the field.
   const resent = pending?.resent === true && error === undefined;
+  // Asked again within the minute: a line of its own where the notice goes,
+  // read out the same way, with the field neither red nor marked invalid.
+  const tooSoon = error === "too-soon";
   const noticeId = useId();
   return (
     <section className={column}>
@@ -167,6 +180,11 @@ function CodeStep({
         <p className="text-body text-text-muted">{messages.signInSpam}</p>
       </div>
       {resent && <Notice id={noticeId} text={messages.signInCodeResent} />}
+      {tooSoon && (
+        <p id={noticeId} className="text-center text-body text-text">
+          {errorText(messages, "too-soon")}
+        </p>
+      )}
       <PostForm action={actions.signIn} lang={lang} next={next}>
         <TextField
           label={messages.signInCode}
@@ -177,8 +195,8 @@ function CodeStep({
           maxLength={6}
           required
           error={fieldError && errorText(messages, fieldError)}
-          autoFocus={fieldError !== undefined || resent}
-          describedBy={resent ? noticeId : undefined}
+          autoFocus={fieldError !== undefined || resent || tooSoon}
+          describedBy={resent || tooSoon ? noticeId : undefined}
         />
         <div className="flex w-full justify-center">
           <Checkbox label={messages.signInRemember} name="remember" value="on" />

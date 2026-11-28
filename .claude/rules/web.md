@@ -74,7 +74,11 @@ since a live region isn't read on a page load. The code path works with no JavaS
 step is a form posted to a server function's `url`, which answers with a 303
 back to the page, the cookies on it, and `?error=<kind>` when it failed; the
 field with the error is rendered with `autoFocus`, which React writes into
-the server's HTML. Asking for a code sends the page's language, so the email
+the server's HTML. Each step shows only the errors that come back to it: an
+address with another step's kind, from a reload or going back once the cookie
+is gone, shows nothing. `too-soon` is the code step's own centred line where
+the notice goes, named by the code field in `aria-describedby`, with the
+field neither red nor invalid. Asking for a code sends the page's language, so the email
 arrives in it, and a 502 (the email couldn't be sent) is `code-not-sent`, shown
 only on the email step. Start refuses a server function request that carries no
 `Sec-Fetch-Site`, `Origin` or `Referer` of the same origin, with 403, so a

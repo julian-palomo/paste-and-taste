@@ -142,7 +142,10 @@ asks for dark (`prefers-color-scheme`).
   - "Mantener la sesión iniciada" is centred, above the main button: below it,
     the page changes before it is seen and a phone's keyboard covers it;
   - the main button is never disabled until something is typed: that needs
-    JavaScript and doesn't say why.
+    JavaScript and doesn't say why;
+  - asking for another code too soon is said on a centred line where the
+    notice goes, not as a red field, since it is about the button and not the
+    code typed (the owner, 28 November 2026).
 - **Proposed:** cards with a 28px radius, rows with 22px, controls 54px tall,
   and no shadows beyond a 2px line under a card. The web app's button, text
   field and card are built with these values; rows are not built yet.
